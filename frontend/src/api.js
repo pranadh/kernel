@@ -1,8 +1,10 @@
 import axios from "axios";
 
-const instance = axios.create({
-  baseURL: "http://localhost:5000",
-});
+const baseURL = process***REMOVED***.NODE_ENV === 'production' 
+  ? 'http://170.64.128.155:5000'
+  : 'http://localhost:5000';
+
+const instance = axios.create({ baseURL });
 
 // Add token to all requests if it exists
 instance.interceptors.request.use((config) => {
