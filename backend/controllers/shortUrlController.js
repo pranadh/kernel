@@ -127,17 +127,56 @@ export const redirectToUrl = async (req, res) => {
 export const deleteUrl = async (req, res) => {
   try {
     const url = await ShortUrl.findById(req.params.id);
-    
     if (!url) {
-      return res.status(404).json({ message: "URL not found" });
+      return res.status(404).json({ message: 'URL not found' });
     }
 
-    if (url.author.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized" });
+    // Allow both admins and URL owners to delete
+    if (!req.user.roles.includes('admin') && url.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
     }
 
     await url.deleteOne();
-    res.json({ message: "URL deleted" });
+    res.json({ message: 'URL deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getAllUrls = async (req, res) => {
+  try {
+    const urls = await ShortUrl.find({})
+      .sort({ createdAt: -1 })
+      .populate('author', 'username handle avatar isVerified');
+    
+    res.json(urls);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const updateUrl = async (req, res) => {
+  try {
+    const url = await ShortUrl.findById(req.params.id);
+    if (!url) {
+      return res.status(404).json({ message: 'URL not found' });
+    }
+
+    const { shortId, originalUrl } = req.body;
+    
+    // Check if new shortId is already taken
+    if (shortId !== url.shortId) {
+      const existingUrl = await ShortUrl.findOne({ shortId });
+      if (existingUrl) {
+        return res.status(400).json({ message: 'Short ID already taken' });
+      }
+    }
+
+    url.shortId = shortId;
+    url.originalUrl = originalUrl;
+    
+    await url.save();
+    res.json(url);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -158,5 +197,7 @@ export default {
   getUserUrls,
   redirectToUrl,
   deleteUrl,
-  getOneUserUrls
+  getOneUserUrls,
+  getAllUrls,
+  updateUrl
 };

@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 import { 
   createDocument, 
   getUserDocuments, 
@@ -8,11 +8,13 @@ import {
   deleteDocument,
   incrementViewCount,
   getGlobalDocuments,
-  searchDocuments
+  searchDocuments,
+  getAllDocuments
 } from '../controllers/documentController.js';
 
 const router = express.Router();
 
+router.get('/all', protect, admin, getAllDocuments);
 router.post('/', protect, createDocument);
 router.get('/me', protect, getUserDocuments);
 router.get('/global', getGlobalDocuments);

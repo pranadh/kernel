@@ -41,9 +41,9 @@ const RoleManager = ({ userId, currentRoles, onUpdate }) => {
   };
 
   return (
-    <div className="p-4 bg-gray-800 rounded-lg">
-      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <FaUserShield className="text-blue-500" />
+    <div className="p-4 bg-surface-2/80 rounded-lg">
+      <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+        <FaUserShield className="text-primary" />
         Manage Roles
       </h3>
       <div className="flex flex-wrap gap-2">
@@ -54,7 +54,7 @@ const RoleManager = ({ userId, currentRoles, onUpdate }) => {
             disabled={loading}
             className={`px-3 py-1 rounded ${
               selectedRoles.includes(role)
-                ? 'bg-blue-500 text-white'
+                ? 'bg-primary text-white'
                 : 'bg-gray-700 text-gray-300'
             } transition-colors`}
           >
