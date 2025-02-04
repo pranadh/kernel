@@ -25,6 +25,7 @@ app.use(cors({
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
+import shortUrlRoutes from './routes/shortUrlRoutes.js';
 import documentRoutes from "./routes/documentRoutes.js";
 import { apiLimiter } from './middleware/rateLimitMiddleware.js';
 
@@ -33,6 +34,7 @@ app.use(apiLimiter);
 app.use("/api/users", userRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/documents", documentRoutes);
+app.use("/api/urls", shortUrlRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
