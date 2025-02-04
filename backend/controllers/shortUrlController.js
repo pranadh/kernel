@@ -93,7 +93,6 @@ export const redirectToUrl = async (req, res) => {
       return res.status(404).json({ message: "URL not found or has expired" });
     }
 
-    // Instead of res.redirect, send the URL in the response
     res.json({ url: shortUrl.originalUrl });
   } catch (error) {
     res.status(400).json({ message: error.message });
