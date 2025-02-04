@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import DocumentEditor from "./pages/DocumentEditor";
 import DocumentViewer from "./components/DocumentViewer";
 import Navbar from './components/Navbar';
+import UrlRedirect from './components/UrlRedirect';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -68,6 +69,7 @@ const App = () => {
             <DocumentEditor />
           </PrivateRoute>
         } />
+        <Route path="/s/:shortId" element={<UrlRedirect />} />
       </Routes>
     </>
   );

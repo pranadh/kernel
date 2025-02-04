@@ -87,7 +87,7 @@ const DocumentList = () => {
         <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center">
             <FiFile className="w-6 h-6 text-text-secondary mr-3" />
-            <h3 className="text-xl font-semibold text-text-primary">Documents</h3>
+            <h3 className="text-xl font-semibold text-text-primary">Your Documents</h3>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-text-secondary">Total: {documents.length}</span>
@@ -101,7 +101,7 @@ const DocumentList = () => {
           </div>
         </div>
         
-        <div className="max-h-[60vh] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <div className="max-h-[415px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <div className="p-3 flex flex-col space-y-2">
             {documents.map((doc) => (
               <div key={doc.documentId} className="block w-full">
