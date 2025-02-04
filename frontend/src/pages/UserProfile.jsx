@@ -44,8 +44,8 @@ const UserProfile = () => {
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
   const [connections, setConnections] = useState({ followers: [], following: [] });
-  const [loadingConnections, setLoadingConnections] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [colorPickerColor, setColorPickerColor] = useState('#6366f1');
   const [bannerColor, setBannerColor] = useState('#6366f1');
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [bannerImage, setBannerImage] = useState(null);
@@ -63,6 +63,7 @@ const UserProfile = () => {
         setIsFollowing(data.followers?.includes(currentUser?._id));
         if (data.bannerColor) {
           setBannerColor(data.bannerColor);
+          setColorPickerColor(data.bannerColor); // Update color picker too
         }
         setBannerImage(data.bannerImage || null);
       } catch (error) {
@@ -71,7 +72,7 @@ const UserProfile = () => {
         setLoading(false);
       }
     };
-
+  
     fetchProfile();
   }, [handle, currentUser]);
 
@@ -174,15 +175,32 @@ const UserProfile = () => {
     }
   };
 
+  const handleColorPickerChange = (color) => {
+    setColorPickerColor(color.hex);
+  };
+
+  const handleColorAccept = async () => {
+    try {
+      const { data } = await axios.put('/api/users/profile', {
+        bannerColor: colorPickerColor
+      });
+      setBannerColor(colorPickerColor);
+      setProfile(prev => ({ ...prev, bannerColor: colorPickerColor }));
+      setShowColorPicker(false);
+    } catch (error) {
+      setError("Failed to update banner color");
+    }
+  };
+
   useEffect(() => {
     if (profile) {
-      document.title = `${profile.username} (@${profile.handle}) > Kernel`;
+      document.title = `${profile.username} (@${profile.handle}) > Exalt`;
     } else {
-      document.title = 'Profile > Kernel';
+      document.title = 'Profile > Exalt';
     }
 
     return () => {
-      document.title = 'Home > Kernel';
+      document.title = 'Home > Exalt';
     };
   }, [profile]);
   
@@ -359,11 +377,53 @@ const handleBannerUpload = async (e) => {
           </div>
         )}
         {showColorPicker && (
-          <div className="absolute top-6 right-6 z-50"> {/* Changed from bottom-16 to top-6 */}
-            <SketchPicker
-              color={bannerColor}
-              onChange={handleColorChange}
-            />
+          <div className="absolute bottom-0 right-6 translate-y-full mt-2 z-50">
+            <div className="p-4 bg-surface-2 rounded-lg border border-white/10">
+              <SketchPicker
+                color={colorPickerColor}
+                onChange={handleColorPickerChange}
+                disableAlpha={true}
+                styles={{
+                  default: {
+                    picker: {
+                      background: '#22222A', // Dark background
+                      boxShadow: 'none'
+                    },
+                    saturation: {
+                      borderRadius: '4px'
+                    },
+                    hue: {
+                      borderRadius: '4px'
+                    },
+                    input: {
+                      background: '#2a2b2e',
+                      boxShadow: 'none',
+                      color: '#fff'
+                    },
+                    label: {
+                      color: '#9ca3af' // Gray text
+                    },
+                    hash: {
+                      color: '#9ca3af'
+                    }
+                  }
+                }}
+              />
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => setShowColorPicker(false)}
+                  className="px-4 py-2 bg-surface-1 hover:bg-surface-2 text-gray-400 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleColorAccept}
+                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
