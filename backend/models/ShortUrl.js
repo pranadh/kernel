@@ -12,11 +12,6 @@ const shortUrlSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  customAlias: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

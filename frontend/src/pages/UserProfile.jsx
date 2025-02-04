@@ -10,6 +10,7 @@ import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 import imageCompression from 'browser-image-compression';
 import UserDocuments from '../components/UserDocuments';
+import UserUrls from '../components/UserUrls';
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -50,6 +51,8 @@ const UserProfile = () => {
   const [bannerImage, setBannerImage] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [loadingDocuments, setLoadingDocuments] = useState(true);
+  const [urls, setUrls] = useState([]);
+  const [loadingUrls, setLoadingUrls] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -87,6 +90,24 @@ const UserProfile = () => {
 
     if (profile) {
       fetchDocuments();
+    }
+  }, [handle, profile]);
+
+  useEffect(() => {
+    const fetchUrls = async () => {
+      try {
+        setLoadingUrls(true);
+        const { data } = await axios.get(`/api/urls/user/${handle}`);
+        setUrls(data);
+      } catch (error) {
+        console.error('Error fetching URLs:', error);
+      } finally {
+        setLoadingUrls(false);
+      }
+    };
+  
+    if (profile) {
+      fetchUrls();
     }
   }, [handle, profile]);
 
@@ -494,13 +515,19 @@ const handleBannerUpload = async (e) => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <UserDocuments 
             documents={documents} 
             loading={loadingDocuments}
             username={profile.username}
             currentUser={currentUser}
             setDocuments={setDocuments} 
+          />
+          <UserUrls
+            urls={urls}
+            loading={loadingUrls}
+            username={profile.username}
+            currentUser={currentUser}
           />
         </div>
       </div>

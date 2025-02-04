@@ -1,4 +1,5 @@
 import ShortUrl from '../models/ShortUrl.js';
+import User from '../models/User.js';
 
 export const createShortUrl = async (req, res) => {
   try {
@@ -8,25 +9,26 @@ export const createShortUrl = async (req, res) => {
       return res.status(400).json({ message: "Invalid URL" });
     }
 
-    // Handle expiration (expiresIn is now in minutes)
+    // Handle expiration time
     const expiresAt = expiresIn === null ? 
-      null : // No expiration for verified users
-      new Date(+new Date() + expiresIn * 60 * 1000); // Convert minutes to milliseconds
+      null : 
+      new Date(+new Date() + expiresIn * 60 * 1000);
 
+    // If customAlias is provided and user is verified, use it as shortId
     if (customAlias) {
       if (!req.user.isVerified) {
         return res.status(403).json({ message: "Only verified users can create custom aliases" });
       }
 
-      const existingAlias = await ShortUrl.findOne({ customAlias });
-      if (existingAlias) {
+      const existingUrl = await ShortUrl.findOne({ shortId: customAlias });
+      if (existingUrl) {
         return res.status(400).json({ message: "Custom alias already taken" });
       }
     }
 
     const shortUrl = await ShortUrl.create({
       originalUrl: url,
-      customAlias,
+      shortId: customAlias || undefined, // Will use default generateId if undefined
       author: req.user._id,
       expiresAt
     });
@@ -72,6 +74,29 @@ export const getUserUrls = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+export const getOneUserUrls = async (req, res) => {
+    try {
+      const user = await User.findOne({ handle: req.params.handle });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      const urls = await ShortUrl.find({ 
+        author: user._id,
+        $or: [
+          { expiresAt: { $gt: new Date() } },
+          { expiresAt: null }
+        ]
+      })
+        .sort({ createdAt: -1 })
+        .populate('author', 'username handle avatar isVerified');
+      
+      res.json(urls);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  };
 
 export const redirectToUrl = async (req, res) => {
   try {
@@ -132,5 +157,6 @@ export default {
   getGlobalUrls,
   getUserUrls,
   redirectToUrl,
-  deleteUrl
+  deleteUrl,
+  getOneUserUrls
 };
