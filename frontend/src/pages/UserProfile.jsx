@@ -498,7 +498,7 @@ const handleBannerUpload = async (e) => {
           <UserDocuments 
             documents={documents} 
             loading={loadingDocuments}
-            username={profile.handle}
+            username={profile.username}
             currentUser={currentUser}
             setDocuments={setDocuments} 
           />

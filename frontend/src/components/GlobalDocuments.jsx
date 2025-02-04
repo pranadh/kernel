@@ -68,26 +68,30 @@ const GlobalDocuments = () => {
                   
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3">
-                      <div className="relative group flex-shrink-0">
-                        <div className="w-8 h-8 rounded-full overflow-hidden border border-white/5">
-                          {doc.author.avatar ? (
-                            <img 
-                              src={doc.author.avatar} 
-                              alt={doc.author.username}
-                              className="w-full h-full object-cover" 
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-                              <span className="text-sm font-semibold text-white">
-                                {doc.author.username.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="hidden group-hover:block">
-                          <ProfileHoverCard author={doc.author} />
-                        </div>
+                    <div className="relative group flex-shrink-0">
+                      <Link 
+                        to={`/u/${doc.author.handle}`}
+                        onClick={(e) => e.stopPropagation()} 
+                        className="block w-8 h-8 rounded-full overflow-hidden border border-white/5"
+                      >
+                        {doc.author.avatar ? (
+                          <img 
+                            src={doc.author.avatar} 
+                            alt={doc.author.username}
+                            className="w-full h-full object-cover" 
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-surface-2 flex items-center justify-center">
+                            <span className="text-sm font-semibold text-white">
+                              {doc.author.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </Link>
+                      <div className="hidden group-hover:block">
+                        <ProfileHoverCard author={doc.author} />
                       </div>
+                    </div>
                       
                       <span className="font-medium text-text-primary text-lg truncate">
                         {doc.title || 'Untitled Document'}

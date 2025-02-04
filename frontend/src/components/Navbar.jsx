@@ -97,6 +97,13 @@ const Navbar = () => {
   };
 
   const renderAvatar = () => {
+    // Debug user state
+    console.log('User state in Navbar:', {
+      hasAvatar: !!user?.avatar,
+      avatarURL: user?.avatar,
+      avatarError
+    });
+  
     if (!user?.avatar || avatarError) {
       return (
         <div className="w-full h-full bg-gray-700 flex items-center justify-center">
@@ -112,13 +119,8 @@ const Navbar = () => {
         src={user.avatar}
         alt={user.username}
         className="w-full h-full object-cover pointer-events-none select-none"
-        style={{
-          objectPosition: 'center',
-          minWidth: '100%',
-          minHeight: '100%'
-        }}
         onError={(e) => {
-          console.error('Avatar display error');
+          console.error('Avatar load error:', e);
           setAvatarError(true);
         }}
       />
@@ -226,7 +228,7 @@ const Navbar = () => {
                 </>
               ) : searchQuery ? (
                 <div className="px-4 py-8 text-center text-gray-400">
-                  No documents found
+                  No documents found.
                 </div>
               ) : null}
             </div>

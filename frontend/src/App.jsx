@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
@@ -18,9 +18,28 @@ const PrivateRoute = ({ children }) => {
 
 const App = () => {
   const { user } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Redirect www to non-www
+    if (window.location.hostname.startsWith('www.')) {
+      const newUrl = window.location.href.replace('www.', '');
+      window.location.replace(newUrl);
+    }
+
+    // Handle cross-domain session sync
+    const handleStorageChange = (e) => {
+      if (e.key === 'token' || e.key === 'user') {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [location]);
 
   return (
-    <Router>
+    <>
       <Navbar />
       <Routes>
         <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
@@ -50,14 +69,16 @@ const App = () => {
           </PrivateRoute>
         } />
       </Routes>
-    </Router>
+    </>
   );
 };
 
 const AppWrapper = () => {
   return (
     <AuthProvider>
-      <App />
+      <Router>
+        <App />
+      </Router>
     </AuthProvider>
   );
 };
