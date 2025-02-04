@@ -56,6 +56,8 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
       originalUrl: ''
     });
     const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [urlToDelete, setUrlToDelete] = useState(null);
 
     const isValidUrl = (url) => {
         try {
@@ -177,18 +179,25 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
         }
       };
   
-    const handleDelete = async (urlId) => {
-      if (!window.confirm('Are you sure you want to delete this URL?')) return;
+    const handleDelete = (e, url) => {
+      e.stopPropagation();
+      setUrlToDelete(url);
+      setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
       try {
-        await axios.delete(`/api/urls/${urlId}`);
+        await axios.delete(`/api/urls/${urlToDelete._id}`);
         if (onUrlsUpdate) {
-          onUrlsUpdate(prevUrls => prevUrls.filter(url => url._id !== urlId));
+          onUrlsUpdate(prevUrls => prevUrls.filter(url => url._id !== urlToDelete._id));
         }
         setToast({
           show: true,
           message: 'URL deleted successfully',
           type: 'success'
         });
+        setShowDeleteModal(false);
+        setUrlToDelete(null);
       } catch (error) {
         setToast({
           show: true,
@@ -385,18 +394,15 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
                       </button>
 
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(url._id);
-                        }}
+                        onClick={(e) => handleDelete(e, url)}
                         className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors relative group"
-                      >
+                        >
                         <FiTrash2 className="w-4 h-4" />
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
                                     opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                          Delete URL
+                            Delete URL
                         </div>
-                      </button>
+                        </button>
                     </div>
                   )}
                 </div>
@@ -414,6 +420,43 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
         </div>
       )}
     </div>
+
+    {showDeleteModal && (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-surface-2 rounded-lg border border-white/5 p-6 max-w-md w-full mx-4">
+          <div className="flex items-center gap-3 mb-4">
+            <FiTrash2 className="w-6 h-6 text-red-400" />
+            <h3 className="text-xl font-semibold text-white">Delete URL</h3>
+          </div>
+          <p className="text-gray-300 mb-6">
+            Are you sure you want to delete "<span 
+              className="font-semibold text-white inline-block max-w-[200px] truncate align-bottom"
+              title={urlToDelete?.originalUrl}
+            >
+              {urlToDelete?.originalUrl}
+            </span>"? 
+            This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-4">
+            <button
+              onClick={() => {
+                setShowDeleteModal(false);
+                setUrlToDelete(null);
+              }}
+              className="px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmDelete}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
     {toast.show && (
       <Toast
