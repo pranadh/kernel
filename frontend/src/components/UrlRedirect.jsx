@@ -10,17 +10,16 @@ const UrlRedirect = () => {
     const redirect = async () => {
       try {
         const { data } = await axios.get(`/api/urls/${shortId}`);
-        // Check if URL is external and has proper protocol
         const urlToRedirect = data.url.startsWith('http') ? 
           data.url : 
           `https://${data.url}`;
-        window.location.replace(urlToRedirect); // Use replace instead of href
+        window.location.href = urlToRedirect;
       } catch (error) {
         setError(error.response?.data?.message || 'Failed to redirect');
         console.error('Redirect failed:', error);
       }
     };
-
+  
     redirect();
   }, [shortId]);
 
