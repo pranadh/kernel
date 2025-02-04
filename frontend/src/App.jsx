@@ -10,6 +10,7 @@ import DocumentEditor from "./pages/DocumentEditor";
 import DocumentViewer from "./components/DocumentViewer";
 import Navbar from './components/Navbar';
 import UrlRedirect from './components/UrlRedirect';
+import UrlInfo from './components/UrlInfo';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -67,6 +68,12 @@ const App = () => {
         <Route path="/d/:documentId/edit" element={
           <PrivateRoute>
             <DocumentEditor />
+          </PrivateRoute>
+        } />
+        <Route path="/s/:shortId" element={<UrlRedirect />} />
+        <Route path="/info/s/:shortId" element={
+          <PrivateRoute>
+            <UrlInfo />
           </PrivateRoute>
         } />
         <Route path="/s/:shortId" element={<UrlRedirect />} />

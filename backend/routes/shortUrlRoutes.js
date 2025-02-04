@@ -9,7 +9,8 @@ import {
   getOneUserUrls,
   getAllUrls,
   updateUrl,
-  renewUrl
+  renewUrl,
+  getUrlInfo
 } from '../controllers/shortUrlController.js';
 
 const router = express.Router();
@@ -23,5 +24,6 @@ router.get('/user/:handle', getOneUserUrls);
 router.delete('/:id', protect, deleteUrl);
 router.put('/:id', protect, updateUrl);
 router.post('/:id/renew', protect, renewUrl);
+router.get('/info/:shortId', protect, getUrlInfo);
 
 export default router;

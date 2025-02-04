@@ -216,6 +216,24 @@ export const renewUrl = async (req, res) => {
   }
 };
 
+export const getUrlInfo = async (req, res) => {
+  try {
+    const { shortId } = req.params;
+    
+    const url = await ShortUrl.findOne({ 
+      shortId
+    }).populate('author', 'username handle avatar isVerified');
+
+    if (!url) {
+      return res.status(404).json({ message: "URL not found" });
+    }
+
+    res.json(url);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 const isValidUrl = (url) => {
   try {
     new URL(url);
@@ -234,5 +252,6 @@ export default {
   getOneUserUrls,
   getAllUrls,
   updateUrl,
-  renewUrl
+  renewUrl,
+  getUrlInfo
 };

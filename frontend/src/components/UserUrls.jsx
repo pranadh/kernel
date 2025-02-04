@@ -3,6 +3,7 @@ import { FiLink, FiCopy, FiCheck, FiEdit2, FiTrash2, FiSave, FiX } from 'react-i
 import { LuAlarmClock, LuMousePointerClick } from "react-icons/lu";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
 import { BiInfinite } from "react-icons/bi";
+import { Link, useNavigate } from 'react-router-dom';
 import Toast from './Toast';
 import axios from '../api';
 
@@ -47,6 +48,7 @@ const getTimeUntilExpiry = (expiresAt) => {
 };
 
 const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpdate }) => {
+    const navigate = useNavigate();
     const [copiedUrl, setCopiedUrl] = React.useState(null);
     const [editingUrl, setEditingUrl] = useState(null);
     const [editForm, setEditForm] = useState({
@@ -196,6 +198,14 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
       }
     };
 
+    const handleCardClick = (shortId, e) => {
+      // Prevent navigation if clicking on buttons or links
+      if (e.target.closest('button') || e.target.closest('a')) {
+        return;
+      }
+      navigate(`/info/s/${shortId}`);
+    };
+
   if (loading) return <div className="text-center py-8">Loading URLs...</div>;
 
   const isOwnProfile = currentUser?.handle === handle;
@@ -216,15 +226,20 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
         {urls?.length > 0 ? (
           <div className="p-3 flex flex-col space-y-2">
             {urls.map((url) => (
-              <div key={url._id} className="p-4 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
-                                          transition-all duration-300 hover:border-yellow-500/20 hover:shadow-lg hover:shadow-yellow-500/5">
+              <div 
+                key={url._id} 
+                onClick={(e) => handleCardClick(url.shortId, e)}
+                className="p-4 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
+                        transition-all duration-300 hover:border-yellow-500/20 hover:shadow-lg 
+                        hover:shadow-yellow-500/5 cursor-pointer"
+              >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 
                                 bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 
                                 flex items-center justify-center flex-shrink-0">
                     <FiLink className="w-6 h-6 text-yellow-500/75" />
                   </div>
-
+  
                   <div className="flex-1 min-w-0">
                     {editingUrl === url._id ? (
                       <div className="space-y-2">
@@ -264,126 +279,151 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-1">
-                        <a href={url.originalUrl} target="_blank" rel="noopener noreferrer" 
-                           className="text-white hover:text-white truncate">
-                          {url.originalUrl}
+                    <div className="flex flex-col gap-1">
+                      <a 
+                        href={url.originalUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()} 
+                        className="text-white hover:text-white truncate"
+                      >
+                        {url.originalUrl}
+                      </a>
+                      <div className="flex items-center gap-1">
+                        <MdSubdirectoryArrowRight className="w-4 h-4 text-yellow-600" />
+                        <a 
+                          href={`/s/${url.shortId}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-yellow-500 hover:text-yellow-400 font-medium truncate"
+                        >
+                          {window.location.host}/s/{url.shortId}
                         </a>
-                        <div className="flex items-center gap-1">
-                          <MdSubdirectoryArrowRight className="w-4 h-4 text-yellow-600" />
-                          <a href={`/s/${url.shortId}`} target="_blank" rel="noopener noreferrer" 
-                             className="text-yellow-500 hover:text-yellow-400 font-medium truncate">
-                            {window.location.host}/s/{url.shortId}
-                          </a>
-                          <button
-                            onClick={() => handleCopy(`${window.location.origin}/s/${url.shortId}`, url._id)}
-                            className="p-1.5 rounded-md bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors flex-shrink-0"
-                          >
-                            {copiedUrl === url._id ? 
-                              <FiCheck className="w-4 h-4 text-yellow-500" /> : 
-                              <FiCopy className="w-4 h-4 text-yellow-500" />
-                            }
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-6 flex-shrink-0">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <LuAlarmClock className="w-4 h-4 text-text-secondary" />
-                        <span className="text-sm text-text-secondary">
-                          {getTimeUntilExpiry(url.expiresAt)}
-                        </span>
-                      </div>
-                      
-                      <div className="h-8 w-px bg-white/30"></div>
-                      
-                      <div className="flex items-center gap-2 text-text-secondary">
-                        <LuMousePointerClick className="w-4 h-4" />
-                        <span className="text-sm">{url.clicks || 0} clicks</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopy(`${window.location.origin}/s/${url.shortId}`, url._id);
+                          }}
+                          className="p-1.5 rounded-md bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors flex-shrink-0"
+                        >
+                          {copiedUrl === url._id ? 
+                            <FiCheck className="w-4 h-4 text-yellow-500" /> : 
+                            <FiCopy className="w-4 h-4 text-yellow-500" />
+                          }
+                        </button>
                       </div>
                     </div>
+                  )}
+                </div>
 
-                    {isOwnProfile && (
+                <div className="flex items-center gap-6 flex-shrink-0">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <LuAlarmClock className="w-4 h-4 text-text-secondary" />
+                      <span className="text-sm text-text-secondary">
+                        {getTimeUntilExpiry(url.expiresAt)}
+                      </span>
+                    </div>
+                    
+                    <div className="h-8 w-px bg-white/30"></div>
+                    
+                    <div className="flex items-center gap-2 text-text-secondary">
+                      <LuMousePointerClick className="w-4 h-4" />
+                      <span className="text-sm">{url.clicks || 0} clicks</span>
+                    </div>
+                  </div>
+
+                  {isOwnProfile && (
                     <div className="grid grid-cols-2 gap-2">
-                        <button
-                        onClick={() => handleRenew(url._id)}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRenew(url._id);
+                        }}
                         className="p-2 text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 
-                                    rounded-full transition-colors relative group"
-                        >
+                                rounded-full transition-colors relative group"
+                      >
                         <LuAlarmClock className="w-4 h-4" />
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
-                                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            Renew URL (30 days)
+                                    opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          Renew URL (30 days)
                         </div>
-                        </button>
+                      </button>
 
-                        <button
-                        onClick={() => handleEdit(url)}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(url);
+                        }}
                         className="p-2 text-primary hover:text-white hover:bg-white/5 rounded-full transition-colors relative group"
-                        >
+                      >
                         <FiEdit2 className="w-4 h-4" />
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
-                                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            Edit URL
+                                    opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          Edit URL
                         </div>
-                        </button>
+                      </button>
 
-                        <button
-                        onClick={() => currentUser?.isVerified ? handleSetNeverExpire(url._id) : null}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          currentUser?.isVerified && handleSetNeverExpire(url._id);
+                        }}
                         className={`p-2 rounded-full transition-colors relative group
-                                    ${currentUser?.isVerified 
-                                    ? "text-primary hover:text-white hover:bg-white/5" 
-                                    : "text-purple-800 cursor-not-allowed bg-surface-2/50"}`}
-                        >
+                                ${currentUser?.isVerified 
+                                  ? "text-sky-600 hover:text-white hover:bg-white/5" 
+                                  : "text-gray-600 cursor-not-allowed bg-surface-2/50"}`}
+                      >
                         <BiInfinite className="w-4 h-4" />
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
-                                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            {currentUser?.isVerified 
+                                    opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          {currentUser?.isVerified 
                             ? "Set to never expire" 
                             : "Verified users only"}
                         </div>
-                        </button>
+                      </button>
 
-                        <button
-                        onClick={() => handleDelete(url._id)}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(url._id);
+                        }}
                         className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors relative group"
-                        >
+                      >
                         <FiTrash2 className="w-4 h-4" />
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
-                                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            Delete URL
+                                    opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                          Delete URL
                         </div>
-                        </button>
+                      </button>
                     </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <FiLink className="w-12 h-12 text-text-secondary mb-4" />
-            <p className="text-text-secondary text-lg">No shortened URLs found</p>
-            <p className="text-text-secondary/75 text-sm mt-2">
-              {username ? `${username} hasn't shortened any URLs yet` : 'No URLs available'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {toast.show && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast({ show: false, message: '', type: 'error' })}
-        />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <FiLink className="w-12 h-12 text-text-secondary mb-4" />
+          <p className="text-text-secondary text-lg">No shortened URLs found</p>
+          <p className="text-text-secondary/75 text-sm mt-2">
+            {username ? `${username} hasn't shortened any URLs yet` : 'No URLs available'}
+          </p>
+        </div>
       )}
     </div>
-  );
+
+    {toast.show && (
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ show: false, message: '', type: 'error' })}
+      />
+    )}
+  </div>
+);
 };
 
 export default UserUrls;

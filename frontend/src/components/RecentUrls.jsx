@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { FiLink, FiCopy, FiCheck } from 'react-icons/fi';
 import { LuAlarmClock, LuMousePointerClick } from "react-icons/lu";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
+import { useNavigate } from 'react-router-dom';
 import axios from '../api';
 import ProfileHoverCard from './ProfileHoverCard';
 
 const RecentUrls = () => {
+  const navigate = useNavigate();
   const [shortUrls, setShortUrls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedUrl, setCopiedUrl] = useState(null);
@@ -59,20 +61,12 @@ const RecentUrls = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Invalid date';
-    try {
-      return new Date(dateString).toLocaleString(undefined, {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-    } catch (error) {
-      return 'Invalid date';
+  const handleCardClick = (shortId, e) => {
+    // Prevent navigation if clicking on buttons or links
+    if (e.target.closest('button') || e.target.closest('a')) {
+      return;
     }
+    navigate(`/info/s/${shortId}`);
   };
 
   if (loading) return <div className="text-center py-8">Loading...</div>;
@@ -90,8 +84,13 @@ const RecentUrls = () => {
       <div className="max-h-[60vh] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         <div className="p-3 flex flex-col space-y-2">
           {shortUrls.map((url) => (
-            <div key={url._id} className="p-4 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
-                                      transition-all duration-300 hover:border-yellow-500/20 hover:shadow-lg hover:shadow-yellow-500/5">
+            <div 
+              key={url._id} 
+              className="p-4 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
+                        transition-all duration-300 hover:border-yellow-500/20 hover:shadow-lg 
+                        hover:shadow-yellow-500/5 cursor-pointer"
+              onClick={(e) => handleCardClick(url.shortId, e)}
+            >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 
                               bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 
@@ -103,7 +102,10 @@ const RecentUrls = () => {
                   <div className="flex items-center gap-3">
                     <div className="relative group flex-shrink-0">
                       <div className="block w-8 h-8 rounded-full overflow-hidden border border-white/5 cursor-pointer"
-                           onClick={() => window.location.href = `/u/${url.author.handle}`}>
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             window.location.href = `/u/${url.author.handle}`;
+                           }}>
                         {url.author.avatar ? (
                           <img 
                             src={url.author.avatar} 
@@ -124,18 +126,31 @@ const RecentUrls = () => {
                     </div>
 
                     <div className="flex flex-col gap-1 min-w-0">
-                      <a href={url.originalUrl} target="_blank" rel="noopener noreferrer" 
-                         className="text-white hover:text-white truncate">
+                      <a 
+                        href={url.originalUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-white hover:text-white truncate"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {url.originalUrl}
                       </a>
                       <div className="flex items-center gap-1">
-                      <MdSubdirectoryArrowRight className="w-4 h-4 text-yellow-600" />
-                        <a href={`/s/${url.shortId}`} target="_blank" rel="noopener noreferrer" 
-                           className="text-yellow-500 hover:text-yellow-400 font-medium truncate">
+                        <MdSubdirectoryArrowRight className="w-4 h-4 text-yellow-600" />
+                        <a 
+                          href={`/s/${url.shortId}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-yellow-500 hover:text-yellow-400 font-medium truncate"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {window.location.host}/s/{url.shortId}
                         </a>
                         <button
-                          onClick={() => handleCopy(`${window.location.origin}/s/${url.shortId}`, url._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopy(`${window.location.origin}/s/${url.shortId}`, url._id);
+                          }}
                           className="p-1.5 rounded-md bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors flex-shrink-0"
                         >
                           {copiedUrl === url._id ? 
@@ -152,7 +167,7 @@ const RecentUrls = () => {
                   <div className="flex items-center gap-2">
                     <LuAlarmClock className="w-4 h-4 text-text-secondary" />
                     <span className="text-sm text-text-secondary">
-                        {getTimeUntilExpiry(url.expiresAt)}
+                      {getTimeUntilExpiry(url.expiresAt)}
                     </span>
                   </div>
                   
