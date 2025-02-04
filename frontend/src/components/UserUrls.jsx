@@ -1,7 +1,10 @@
-import React from 'react';
-import { FiLink, FiCopy, FiCheck } from 'react-icons/fi';
+import React, { useState } from 'react';
+import { FiLink, FiCopy, FiCheck, FiEdit2, FiTrash2, FiSave, FiX } from 'react-icons/fi';
 import { LuAlarmClock, LuMousePointerClick } from "react-icons/lu";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
+import { BiInfinite } from "react-icons/bi";
+import Toast from './Toast';
+import axios from '../api';
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Invalid date';
@@ -43,20 +46,159 @@ const getTimeUntilExpiry = (expiresAt) => {
   }
 };
 
-const UserUrls = ({ urls = [], loading, username, currentUser }) => {
-  const [copiedUrl, setCopiedUrl] = React.useState(null);
+const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpdate }) => {
+    const [copiedUrl, setCopiedUrl] = React.useState(null);
+    const [editingUrl, setEditingUrl] = useState(null);
+    const [editForm, setEditForm] = useState({
+      shortId: '',
+      originalUrl: ''
+    });
+    const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
 
-  const handleCopy = async (url, id) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedUrl(id);
-      setTimeout(() => setCopiedUrl(null), 2000);
-    } catch (error) {
-      console.error('Failed to copy:', error);
-    }
-  };
+    const isValidUrl = (url) => {
+        try {
+        new URL(url);
+        return true;
+        } catch {
+        return false;
+        }
+    };
+  
+    const handleCopy = async (url, id) => {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopiedUrl(id);
+        setTimeout(() => setCopiedUrl(null), 2000);
+      } catch (error) {
+        console.error('Failed to copy:', error);
+      }
+    };
+
+    const handleRenew = async (urlId) => {
+        try {
+          const { data } = await axios.post(`/api/urls/${urlId}/renew`);
+          if (onUrlsUpdate) {
+            onUrlsUpdate(prevUrls => 
+              prevUrls.map(url => 
+                url._id === urlId ? { ...url, ...data } : url
+              )
+            );
+          }
+          setToast({
+            show: true,
+            message: 'URL expiration renewed successfully',
+            type: 'success'
+          });
+        } catch (error) {
+          setToast({
+            show: true,
+            message: error.response?.data?.message || 'Failed to renew URL',
+            type: 'error'
+          });
+        }
+      };
+
+      const handleSetNeverExpire = async (urlId) => {
+        try {
+          const { data } = await axios.put(`/api/urls/${urlId}`, { 
+            expiresAt: null 
+          });
+          
+          if (onUrlsUpdate) {
+            onUrlsUpdate(prevUrls => 
+              prevUrls.map(url => 
+                url._id === urlId ? { ...url, ...data, author: url.author } : url
+              )
+            );
+          }
+          
+          setToast({
+            show: true,
+            message: 'URL set to never expire',
+            type: 'success'
+          });
+        } catch (error) {
+          setToast({
+            show: true,
+            message: error.response?.data?.message || 'Failed to update expiration',
+            type: 'error'
+          });
+        }
+      };
+  
+    const handleEdit = (url) => {
+      setEditingUrl(url._id);
+      setEditForm({
+        shortId: url.shortId,
+        originalUrl: url.originalUrl
+      });
+    };
+  
+    const handleCancel = () => {
+      setEditingUrl(null);
+      setEditForm({ shortId: '', originalUrl: '' });
+    };
+  
+    const handleSave = async (urlId) => {
+        // Validate URL before saving
+        if (!isValidUrl(editForm.originalUrl)) {
+          setToast({
+            show: true,
+            message: 'Please enter a valid URL (e.g. https://exlt.tech)',
+            type: 'error'
+          });
+          return;
+        }
+    
+        try {
+          const { data } = await axios.put(`/api/urls/${urlId}`, editForm);
+          if (onUrlsUpdate) {
+            onUrlsUpdate(prevUrls => 
+              prevUrls.map(url => 
+                url._id === urlId ? { ...url, ...data, author: url.author } : url
+              )
+            );
+          }
+          setEditingUrl(null);
+          setEditForm({ shortId: '', originalUrl: '' });
+          setToast({
+            show: true,
+            message: 'URL updated successfully',
+            type: 'success'
+          });
+        } catch (error) {
+          setToast({
+            show: true, 
+            message: error.response?.data?.message || 'Failed to update URL',
+            type: 'error'
+          });
+        }
+      };
+  
+    const handleDelete = async (urlId) => {
+      if (!window.confirm('Are you sure you want to delete this URL?')) return;
+      try {
+        await axios.delete(`/api/urls/${urlId}`);
+        if (onUrlsUpdate) {
+          onUrlsUpdate(prevUrls => prevUrls.filter(url => url._id !== urlId));
+        }
+        setToast({
+          show: true,
+          message: 'URL deleted successfully',
+          type: 'success'
+        });
+      } catch (error) {
+        setToast({
+          show: true,
+          message: error.response?.data?.message || 'Failed to delete URL',
+          type: 'error'
+        });
+      }
+    };
 
   if (loading) return <div className="text-center py-8">Loading URLs...</div>;
+
+  const isOwnProfile = currentUser?.handle === handle;
 
   return (
     <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 mt-6">
@@ -84,44 +226,139 @@ const UserUrls = ({ urls = [], loading, username, currentUser }) => {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-col gap-1">
-                      <a href={url.originalUrl} target="_blank" rel="noopener noreferrer" 
-                         className="text-text-secondary hover:text-white truncate">
-                        {url.originalUrl}
-                      </a>
-                      <div className="flex items-center gap-1">
-                        <MdSubdirectoryArrowRight className="w-4 h-4 text-yellow-600" />
-                        <a href={`/s/${url.shortId}`} target="_blank" rel="noopener noreferrer" 
-                           className="text-yellow-500 hover:text-yellow-400 font-medium truncate">
-                          {window.location.host}/s/{url.shortId}
-                        </a>
-                        <button
-                          onClick={() => handleCopy(`${window.location.origin}/s/${url.shortId}`, url._id)}
-                          className="p-1.5 rounded-md bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors flex-shrink-0"
-                        >
-                          {copiedUrl === url._id ? 
-                            <FiCheck className="w-4 h-4 text-yellow-500" /> : 
-                            <FiCopy className="w-4 h-4 text-yellow-500" />
-                          }
-                        </button>
+                    {editingUrl === url._id ? (
+                      <div className="space-y-2">
+                        <input
+                            type="text"
+                            value={editForm.shortId}
+                            onChange={(e) => setEditForm({ ...editForm, shortId: e.target.value })}
+                            className={`w-full bg-surface-2 border border-white/5 rounded px-3 py-2 text-white
+                                    ${!currentUser?.isVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            placeholder="Short ID"
+                            disabled={!currentUser?.isVerified}
+                        />
+                        <input
+                            type="url" 
+                            value={editForm.originalUrl}
+                            onChange={(e) => setEditForm({ ...editForm, originalUrl: e.target.value })}
+                            className="w-full bg-surface-2 border border-white/5 rounded px-3 py-2 text-white"
+                            placeholder="https://example.com"
+                            pattern="https?://.*"
+                            title="Please enter a valid URL starting with http:// or https://"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSave(url._id)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-500 rounded"
+                          >
+                            <FiSave className="w-4 h-4" />
+                            Save
+                          </button>
+                          <button
+                            onClick={handleCancel}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-500/20 text-gray-400 rounded"
+                          >
+                            <FiX className="w-4 h-4" />
+                            Cancel
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        <a href={url.originalUrl} target="_blank" rel="noopener noreferrer" 
+                           className="text-text-secondary hover:text-white truncate">
+                          {url.originalUrl}
+                        </a>
+                        <div className="flex items-center gap-1">
+                          <MdSubdirectoryArrowRight className="w-4 h-4 text-yellow-600" />
+                          <a href={`/s/${url.shortId}`} target="_blank" rel="noopener noreferrer" 
+                             className="text-yellow-500 hover:text-yellow-400 font-medium truncate">
+                            {window.location.host}/s/{url.shortId}
+                          </a>
+                          <button
+                            onClick={() => handleCopy(`${window.location.origin}/s/${url.shortId}`, url._id)}
+                            className="p-1.5 rounded-md bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors flex-shrink-0"
+                          >
+                            {copiedUrl === url._id ? 
+                              <FiCheck className="w-4 h-4 text-yellow-500" /> : 
+                              <FiCopy className="w-4 h-4 text-yellow-500" />
+                            }
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-4 flex-shrink-0">
-                    <div className="flex items-center gap-2">
-                      <LuAlarmClock className="w-4 h-4 text-text-secondary" />
-                      <span className="text-sm text-text-secondary">
-                        {getTimeUntilExpiry(url.expiresAt)}
-                      </span>
+                  <div className="flex items-center gap-6 flex-shrink-0">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <LuAlarmClock className="w-4 h-4 text-text-secondary" />
+                        <span className="text-sm text-text-secondary">
+                          {getTimeUntilExpiry(url.expiresAt)}
+                        </span>
+                      </div>
+                      
+                      <div className="h-8 w-px bg-white/30"></div>
+                      
+                      <div className="flex items-center gap-2 text-text-secondary">
+                        <LuMousePointerClick className="w-4 h-4" />
+                        <span className="text-sm">{url.clicks || 0} clicks</span>
+                      </div>
                     </div>
-                    
-                    <div className="h-8 w-px bg-white/30"></div>
-                    
-                    <div className="flex items-center gap-2 text-text-secondary">
-                      <LuMousePointerClick className="w-4 h-4" />
-                      <span className="text-sm">{url.clicks || 0} clicks</span>
+
+                    {isOwnProfile && (
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                        onClick={() => handleRenew(url._id)}
+                        className="p-2 text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 
+                                    rounded-full transition-colors relative group"
+                        >
+                        <LuAlarmClock className="w-4 h-4" />
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            Renew URL (30 days)
+                        </div>
+                        </button>
+
+                        <button
+                        onClick={() => handleEdit(url)}
+                        className="p-2 text-primary hover:text-white hover:bg-white/5 rounded-full transition-colors relative group"
+                        >
+                        <FiEdit2 className="w-4 h-4" />
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            Edit URL
+                        </div>
+                        </button>
+
+                        <button
+                        onClick={() => currentUser?.isVerified ? handleSetNeverExpire(url._id) : null}
+                        className={`p-2 rounded-full transition-colors relative group
+                                    ${currentUser?.isVerified 
+                                    ? "text-primary hover:text-white hover:bg-white/5" 
+                                    : "text-gray-600 cursor-not-allowed bg-surface-2/50"}`}
+                        >
+                        <BiInfinite className="w-4 h-4" />
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            {currentUser?.isVerified 
+                            ? "Set to never expire" 
+                            : "Verified users only"}
+                        </div>
+                        </button>
+
+                        <button
+                        onClick={() => handleDelete(url._id)}
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors relative group"
+                        >
+                        <FiTrash2 className="w-4 h-4" />
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            Delete URL
+                        </div>
+                        </button>
                     </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -137,6 +374,14 @@ const UserUrls = ({ urls = [], loading, username, currentUser }) => {
           </div>
         )}
       </div>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: 'error' })}
+        />
+      )}
     </div>
   );
 };

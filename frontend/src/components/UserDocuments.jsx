@@ -21,7 +21,7 @@ const formatDate = (dateString) => {
   }
 };
 
-const UserDocuments = ({ documents, loading, username, currentUser, setDocuments }) => {
+const UserDocuments = ({ documents, loading, handle, username, currentUser, setDocuments }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState(null);
 
@@ -101,13 +101,17 @@ const UserDocuments = ({ documents, loading, username, currentUser, setDocuments
                           <span className="text-sm">{doc.viewCount || 0} views</span>
                         </div>
                         
-                        {currentUser?.handle === username && (
+                        {currentUser?.handle === handle && (
                           <button
                             onClick={(e) => handleDeleteClick(e, doc)}
                             className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 
-                                     rounded-full transition-colors"
+                                      rounded-full transition-colors relative group"
                           >
                             <FiTrash2 className="w-4 h-4" />
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                          opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-[100]">
+                              Delete
+                            </div>
                           </button>
                         )}
                       </div>

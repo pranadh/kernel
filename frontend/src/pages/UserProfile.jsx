@@ -520,6 +520,7 @@ const handleBannerUpload = async (e) => {
             documents={documents} 
             loading={loadingDocuments}
             username={profile.username}
+            handle={profile.handle}
             currentUser={currentUser}
             setDocuments={setDocuments} 
           />
@@ -527,7 +528,9 @@ const handleBannerUpload = async (e) => {
             urls={urls}
             loading={loadingUrls}
             username={profile.username}
+            handle={profile.handle}
             currentUser={currentUser}
+            onUrlsUpdate={setUrls}
           />
         </div>
       </div>

@@ -162,20 +162,54 @@ export const updateUrl = async (req, res) => {
       return res.status(404).json({ message: 'URL not found' });
     }
 
-    const { shortId, originalUrl } = req.body;
+    // Check if user owns the URL or is admin
+    if (!req.user.roles.includes('admin') && url.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const { shortId, originalUrl, expiresAt } = req.body;
     
+    // Only verified users or admins can change shortId or set never expire
+    if ((shortId !== url.shortId || expiresAt === null) && !req.user.isVerified && !req.user.roles.includes('admin')) {
+      return res.status(403).json({ message: 'Only verified users can perform this action' });
+    }
+
     // Check if new shortId is already taken
-    if (shortId !== url.shortId) {
+    if (shortId && shortId !== url.shortId) {
       const existingUrl = await ShortUrl.findOne({ shortId });
       if (existingUrl) {
         return res.status(400).json({ message: 'Short ID already taken' });
       }
     }
 
-    url.shortId = shortId;
-    url.originalUrl = originalUrl;
+    if (shortId) url.shortId = shortId;
+    if (originalUrl) url.originalUrl = originalUrl;
+    if (expiresAt !== undefined) url.expiresAt = expiresAt;
     
     await url.save();
+    res.json(url);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Add new renewal endpoint
+export const renewUrl = async (req, res) => {
+  try {
+    const url = await ShortUrl.findById(req.params.id);
+    if (!url) {
+      return res.status(404).json({ message: 'URL not found' });
+    }
+
+    // Check if user owns the URL or is admin
+    if (!req.user.roles.includes('admin') && url.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Set expiry to 30 days from now
+    url.expiresAt = new Date(+new Date() + 30*24*60*60*1000);
+    await url.save();
+    
     res.json(url);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -199,5 +233,6 @@ export default {
   deleteUrl,
   getOneUserUrls,
   getAllUrls,
-  updateUrl
+  updateUrl,
+  renewUrl
 };
