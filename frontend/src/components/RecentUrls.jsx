@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../api';
 import ProfileHoverCard from './ProfileHoverCard';
 
-const RecentUrls = () => {
+const RecentUrls = ({ refreshTrigger }) => {
   const navigate = useNavigate();
   const [shortUrls, setShortUrls] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,7 @@ const RecentUrls = () => {
     };
 
     fetchData();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleCopy = async (url, id) => {
     try {

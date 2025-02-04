@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiEye, FiEdit2, FiTrash2, FiCopy, FiCheck } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiTrash2, FiCopy, FiCheck, FiArrowLeft } from 'react-icons/fi';
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import ProfileHoverCard from '../components/ProfileHoverCard';
@@ -63,46 +63,57 @@ const DocumentViewer = () => {
           {/* Author Info and Stats Section */}
           <div className="bg-surface-2/50 p-6 border-b border-white/5">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative group">
-                <Link 
-                  to={`/u/${document.author.handle}`}
-                  className="flex items-center gap-3.5 p-3 rounded-lg hover:bg-[#24242f] transition-colors"
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="w-10 h-10 rounded-lg border border-white/5 
+                          bg-surface-2/50 hover:bg-surface-2 
+                          flex items-center justify-center transition-colors p-0"
                 >
-                  <div className="w-12 h-12 rounded-full overflow-hidden border border-white/5">
-                    {document.author.avatar ? (
-                      <img 
-                        src={document.author.avatar}
-                        alt={document.author.username}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-                        <span className="text-xl font-semibold text-white">
-                          {document.author.username.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                  <FiArrowLeft className="w-6 h-6 text-white/75" />
+                </button>
+  
+                <div className="relative group">
+                  <Link 
+                    to={`/u/${document.author.handle}`}
+                    className="flex items-center gap-3.5 p-3 rounded-lg hover:bg-[#24242f] transition-colors"
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden border border-white/5">
+                      {document.author.avatar ? (
+                        <img 
+                          src={document.author.avatar}
+                          alt={document.author.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-surface-2 flex items-center justify-center">
+                          <span className="text-xl font-semibold text-white">
+                            {document.author.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-medium text-white group-hover:text-primary transition-colors flex items-center gap-2">
+                        {document.author.username}
+                        {document.author.isVerified && (
+                          <VscVerifiedFilled className="w-5 h-5 text-primary" />
+                        )}
+                      </h3>
+                      <p className="text-sm text-gray-400">@{document.author.handle}</p>
+                    </div>
+                  </Link>
+  
+                  {/* Invisible Bridge */}
+                  <div className="hidden group-hover:block absolute w-full h-2 bottom-0 translate-y-full" />
+  
+                  <div className="hidden group-hover:block">
+                    <ProfileHoverCard author={document.author} />
                   </div>
-                  
-                  <div>
-                  <h3 className="text-lg font-medium text-white group-hover:text-primary transition-colors flex items-center gap-2">
-                    {document.author.username}
-                    {document.author.isVerified && (
-                      <VscVerifiedFilled className="w-5 h-5 text-primary" />
-                    )}
-                  </h3>
-                  <p className="text-sm text-gray-400">@{document.author.handle}</p>
-                </div>
-                </Link>
-
-                {/* Invisible Bridge */}
-                <div className="hidden group-hover:block absolute w-full h-2 bottom-0 translate-y-full" />
-
-                <div className="hidden group-hover:block">
-                  <ProfileHoverCard author={document.author} />
                 </div>
               </div>
-
+  
               <div className="flex items-center gap-5 text-sm text-gray-400">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">

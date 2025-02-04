@@ -241,43 +241,43 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
                   </div>
   
                   <div className="flex-1 min-w-0">
-                    {editingUrl === url._id ? (
-                      <div className="space-y-2">
+                  {editingUrl === url._id ? (
+                    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
                         <input
-                            type="text"
-                            value={editForm.shortId}
-                            onChange={(e) => setEditForm({ ...editForm, shortId: e.target.value })}
-                            className={`w-full bg-surface-2 border border-white/5 rounded px-3 py-2 text-white
-                                    ${!currentUser?.isVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            placeholder="Short ID"
-                            disabled={!currentUser?.isVerified}
+                        type="text"
+                        value={editForm.shortId}
+                        onChange={(e) => setEditForm({ ...editForm, shortId: e.target.value })}
+                        className={`w-full bg-surface-2 border border-white/5 rounded px-3 py-2 text-white
+                                ${!currentUser?.isVerified ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        placeholder="Short ID"
+                        disabled={!currentUser?.isVerified}
                         />
                         <input
-                            type="url" 
-                            value={editForm.originalUrl}
-                            onChange={(e) => setEditForm({ ...editForm, originalUrl: e.target.value })}
-                            className="w-full bg-surface-2 border border-white/5 rounded px-3 py-2 text-white"
-                            placeholder="https://example.com"
-                            pattern="https?://.*"
-                            title="Please enter a valid URL starting with http:// or https://"
+                        type="url" 
+                        value={editForm.originalUrl}
+                        onChange={(e) => setEditForm({ ...editForm, originalUrl: e.target.value })}
+                        className="w-full bg-surface-2 border border-white/5 rounded px-3 py-2 text-white"
+                        placeholder="https://example.com"
+                        pattern="https?://.*"
+                        title="Please enter a valid URL starting with http:// or https://"
                         />
                         <div className="flex gap-2">
-                          <button
+                        <button
                             onClick={() => handleSave(url._id)}
                             className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-500 rounded"
-                          >
+                        >
                             <FiSave className="w-4 h-4" />
                             Save
-                          </button>
-                          <button
+                        </button>
+                        <button
                             onClick={handleCancel}
                             className="flex items-center gap-2 px-3 py-1.5 bg-gray-500/20 text-gray-400 rounded"
-                          >
+                        >
                             <FiX className="w-4 h-4" />
                             Cancel
-                          </button>
+                        </button>
                         </div>
-                      </div>
+                    </div>
                     ) : (
                     <div className="flex flex-col gap-1">
                       <a 

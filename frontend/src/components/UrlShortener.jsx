@@ -4,7 +4,7 @@ import axios from '../api';
 import { FiLink, FiCopy, FiCheck, FiLock } from 'react-icons/fi';
 import { LuAlarmClock } from "react-icons/lu";
 
-const UrlShortener = () => {
+const UrlShortener = ({ onUrlCreated }) => {
   const [url, setUrl] = useState('');
   const [customAlias, setCustomAlias] = useState('');
   const [shortenedUrl, setShortenedUrl] = useState('');
@@ -20,26 +20,39 @@ const UrlShortener = () => {
     minutes: 0
   });
 
+  const calculateExpiration = () => {
+    const totalMinutes = 
+      (expiration.days * 24 * 60) + 
+      (expiration.hours * 60) + 
+      expiration.minutes;
+    return totalMinutes;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
+  
     try {
-      // Convert expiration to minutes
-      const totalMinutes = isUnlimited ? null : 
-        (expiration.days * 24 * 60) + 
-        (expiration.hours * 60) + 
-        expiration.minutes;
-
+      // Validate customAlias format
+      if (customAlias && !/^[a-zA-Z0-9-]+$/.test(customAlias)) {
+        setError('Custom alias can only contain letters, numbers, and hyphens');
+        setLoading(false);
+        return;
+      }
+  
       const { data } = await axios.post('/api/urls', {
-        url,
+        url: url,
         customAlias: customAlias || undefined,
-        expiresIn: totalMinutes
+        expiresIn: isUnlimited ? null : calculateExpiration()
       });
-
-      const shortUrl = `${window.location.origin}/s/${data.customAlias || data.shortId}`;
-      setShortenedUrl(shortUrl);
+      
+      setShortenedUrl(`${window.location.origin}/s/${data.shortId}`);
+      if (onUrlCreated) {
+        onUrlCreated(); // Only call if prop exists
+      }
+      setUrl('');
+      setCustomAlias('');
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to shorten URL');
     } finally {
@@ -125,7 +138,6 @@ const UrlShortener = () => {
             placeholder="Custom alias (optional)"
             className={`w-full p-3 bg-surface-2 rounded-lg border border-white/5 text-white 
                        ${!user?.isVerified && 'opacity-50 cursor-not-allowed'}`}
-            pattern="[a-zA-Z0-9-]+"
             disabled={!user?.isVerified}
           />
           {!user?.isVerified && (
