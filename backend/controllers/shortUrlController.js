@@ -90,7 +90,7 @@ export const redirectToUrl = async (req, res) => {
     );
 
     if (!shortUrl) {
-      return res.status(404).json({ message: "URL not found or has expired" });
+      return res.status(404).json({ message: "URL not found or has expired." });
     }
 
     res.json({ url: shortUrl.originalUrl });
