@@ -81,7 +81,7 @@ const RecentUrls = () => {
     <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5">
       <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center">
-          <FiLink className="w-6 h-6 text-text-secondary mr-3" />
+          <FiLink className="w-6 h-6 text-yellow-500 mr-3" />
           <h3 className="text-xl font-semibold text-text-primary">Recent URLs</h3>
         </div>
         <span className="text-text-secondary">Latest 20 links</span>

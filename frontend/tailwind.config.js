@@ -48,7 +48,8 @@ export default {
         'slide-in-right': 'slideInRight 0.3s ease-out forwards',
         'slide-out-right': 'slideOutRight 0.3s ease-out forwards',
         'fade-in': 'fadeIn 200ms ease-out',
-        'fade-out': 'fadeOut 200ms ease-out'
+        'fade-out': 'fadeOut 200ms ease-out',
+        'progress': 'progress 3s linear'
       },
       keyframes: {
         slideUp: {
@@ -74,6 +75,10 @@ export default {
         fadeOut: {
           '0%': { opacity: '1', transform: 'translateY(0)' },
           '100%': { opacity: '0', transform: 'translateY(10px)' }
+        },
+        progress: {
+          '0%': { width: '0%' },
+          '100%': { width: '100%' }
         }
       },
       backgroundImage: {

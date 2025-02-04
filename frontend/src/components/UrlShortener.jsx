@@ -80,6 +80,20 @@ const UrlShortener = () => {
       newExpiration.hours = 0;
       newExpiration.minutes = 0;
     }
+
+    // Enforce minimum 30 minutes
+    if (totalMinutes < 30) {
+        if (field === 'minutes') {
+        newExpiration.minutes = 30;
+        } else if (field === 'hours') {
+        newExpiration.minutes = 30;
+        newExpiration.hours = 0;
+        } else {
+        newExpiration.minutes = 30;
+        newExpiration.hours = 0;
+        newExpiration.days = 0;
+        }
+    }
   
     setExpiration(newExpiration);
   };
