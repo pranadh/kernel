@@ -3,9 +3,12 @@ import DocumentList from '../components/DocumentList';
 import GlobalDocuments from '../components/GlobalDocuments';
 import UrlShortener from '../components/UrlShortener';
 import RecentUrls from '../components/RecentUrls';
+import ShareXConfig from '../components/ShareXConfig';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const { user } = useAuth();
 
   const handleUrlCreated = () => {
     setRefreshCounter(prev => prev + 1);
@@ -22,6 +25,7 @@ const Home = () => {
           
           <div className="lg:col-span-2 space-y-8">
             <UrlShortener onUrlCreated={handleUrlCreated} />
+            {user && <ShareXConfig />}
             <RecentUrls refreshTrigger={refreshCounter} />
           </div>
         </div>
