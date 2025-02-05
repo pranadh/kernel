@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import imageCompression from 'browser-image-compression';
 import UserDocuments from '../components/UserDocuments';
 import UserUrls from '../components/UserUrls';
+import UserImages from '../components/UserImages';
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -53,6 +54,8 @@ const UserProfile = () => {
   const [loadingDocuments, setLoadingDocuments] = useState(true);
   const [urls, setUrls] = useState([]);
   const [loadingUrls, setLoadingUrls] = useState(true);
+  const [images, setImages] = useState([]);
+  const [loadingImages, setLoadingImages] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -109,6 +112,24 @@ const UserProfile = () => {
   
     if (profile) {
       fetchUrls();
+    }
+  }, [handle, profile]);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        setLoadingImages(true);
+        const { data } = await axios.get(`/api/images/user/${handle}`);
+        setImages(data);
+      } catch (error) {
+        console.error('Error fetching images:', error);
+      } finally {
+        setLoadingImages(false);
+      }
+    };
+  
+    if (profile) {
+      fetchImages();
     }
   }, [handle, profile]);
 
@@ -574,8 +595,8 @@ const handleBannerUpload = async (e) => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="container mx-auto max-w-[2160px] px-1 py-8">
+        <div className="max-w-[2160px] w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           <UserDocuments 
             documents={documents} 
             loading={loadingDocuments}
@@ -591,6 +612,14 @@ const handleBannerUpload = async (e) => {
             handle={profile.handle}
             currentUser={currentUser}
             onUrlsUpdate={setUrls}
+          />
+          <UserImages
+            images={images}
+            loading={loadingImages}
+            username={profile.username}
+            handle={profile.handle}
+            currentUser={currentUser}
+            setImages={setImages}
           />
         </div>
       </div>

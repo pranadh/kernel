@@ -3,7 +3,6 @@ import { RiVipCrownLine } from "react-icons/ri";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { LuHammer, LuMoonStar } from "react-icons/lu";
 import { GrBug } from "react-icons/gr";
-import { BsIncognito } from "react-icons/bs";
 
 const UserBadges = ({ roles, isVerified, splitBadges = false, disableHover = false, disableTooltip = false, iconSize = 20 }) => {
   const getBadgeInfo = (role) => {
@@ -47,7 +46,7 @@ const UserBadges = ({ roles, isVerified, splitBadges = false, disableHover = fal
             <span 
               className={`${badge.color} inline-flex items-center justify-center 
                          ${iconSize <= 16 ? 'px-4 py-1' : 'px-5 py-2'} 
-                         rounded-md bg-zinc-900 border-2 border-neutral-900`}
+                         rounded-md bg-surface-1 border-2 border-neutral-900`}
             >
               {badge.icon}
             </span>

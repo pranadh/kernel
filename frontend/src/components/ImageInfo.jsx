@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FiImage, FiClock, FiArrowLeft, FiExternalLink, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { PiMouseScroll } from "react-icons/pi";
 import { SlMagnifier } from "react-icons/sl";
 import ProfileHoverCard from './ProfileHoverCard';
 import axios from '../api';
@@ -193,8 +194,8 @@ const ImageInfo = () => {
                             left: `${magnifierPos.x}%`,
                             top: `${magnifierPos.y}%`,
                             transform: 'translate(-50%, -50%)',
-                            width: '150px',
-                            height: '150px',
+                            width: '200px',
+                            height: '200px',
                             border: '2px solid white',
                             borderRadius: '50%',
                             overflow: 'hidden'
@@ -223,6 +224,7 @@ const ImageInfo = () => {
                         <SlMagnifier className={`w-5 h-5 ${magnifierEnabled ? 'text-white' : 'text-gray-500'}`} />
                       </button>
                       <div className="bg-black/50 rounded-full px-3 py-2 text-white text-sm">
+                        <PiMouseScroll className="w-4 h-4 inline-block mr-1 -mt-1" />
                         {Math.round(zoomLevel)}%
                       </div>
                     </div>

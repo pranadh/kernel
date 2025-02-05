@@ -1,8 +1,9 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import User from '../models/User.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { uploadImage, getImage, deleteImage, getUserImages, getAllImages, getImageInfo, adminDeleteImage } from '../controllers/imageController.js';
+import { uploadImage, getImage, deleteImage, getUserImages, getAllImages, getImageInfo, adminDeleteImage, updateImage } from '../controllers/imageController.js';
 
 const router = express.Router();
 
@@ -39,7 +40,8 @@ router.get('/info/:id', protect, getImageInfo);
 router.post('/', protect, upload.single('image'), uploadImage);
 router.get('/:id', getImage);
 router.delete('/:id', protect, deleteImage);
-router.get('/user/images', protect, getUserImages);
+router.get('/user/:handle', protect, getUserImages);
 router.delete('/:id', protect, admin, adminDeleteImage);
+router.put('/:imageId', protect, updateImage);
 
 export default router;

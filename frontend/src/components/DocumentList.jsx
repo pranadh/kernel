@@ -131,7 +131,7 @@ const DocumentList = () => {
                           <button className="p-2 text-text-secondary hover:text-white hover:bg-surface-1 rounded-full transition-colors">
                             <FaRegCalendarAlt className="w-4 h-4" />
                           </button>
-                          <div className="absolute right-full top-0 mr-2 w-[320px] p-2 bg-surface-2 rounded-lg border border-white/5 
+                          <div className="absolute right-full top-0 mr-2 w-[320px] p-2 bg-neutral-900 rounded-lg border border-white/5 
                                         opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-10">
                             <div className="text-sm text-text-secondary grid grid-cols-2 gap-4">
                               <div>

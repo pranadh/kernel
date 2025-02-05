@@ -90,7 +90,7 @@ const ProfileHoverCard = ({ author, anchorEl }) => {
   return createPortal(
     <div
       ref={cardRef}
-      className={`fixed w-[400px] bg-surface-2/95 backdrop-blur-sm rounded-lg border-4 
+      className={`fixed w-[400px] bg-neutral-900 backdrop-blur-sm rounded-lg border-4 
                 shadow-xl overflow-hidden cursor-pointer z-[9999]
                 transition-opacity duration-200 ease-in-out
                 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}

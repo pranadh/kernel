@@ -220,7 +220,7 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
   const isOwnProfile = currentUser?.handle === handle;
 
   return (
-    <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 mt-6">
+    <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 mt-3">
       <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center">
           <FiLink className="w-6 h-6 text-yellow-500 mr-3" />
@@ -231,9 +231,9 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
         <span className="text-text-secondary">Total: {urls?.length || 0}</span>
       </div>
       
-      <div className="max-h-[60vh] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <div className="w-full max-h-[60vh] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         {urls?.length > 0 ? (
-          <div className="p-3 flex flex-col space-y-2">
+          <div className="w-full p-3 flex flex-col space-y-2">
             {urls.map((url) => (
               <div 
                 key={url._id} 
@@ -327,15 +327,13 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
                 </div>
 
                 <div className="flex items-center gap-6 flex-shrink-0">
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col gap-3"> {/* Changed from flex-row to flex-col */}
                     <div className="flex items-center gap-2">
                       <LuAlarmClock className="w-4 h-4 text-text-secondary" />
                       <span className="text-sm text-text-secondary">
                         {getTimeUntilExpiry(url.expiresAt)}
                       </span>
                     </div>
-                    
-                    <div className="h-8 w-px bg-white/30"></div>
                     
                     <div className="flex items-center gap-2 text-text-secondary">
                       <LuMousePointerClick className="w-4 h-4" />
@@ -381,7 +379,7 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
                         }}
                         className={`p-2 rounded-full transition-colors relative group
                                 ${currentUser?.isVerified 
-                                  ? "text-sky-600 hover:text-white hover:bg-white/5" 
+                                  ? "text-white hover:text-white hover:bg-white/5" 
                                   : "text-gray-600 cursor-not-allowed bg-surface-2/50"}`}
                       >
                         <BiInfinite className="w-4 h-4" />

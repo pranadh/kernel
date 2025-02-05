@@ -41,7 +41,7 @@ const RecentImages = () => {
 
   const formatSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
     else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
     return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
   };
@@ -148,7 +148,7 @@ const RecentImages = () => {
                         <span>{formatDate(image.createdAt)}</span>
                         </div>
 
-                        <div className="h-8 w-px bg-white/5" /> {/* Updated divider */}
+                        <div className="h-8 w-px bg-white/30"></div>
 
                         <div className="flex items-center gap-2">
                         <FiHardDrive className="w-4 h-4" />
