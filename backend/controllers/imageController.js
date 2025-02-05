@@ -17,9 +17,14 @@ export const uploadImage = async (req, res) => {
       author: req.user._id
     });
 
+    // Fix URL construction
+    const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
+      ? 'https://i.exlt.tech'
+      : `${req.protocol}://i.${req.get('host')}`;
+
     res.status(201).json({
-      url: `${req.protocol}://i.${req.get('host')}/${image.imageId}`,
-      deleteUrl: `${req.protocol}://${req.get('host')}/api/images/${image.imageId}`
+      url: `${baseUrl}/${image.imageId}`,
+      deleteUrl: `https://exlt.tech/api/images/${image.imageId}`
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

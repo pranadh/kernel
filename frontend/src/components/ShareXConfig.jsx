@@ -17,8 +17,9 @@ const ShareXConfig = () => {
     },
     Body: "MultipartFormData",
     FileFormName: "image",
-    URL: "{json:url}",
-    DeletionURL: "{json:deleteUrl}"
+    ResponseType: "Text",
+    URL: "$json:url$", // Changed from {json:url}
+    DeletionURL: "$json:deleteUrl$" // Changed from {json:deleteUrl}
   };
 
   const handleDownload = () => {

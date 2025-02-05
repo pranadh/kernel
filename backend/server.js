@@ -57,7 +57,9 @@ app.get('/api/health', (req, res) => {
 app.use((req, res, next) => {
   if (req.subdomains[0] === 'i') {
     const imageId = req.path.substring(1); // Remove leading slash
-    req.url = `/api/images/${imageId}`;
+    if (imageId) {
+      req.url = `/api/images/${imageId}`;
+    }
   }
   next();
 });
