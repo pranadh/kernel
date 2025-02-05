@@ -4,36 +4,34 @@ import util from 'util';
 const execAsync = util.promisify(exec);
 
 export const getSystemStats = async (req, res) => {
-  try {
-    // Get MongoDB connection from app locals
-    const db = req.app.locals.db;
-    if (!db) {
-      throw new Error('Database connection not available');
-    }
-
-    // Get MongoDB stats
-    const dbStats = await db.db.stats();
-    const collections = await db.db.listCollections().toArray();
-
-    // Get system stats using commands instead of diskusage
-    const { stdout: dfOutput } = await execAsync('df -B1 /');
-    const [, used, available] = dfOutput.split('\n')[1].split(/\s+/);
-
-    // Get memory info
-    const totalMem = os.totalmem();
-    const freeMem = os.freemem();
-    const usedMem = totalMem - freeMem;
-
-    // Get CPU load
-    const cpuLoad = os.loadavg()[0];
-
-    res.json({
-      mongodb: {
-        totalSpace: dbStats.storageSize || 0,
-        usedSpace: dbStats.dataSize || 0,
-        collections: collections.length,
-        documents: dbStats.objects || 0
-      },
+    try {
+      const db = req.app.locals.db;
+      if (!db) {
+        throw new Error('Database connection not available');
+      }
+  
+      // Get stats for each collection
+      const collections = await db.db.listCollections().toArray();
+      let totalDataSize = 0;
+      let collectionStats = [];
+  
+      for (const collection of collections) {
+        const stats = await db.db.collection(collection.name).stats();
+        totalDataSize += stats.size;
+        collectionStats.push({
+          name: collection.name,
+          size: stats.size
+        });
+      }
+  
+      res.json({
+        mongodb: {
+          totalSpace: 512 * 1024 * 1024, // 512MB Atlas free tier limit
+          usedSpace: totalDataSize,
+          collections: collections.length,
+          documents: (await db.db.stats()).objects,
+          collectionSizes: collectionStats // Additional detail
+        },
       server: {
         totalDiskSpace: parseInt(used) + parseInt(available),
         usedDiskSpace: parseInt(used),
