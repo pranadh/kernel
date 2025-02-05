@@ -38,11 +38,30 @@ export const getImage = async (req, res) => {
       return res.status(404).json({ message: "Image not found" });
     }
 
-    const filePath = path.join(UPLOAD_DIR, image.filename);
+    // Use absolute path
+    const filePath = path.resolve(process.cwd(), 'uploads/images', image.filename);
+    
+    // Verify file exists
+    try {
+      await fs.access(filePath);
+    } catch (error) {
+      return res.status(404).json({ message: "Image file not found" });
+    }
+
+    // Set proper headers
     res.setHeader('Content-Type', image.mimeType);
-    res.sendFile(filePath);
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    
+    // Send file
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('File send error:', err);
+        res.status(500).json({ message: "Error sending file" });
+      }
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Get image error:', error);
+    res.status(500).json({ message: error.message });
   }
 };
 

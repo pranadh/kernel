@@ -59,6 +59,7 @@ app.use((req, res, next) => {
     const imageId = req.path.substring(1); // Remove leading slash
     if (imageId) {
       req.url = `/api/images/${imageId}`;
+      return next();
     }
   }
   next();
