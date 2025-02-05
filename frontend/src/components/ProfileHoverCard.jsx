@@ -103,6 +103,8 @@ const ProfileHoverCard = ({ author, anchorEl }) => {
       }}
       onClick={handleProfileClick}
     >
+
+      
       {/* Banner and Avatar */}
       <div className="h-24 relative" style={bannerStyle}>
         <div className="absolute -bottom-8 left-4">

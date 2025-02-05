@@ -11,6 +11,8 @@ const DocumentViewer = () => {
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [hoveredAuthor, setHoveredAuthor] = useState(null);
+  const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
   const [copied, setCopied] = useState(false);
   const { documentId } = useParams();
   const { user } = useAuth();
@@ -45,10 +47,20 @@ const DocumentViewer = () => {
     try {
       await navigator.clipboard.writeText(document.content);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
     }
+  };
+
+  const handleMouseEnter = (e, author) => {
+    setHoverAnchorEl(e.currentTarget);
+    setHoveredAuthor(author);
+  };
+  
+  const handleMouseLeave = () => {
+    setHoverAnchorEl(null);
+    setHoveredAuthor(null);
   };
 
   if (loading) return <div className="min-h-screen pt-[70px] bg-[#101113] flex items-center justify-center">Loading...</div>;
@@ -73,7 +85,11 @@ const DocumentViewer = () => {
                   <FiArrowLeft className="w-6 h-6 text-white/75" />
                 </button>
   
-                <div className="relative group">
+                <div 
+                  className="relative flex-shrink-0"
+                  onMouseEnter={(e) => handleMouseEnter(e, document.author)}
+                  onMouseLeave={handleMouseLeave}
+                >
                   <Link 
                     to={`/u/${document.author.handle}`}
                     className="flex items-center gap-3.5 p-3 rounded-lg hover:bg-[#24242f] transition-colors"
@@ -104,13 +120,6 @@ const DocumentViewer = () => {
                       <p className="text-sm text-gray-400">@{document.author.handle}</p>
                     </div>
                   </Link>
-  
-                  {/* Invisible Bridge */}
-                  <div className="hidden group-hover:block absolute w-full h-2 bottom-0 translate-y-full" />
-  
-                  <div className="hidden group-hover:block">
-                    <ProfileHoverCard author={document.author} />
-                  </div>
                 </div>
               </div>
   
@@ -202,7 +211,7 @@ const DocumentViewer = () => {
           </div>
           
           <div className="p-6">
-            <div className="bg-surface-2/60 rounded-lg border border-white/5 p-6 p-6 min-h-[100px]">
+            <div className="bg-surface-2/60 rounded-lg border border-white/5 p-6 min-h-[100px]">
               <div className="prose prose-invert max-w-none">
                 <div className="grid grid-cols-[auto_1fr] gap-0">
                   {/* Line Numbers */}
@@ -256,6 +265,12 @@ const DocumentViewer = () => {
             </div>
           </div>
         </div>
+      )}
+      {hoveredAuthor && hoverAnchorEl && (
+        <ProfileHoverCard 
+          author={hoveredAuthor}
+          anchorEl={hoverAnchorEl}
+        />
       )}
     </div>
   );
