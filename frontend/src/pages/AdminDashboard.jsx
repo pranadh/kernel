@@ -134,6 +134,7 @@ const AdminDashboard = () => {
             {activeSection === 'documents' && <DocumentManagement />}
             {activeSection === 'urls' && <UrlManagement />}
             {activeSection === 'images' && <ImageManagement />}
+            {activeSection === 'analytics' && <AnalyticsManagement />}
           </div>
         </div>
       </div>
