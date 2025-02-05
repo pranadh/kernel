@@ -1,48 +1,54 @@
-import { MongoClient } from 'mongodb';
 import os from 'os';
-import diskusage from 'diskusage';
+import { exec } from 'child_process';
+import util from 'util';
+const execAsync = util.promisify(exec);
 
 export const getSystemStats = async (req, res) => {
   try {
-    // MongoDB Stats
-    const db = req.app.get('db');
-    const dbStats = await db.stats();
-    const collections = await db.listCollections().toArray();
-    
-    // Server Stats
-    const path = '/';
-    const disk = diskusage.checkSync(path);
-    const memory = {
-      total: os.totalmem(),
-      free: os.freemem(),
-      used: os.totalmem() - os.freemem()
-    };
-    const cpus = os.cpus();
-    const cpuUsage = cpus.reduce((acc, cpu) => {
-      const total = Object.values(cpu.times).reduce((a, b) => a + b);
-      const idle = cpu.times.idle;
-      return acc + ((total - idle) / total) * 100;
-    }, 0) / cpus.length;
+    // Get MongoDB connection from app locals
+    const db = req.app.locals.db;
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
+
+    // Get MongoDB stats
+    const dbStats = await db.db.stats();
+    const collections = await db.db.listCollections().toArray();
+
+    // Get system stats using commands instead of diskusage
+    const { stdout: dfOutput } = await execAsync('df -B1 /');
+    const [, used, available] = dfOutput.split('\n')[1].split(/\s+/);
+
+    // Get memory info
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+
+    // Get CPU load
+    const cpuLoad = os.loadavg()[0];
 
     res.json({
       mongodb: {
-        totalSpace: dbStats.storageSize,
-        usedSpace: dbStats.dataSize,
+        totalSpace: dbStats.storageSize || 0,
+        usedSpace: dbStats.dataSize || 0,
         collections: collections.length,
-        documents: dbStats.objects
+        documents: dbStats.objects || 0
       },
       server: {
-        totalDiskSpace: disk.total,
-        usedDiskSpace: disk.total - disk.free,
+        totalDiskSpace: parseInt(used) + parseInt(available),
+        usedDiskSpace: parseInt(used),
         memory: {
-          total: memory.total,
-          used: memory.used
+          total: totalMem,
+          used: usedMem
         },
-        cpu: Math.round(cpuUsage)
+        cpu: Math.round(cpuLoad * 100 / os.cpus().length) // Convert load to percentage
       }
     });
   } catch (error) {
     console.error('Stats error:', error);
-    res.status(500).json({ message: 'Failed to fetch system statistics' });
+    res.status(500).json({ 
+      message: 'Failed to fetch system statistics',
+      error: error.message 
+    });
   }
 };

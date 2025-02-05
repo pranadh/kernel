@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -9,6 +10,15 @@ const PORT = process***REMOVED***.PORT || 5000;
 
 // Initialize express
 const app = express();
+
+mongoose.connect(process***REMOVED***.MONGO_URI)
+  .then((connection) => {
+    app.locals.db = connection.connection;
+    console.log('MongoDB Connected:', connection.connection.host);
+  })
+  .catch((error) => {
+    console.error('MongoDB connection error:', error);
+  });
 
 // Middleware
 app.use(express.json({ limit: '5mb' }));
