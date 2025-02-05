@@ -5,6 +5,7 @@ import UserManagement from '../components/admin/UserManagement';
 import DocumentManagement from '../components/admin/DocumentManagement';
 import UrlManagement from '../components/admin/UrlManagement';
 import ImageManagement from '../components/admin/ImageManagement';
+import AnalyticsManagement from '../components/admin/AnalyticsManagement';
 import axios from '../api';
 
 const AdminDashboard = () => {
@@ -20,7 +21,8 @@ const AdminDashboard = () => {
     users: 'User Management',
     documents: 'Document Management',
     urls: 'URL Management',
-    images: 'Image Management'
+    images: 'Image Management',
+    analytics: 'System Analytics'
   };
 
   useEffect(() => {
