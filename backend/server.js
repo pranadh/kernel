@@ -55,6 +55,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.set('trust proxy', 1);
+
 // Routes
 app.use(apiLimiter);
 app.use("/api/users", userRoutes);
