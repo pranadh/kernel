@@ -38,15 +38,17 @@ export const getImage = async (req, res) => {
       return res.status(404).json({ message: "Image not found" });
     }
 
-    // Fix the file path - use absolute path
     const filePath = path.resolve('/var/www/kernel/backend/uploads/images', image.filename);
     
     // Debug logging
-    console.log('Image ID:', req.params.id);
-    console.log('Image filename:', image.filename);
-    console.log('File path:', filePath);
+    console.log('Image request:', {
+      imageId: req.params.id,
+      filename: image.filename,
+      filePath,
+      mimeType: image.mimeType
+    });
 
-    // Check if file exists
+    // Verify file exists
     try {
       await fs.access(filePath);
     } catch (error) {
@@ -54,8 +56,17 @@ export const getImage = async (req, res) => {
       return res.status(404).json({ message: "Image file not found" });
     }
 
+    // Set proper headers
     res.setHeader('Content-Type', image.mimeType);
-    res.sendFile(filePath);
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+    
+    // Send file
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('Send file error:', err);
+        res.status(500).json({ message: "Error sending file" });
+      }
+    });
   } catch (error) {
     console.error('Get image error:', error);
     res.status(500).json({ message: error.message });

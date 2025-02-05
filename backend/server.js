@@ -43,14 +43,11 @@ const ensureUploadDir = async () => {
 };
 
 app.use((req, res, next) => {
-  console.log('Subdomain:', req.subdomains[0]); // Debug
-  console.log('Path:', req.path); // Debug
-  
   if (req.subdomains[0] === 'i') {
     const imageId = req.path.substring(1);
     if (imageId) {
-      console.log('Rewriting to:', `/api/images/${imageId}`); // Debug
       req.url = `/api/images/${imageId}`;
+      return next(); // Important: return here
     }
   }
   next();
