@@ -11,6 +11,7 @@ import DocumentViewer from "./components/DocumentViewer";
 import Navbar from './components/Navbar';
 import UrlRedirect from './components/UrlRedirect';
 import UrlInfo from './components/UrlInfo';
+import ImageInfo from './components/ImageInfo';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -77,6 +78,11 @@ const App = () => {
           </PrivateRoute>
         } />
         <Route path="/s/:shortId" element={<UrlRedirect />} />
+        <Route path="/info/i/:imageId" element={
+          <PrivateRoute>
+            <ImageInfo />
+          </PrivateRoute>
+        } />
       </Routes>
     </>
   );

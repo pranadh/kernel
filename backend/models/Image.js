@@ -7,7 +7,7 @@ const imageSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true,
-    default: () => generateId(7)
+    default: () => generateId(5)
   },
   filename: {
     type: String,

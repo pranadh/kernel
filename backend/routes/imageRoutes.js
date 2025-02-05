@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { protect } from '../middleware/authMiddleware.js';
-import { uploadImage, getImage, deleteImage, getUserImages } from '../controllers/imageController.js';
+import { uploadImage, getImage, deleteImage, getUserImages, getAllImages, getImageInfo } from '../controllers/imageController.js';
 
 const router = express.Router();
 
@@ -34,6 +34,8 @@ router.use((error, req, res, next) => {
   next(error);
 });
 
+router.get('/', protect, getAllImages);
+router.get('/info/:id', protect, getImageInfo);
 router.post('/', protect, upload.single('image'), uploadImage);
 router.get('/:id', getImage);
 router.delete('/:id', protect, deleteImage);

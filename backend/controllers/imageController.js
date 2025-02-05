@@ -107,10 +107,27 @@ export const getUserImages = async (req, res) => {
 export const getAllImages = async (req, res) => {
   try {
     const images = await Image.find({})
-      .populate('author', 'username handle')
-      .sort({ createdAt: -1 });
+      .populate('author', 'username handle avatar isVerified')
+      .sort({ createdAt: -1 })
+      .limit(20);  // Limit to latest 20 images
     res.json(images);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Get all images error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getImageInfo = async (req, res) => {
+  try {
+    const image = await Image.findOne({ imageId: req.params.id })
+      .populate('author', 'username handle avatar isVerified');
+    
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    res.json(image);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
