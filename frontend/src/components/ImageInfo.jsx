@@ -19,7 +19,7 @@ const ImageInfo = () => {
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
   const [zoomLevel, setZoomLevel] = useState(400);
-  const [magnifierEnabled, setMagnifierEnabled] = useState(false);
+  const [magnifierEnabled, setMagnifierEnabled] = useState(true);
 
   const handleWheel = (e) => {
     if (!isZoomed || !magnifierEnabled) return;
@@ -134,7 +134,7 @@ const ImageInfo = () => {
         <div className="space-y-6">
           {/* Author Info */}
           <Link 
-            to={`/user/${imageInfo.author.handle}`} 
+            to={`/u/${imageInfo.author.handle}`} 
             className="flex items-center gap-4 hover:bg-surface-2/50 p-2 rounded-lg transition-colors cursor-pointer"
           >
             <div 

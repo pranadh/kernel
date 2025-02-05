@@ -1,7 +1,7 @@
 import React from 'react';
 import { RiVipCrownLine } from "react-icons/ri";
 import { VscVerifiedFilled } from "react-icons/vsc";
-import { LuHammer, LuMoonStar } from "react-icons/lu";
+import { LuHammer, LuBrain } from "react-icons/lu";
 import { GrBug } from "react-icons/gr";
 
 const UserBadges = ({ roles, isVerified, splitBadges = false, disableHover = false, disableTooltip = false, iconSize = 20 }) => {
@@ -26,8 +26,8 @@ const UserBadges = ({ roles, isVerified, splitBadges = false, disableHover = fal
         description: 'Found and reported critical bugs'
       },
       contributor: { 
-        icon: <LuMoonStar size={iconSize} />, 
-        color: 'text-yellow-300', 
+        icon: <LuBrain size={iconSize} />, 
+        color: 'text-rose-300', 
         title: 'Contributor',
         description: 'Active community contributor'
       }
@@ -46,7 +46,7 @@ const UserBadges = ({ roles, isVerified, splitBadges = false, disableHover = fal
             <span 
               className={`${badge.color} inline-flex items-center justify-center 
                          ${iconSize <= 16 ? 'px-4 py-1' : 'px-5 py-2'} 
-                         rounded-md bg-surface-1 border-2 border-neutral-900`}
+                         rounded-md bg-black/70`}
             >
               {badge.icon}
             </span>
