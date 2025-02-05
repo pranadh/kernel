@@ -17,7 +17,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen pt-[70px] bg-[#101113]"> {/* Increased top padding */}
-      <div className="container mx-auto max-w-[2160px] px-4"> {/* Increased max width, reduced horizontal padding */}
+      <div className="container mx-auto max-w-[2160px] px-1"> {/* Increased max width, reduced horizontal padding */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12"> {/* Increased gap between columns */}
           {/* Left Column - Documents */}
           <div className="space-y-8">
@@ -32,7 +32,7 @@ const Home = () => {
           </div>
 
           {/* Right Column - Images */}
-          <div className="space-y-8 mt-4"> {/* Added top margin */}
+          <div className="space-y-8"> {/* Added top margin */}
             {user && (
               <>
                 <ShareXConfig />

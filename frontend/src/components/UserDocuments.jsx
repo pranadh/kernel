@@ -82,16 +82,27 @@ const UserDocuments = ({ documents, loading, handle, username, currentUser, setD
                     </div>
 
                     <div className="flex items-center gap-4 flex-shrink-0">
-                    <div className="flex flex-col gap-2 text-sm text-text-secondary font-normal">  {/* Add font-normal */}
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        {/* Calendar Hover Button */}
+                        <div className="relative group">
+                          <button className="p-2 text-text-secondary hover:text-white hover:bg-surface-1 rounded-full transition-colors">
                             <FaRegCalendarAlt className="w-4 h-4" />
-                            <span className="font-normal">Last updated: {formatDate(doc.updatedAt)}</span>  {/* Add font-normal */}
+                          </button>
+                          <div className="absolute right-full top-0 mr-2 w-[320px] p-2 bg-surface-2 rounded-lg border border-white/5 
+                                        opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-10">
+                            <div className="text-sm text-text-secondary grid grid-cols-2 gap-4">
+                              <div>
+                                <div className="mb-1">Last updated:</div>
+                                <div className="font-medium text-white">{formatDate(doc.updatedAt)}</div>
+                              </div>
+                              <div>
+                                <div className="mb-1">Created:</div>
+                                <div className="font-medium text-white">{formatDate(doc.createdAt)}</div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <FaRegCalendarAlt className="w-4 h-4" />
-                            <span className="font-normal">Date created: {formatDate(doc.createdAt)}</span>  {/* Add font-normal */}
-                        </div>
-                    </div>
+                      </div>
                       
                       <div className="h-8 w-px bg-white/30"></div>
                       

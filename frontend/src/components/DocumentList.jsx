@@ -109,11 +109,6 @@ const DocumentList = () => {
                               transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
                   <div className="flex items-center justify-between gap-4">
                     <Link to={`/d/${doc.documentId}`} className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 
-                                    bg-gradient-to-br from-primary/10 to-primary-hover/10 
-                                    flex items-center justify-center flex-shrink-0">
-                        <FiFile className="w-6 h-6 text-primary/75" />
-                      </div>
                       
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -130,14 +125,25 @@ const DocumentList = () => {
                     </Link>
 
                     <div className="flex items-center gap-4 flex-shrink-0">
-                      <div className="flex flex-col gap-2 text-sm text-text-secondary">
-                        <div className="flex items-center gap-2">
-                          <FaRegCalendarAlt className="w-4 h-4" />
-                          <span>Last updated: {formatDate(doc.updatedAt)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FaRegCalendarAlt className="w-4 h-4" />
-                          <span>Date created: {formatDate(doc.createdAt)}</span>
+                      <div className="flex items-center gap-2">
+                        {/* Updated Date */}
+                        <div className="relative group">
+                          <button className="p-2 text-text-secondary hover:text-white hover:bg-surface-1 rounded-full transition-colors">
+                            <FaRegCalendarAlt className="w-4 h-4" />
+                          </button>
+                          <div className="absolute right-full top-0 mr-2 w-[320px] p-2 bg-surface-2 rounded-lg border border-white/5 
+                                        opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-10">
+                            <div className="text-sm text-text-secondary grid grid-cols-2 gap-4">
+                              <div>
+                                <div className="mb-1">Last updated:</div>
+                                <div className="font-medium text-white">{formatDate(doc.updatedAt)}</div>
+                              </div>
+                              <div>
+                                <div className="mb-1">Created:</div>
+                                <div className="font-medium text-white">{formatDate(doc.createdAt)}</div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       

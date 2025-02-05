@@ -155,7 +155,7 @@ const ImageManagement = () => {
 
       <div className="space-y-2">
         {filteredImages.map(image => (
-          <div key={image._id} className="p-4 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
+          <div key={image._id} className="p-3 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
                                       transition-all duration-300 hover:border-red-500/20 hover:shadow-lg hover:shadow-red-500/5">
             <div className="flex items-center gap-4">
               <div className="w-24 h-24 rounded-lg overflow-hidden border border-white/5 bg-surface-2 flex-shrink-0">

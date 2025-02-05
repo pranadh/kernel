@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FiImage, FiCopy, FiCheck, FiDownload, FiClock, FiHardDrive } from 'react-icons/fi';
+import { FiImage, FiCopy, FiCheck, FiDownload, FiHardDrive } from 'react-icons/fi';
+import { LuAlarmClock } from "react-icons/lu";
 import { useNavigate } from 'react-router-dom';
 import axios from '../api';
 import ProfileHoverCard from './ProfileHoverCard';
@@ -135,7 +136,7 @@ const RecentImages = () => {
                     {/* Time and Size */}
                     <div className="flex items-center gap-4 text-sm text-text-secondary">
                         <div className="flex items-center gap-2">
-                        <FiClock className="w-4 h-4" />
+                        <LuAlarmClock className="w-4 h-4" />
                         <span>{formatDate(image.createdAt)}</span>
                         </div>
 

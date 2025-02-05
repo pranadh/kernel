@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FiDownload, FiCopy, FiCheck } from 'react-icons/fi';
+import { SiSharex } from "react-icons/si";
 import { useState } from 'react';
 
 const ShareXConfig = () => {
@@ -43,16 +44,19 @@ const ShareXConfig = () => {
   };
 
   return (
-    <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5">
+    <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 mt-6">
       <div className="px-6 py-4 border-b border-white/5">
-        <h3 className="text-xl font-semibold text-text-primary">ShareX Configuration</h3>
+        <div className="flex items-center gap-3">
+          <SiSharex className="w-5 h-5 text-red-600" />
+          <h3 className="text-xl font-semibold text-text-primary">ShareX Configuration</h3>
+        </div>
         <p className="text-sm text-text-secondary mt-1">
           Upload screenshots directly to i.exlt.tech using ShareX
         </p>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col gap-4">
+      <div className="p-5 space-y-6">
+        <div className="flex flex-col gap-5">
           <div className="flex items-center gap-4">
             <button
               onClick={handleDownload}
@@ -85,8 +89,8 @@ const ShareXConfig = () => {
             <h4 className="text-sm font-medium text-white mb-2">Setup Instructions:</h4>
             <ol className="list-decimal list-inside text-sm text-gray-400 space-y-2">
               <li>Download and install ShareX from <a href="https://getsharex.com" target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600">getsharex.com</a></li>
-              <li>Download the config file using the button above</li>
-              <li>Double-click the downloaded config file to import it into ShareX</li>
+              <li>Download / Copy the config file using the button above</li>
+              <li>Import the config file into ShareX, containing your private user token</li>
               <li>Take a screenshot using ShareX (default: Print Screen)</li>
               <li>Your screenshot will be uploaded to <a href="https://exlt.tech" target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600">i.exlt.tech</a> automatically</li>
             </ol>
