@@ -6,7 +6,7 @@ const documentSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true,
-    default: generateId
+    default: () => generateId(7)
   },
   title: {
     type: String,
