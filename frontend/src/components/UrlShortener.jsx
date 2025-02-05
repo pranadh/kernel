@@ -28,12 +28,28 @@ const UrlShortener = ({ onUrlCreated }) => {
     return totalMinutes;
   };
 
+  const isValidUrl = (string) => {
+    try {
+      const url = new URL(string);
+      return url.protocol.startsWith('http') && 
+             url.hostname.includes('.') && 
+             url.hostname.split('.').pop().length > 0;
+    } catch (_) {
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
   
     try {
+      if (!isValidUrl(url)) {
+        setError('Please enter a valid URL (e.g. https://exlt.tech)');
+        return;
+      }
+
       // Validate customAlias format
       if (customAlias && !/^[a-zA-Z0-9-]+$/.test(customAlias)) {
         setError('Custom alias can only contain letters, numbers, and hyphens');

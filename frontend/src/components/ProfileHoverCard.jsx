@@ -1,14 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import axios from '../api';
 import UserBadges from './UserBadges';
 import { VscVerifiedFilled } from "react-icons/vsc";
 
-const ProfileHoverCard = ({ author }) => {
+const ProfileHoverCard = ({ author, anchorEl }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
-  const navigate = useNavigate();
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const cardRef = useRef(null);
+
+  const calculatePosition = () => {
+    if (!anchorEl || !cardRef.current) return;
+
+    const avatarRect = anchorEl.getBoundingClientRect();
+    const cardRect = cardRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+
+    let top = avatarRect.bottom + 8;
+    let left = avatarRect.left;
+
+    if (top + cardRect.height > viewportHeight) {
+      top = avatarRect.top - cardRect.height - 8;
+    }
+
+    if (left + cardRect.width > viewportWidth) {
+      left = viewportWidth - cardRect.width - 16;
+    }
+
+    left = Math.max(16, left);
+    setPosition({ top, left });
+  };
+
+  useEffect(() => {
+    if (userData && cardRef.current) {
+      calculatePosition();
+      setTimeout(() => setIsVisible(true), 50);
+
+      window.addEventListener('scroll', calculatePosition);
+      window.addEventListener('resize', calculatePosition);
+
+      return () => {
+        window.removeEventListener('scroll', calculatePosition);
+        window.removeEventListener('resize', calculatePosition);
+      };
+    }
+  }, [anchorEl, userData]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -47,13 +87,20 @@ const ProfileHoverCard = ({ author }) => {
     borderColor: userData?.bannerColor || '#6366f1'
   };
 
-  return (
-    <div 
-      className={`absolute top-full left-0 mt-2 w-[400px] bg-surface-2/95 backdrop-blur-sm 
-                  rounded-lg border-4 shadow-xl z-50 overflow-hidden cursor-pointer
-                  transition-all duration-200 transform
-                  ${isVisible ? 'opacity-100 translate-y-0 animate-fade-in' : 'opacity-0 translate-y-1'}`}
-      style={borderStyle} 
+  return createPortal(
+    <div
+      ref={cardRef}
+      className={`fixed w-[400px] bg-surface-2/95 backdrop-blur-sm rounded-lg border-4 
+                shadow-xl overflow-hidden cursor-pointer z-[9999]
+                transition-opacity duration-200 ease-in-out
+                ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      style={{
+        ...borderStyle,
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        transform: `translateY(${isVisible ? '0' : '8px'})`,
+        transition: 'opacity 200ms ease-in-out, transform 200ms ease-in-out'
+      }}
       onClick={handleProfileClick}
     >
       {/* Banner and Avatar */}
@@ -95,7 +142,8 @@ const ProfileHoverCard = ({ author }) => {
           <p className="text-sm text-gray-400">@{userData?.handle}</p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

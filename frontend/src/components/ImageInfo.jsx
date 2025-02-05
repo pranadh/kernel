@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiImage, FiUser, FiClock, FiArrowLeft, FiExternalLink, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiImage, FiClock, FiArrowLeft, FiExternalLink, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { SlMagnifier } from "react-icons/sl";
 import ProfileHoverCard from './ProfileHoverCard';
 import axios from '../api';
 
@@ -11,6 +12,66 @@ const ImageInfo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [hoveredAuthor, setHoveredAuthor] = useState(null);
+  const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [showMagnifier, setShowMagnifier] = useState(false);
+  const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
+  const [zoomLevel, setZoomLevel] = useState(400);
+  const [magnifierEnabled, setMagnifierEnabled] = useState(false);
+
+  const handleWheel = (e) => {
+    if (!isZoomed || !magnifierEnabled) return;
+    
+    const delta = e.deltaY * -0.5;
+    setZoomLevel(prev => Math.min(Math.max(prev + delta, 100), 1000));
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isZoomed) return;
+    
+    const elem = e.currentTarget;
+    const { left, top, width, height } = elem.getBoundingClientRect();
+    
+    // Calculate relative mouse position
+    const x = ((e.pageX - left) / width) * 100;
+    const y = ((e.pageY - top) / height) * 100;
+    
+    setMagnifierPos({ x, y });
+  };
+  
+  const handleMagEnter = (e) => {
+    if (isZoomed) setShowMagnifier(true);
+  };
+  
+  const handleMagLeave = () => {
+    setShowMagnifier(false);
+  };
+
+  const handleMouseEnter = (e, author) => {
+    setHoverAnchorEl(e.currentTarget);
+    setHoveredAuthor(author);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverAnchorEl(null);
+    setHoveredAuthor(null);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  const toggleZoom = (e) => {
+    e.stopPropagation(); // Prevent event bubbling
+    setIsZoomed(!isZoomed);
+  };
+
+  const handleZoomClose = (e) => {
+    if (e.target === e.currentTarget) {
+      setIsZoomed(false);
+    }
+  };
 
   useEffect(() => {
     const fetchImageInfo = async () => {
@@ -50,14 +111,14 @@ const ImageInfo = () => {
       <div className="w-full max-w-4xl bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-            <button
-                onClick={() => navigate(-1)}
-                className="w-8 h-8 rounded-lg border border-white/5 
-                        bg-surface-2/50 hover:bg-surface-2 
-                        flex items-center justify-center transition-colors p-0"
-                >
-                <FiArrowLeft className="w-4 h-4 text-white/75" />
-            </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 rounded-lg border border-white/5 
+                    bg-surface-2/50 hover:bg-surface-2 
+                    flex items-center justify-center transition-colors p-0"
+          >
+            <FiArrowLeft className="w-4 h-4 text-white/75" />
+          </button>
           <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 
                        bg-gradient-to-br from-red-500/10 to-red-600/10 
                        flex items-center justify-center">
@@ -75,7 +136,11 @@ const ImageInfo = () => {
             to={`/user/${imageInfo.author.handle}`} 
             className="flex items-center gap-4 hover:bg-surface-2/50 p-2 rounded-lg transition-colors cursor-pointer"
           >
-            <div className="relative group flex-shrink-0">
+            <div 
+              className="relative flex-shrink-0"
+              onMouseEnter={(e) => handleMouseEnter(e, imageInfo.author)}
+              onMouseLeave={handleMouseLeave}
+            >
               <div className="block w-10 h-10 rounded-full overflow-hidden border border-white/5">
                 {imageInfo.author.avatar ? (
                   <img 
@@ -91,9 +156,6 @@ const ImageInfo = () => {
                   </div>
                 )}
               </div>
-              <div className="hidden group-hover:block">
-                <ProfileHoverCard author={imageInfo.author} />
-              </div>
             </div>
             <div>
               <div className="text-white font-medium">{imageInfo.author.username}</div>
@@ -102,27 +164,95 @@ const ImageInfo = () => {
           </Link>
 
           {/* Image Preview */}
-          <div className="relative group">
-            <div className={`relative overflow-hidden rounded-lg border border-white/5
-                           ${isZoomed ? 'fixed inset-4 z-50 bg-black/90' : 'w-full aspect-video'}`}>
-              <img
+        <div className="relative">
+            {isZoomed && (
+                <div 
+                    className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 mt-16
+                   animate-in fade-in duration-500"
+                    onClick={handleZoomClose}
+                >
+                    <div className="relative">
+                    <img
+                        src={`https://i.exlt.tech/${imageInfo.imageId}`}
+                        alt="Preview"
+                        className={`max-h-[calc(100vh-8rem)] max-w-[90vw] object-contain
+                                    ${imageLoaded ? 'opacity-100' : 'opacity-0'} 
+                                    ${showMagnifier && magnifierEnabled ? 'cursor-none' : 'cursor-pointer'}
+                                    transition-all duration-200`}
+                        onLoad={handleImageLoad}
+                        onClick={toggleZoom}
+                        onMouseMove={handleMouseMove}
+                        onMouseEnter={handleMagEnter}
+                        onMouseLeave={handleMagLeave}
+                        onWheel={handleWheel}
+                    />
+                    {showMagnifier && magnifierEnabled && (
+                    <div
+                        className="absolute pointer-events-none"
+                        style={{
+                            left: `${magnifierPos.x}%`,
+                            top: `${magnifierPos.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                            width: '150px',
+                            height: '150px',
+                            border: '2px solid white',
+                            borderRadius: '50%',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                backgroundImage: `url(https://i.exlt.tech/${imageInfo.imageId})`,
+                                backgroundPosition: `${magnifierPos.x}% ${magnifierPos.y}%`,
+                                backgroundSize: `${zoomLevel * 5}%`, // Multiplied by 2 for better zoom effect
+                                backgroundRepeat: 'no-repeat'
+                            }}
+                        />
+                    </div>
+                )}
+                    <div className="absolute top-4 left-4 flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMagnifierEnabled(!magnifierEnabled);
+                        }}
+                        className="p-2 bg-black/50 hover:bg-black/75 rounded-full transition-colors"
+                      >
+                        <SlMagnifier className={`w-5 h-5 ${magnifierEnabled ? 'text-white' : 'text-gray-500'}`} />
+                      </button>
+                      <div className="bg-black/50 rounded-full px-3 py-2 text-white text-sm">
+                        {Math.round(zoomLevel)}%
+                      </div>
+                    </div>
+                    <button
+                        onClick={toggleZoom}
+                        className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/75 
+                                rounded-full transition-colors"
+                    >
+                        <FiMinimize2 className="w-5 h-5 text-white" />
+                    </button>
+                    </div>
+                </div>
+                )}
+
+            <div className="relative overflow-hidden rounded-lg border border-white/5">
+            <img
                 src={`https://i.exlt.tech/${imageInfo.imageId}`}
                 alt="Preview"
-                className={`w-full h-full ${isZoomed ? 'object-contain' : 'object-cover'}`}
-                onClick={() => setIsZoomed(!isZoomed)}
-              />
-              <button
-                onClick={() => setIsZoomed(!isZoomed)}
+                className="w-full aspect-video object-cover cursor-pointer"
+                onClick={toggleZoom}
+            />
+            <button
+                onClick={toggleZoom}
                 className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/75 
-                          rounded-full transition-colors"
-              >
-                {isZoomed ? 
-                  <FiMinimize2 className="w-5 h-5 text-white" /> : 
-                  <FiMaximize2 className="w-5 h-5 text-white" />
-                }
-              </button>
+                        rounded-full transition-colors"
+            >
+                <FiMaximize2 className="w-5 h-5 text-white" />
+            </button>
             </div>
-          </div>
+        </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-4">
@@ -163,6 +293,13 @@ const ImageInfo = () => {
           </div>
         </div>
       </div>
+
+      {hoveredAuthor && hoverAnchorEl && (
+        <ProfileHoverCard 
+          author={hoveredAuthor}
+          anchorEl={hoverAnchorEl}
+        />
+      )}
     </div>
   );
 };

@@ -11,6 +11,8 @@ const RecentUrls = ({ refreshTrigger }) => {
   const [shortUrls, setShortUrls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedUrl, setCopiedUrl] = useState(null);
+  const [hoveredAuthor, setHoveredAuthor] = useState(null);
+  const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
 
   const getTimeUntilExpiry = (expiresAt) => {
     if (!expiresAt) return 'Never expires';
@@ -50,6 +52,16 @@ const RecentUrls = ({ refreshTrigger }) => {
 
     fetchData();
   }, [refreshTrigger]);
+
+  const handleMouseEnter = (e, author) => {
+    setHoverAnchorEl(e.currentTarget);
+    setHoveredAuthor(author);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverAnchorEl(null);
+    setHoveredAuthor(null);
+  };
 
   const handleCopy = async (url, id) => {
     try {
@@ -100,12 +112,12 @@ const RecentUrls = ({ refreshTrigger }) => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
-                    <div className="relative group flex-shrink-0">
-                      <div className="block w-8 h-8 rounded-full overflow-hidden border border-white/5 cursor-pointer"
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             window.location.href = `/u/${url.author.handle}`;
-                           }}>
+                    <div 
+                      className="relative flex-shrink-0"
+                      onMouseEnter={(e) => handleMouseEnter(e, url.author)}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      <div className="block w-8 h-8 rounded-full overflow-hidden border border-white/5 cursor-pointer">
                         {url.author.avatar ? (
                           <img 
                             src={url.author.avatar} 
@@ -119,9 +131,6 @@ const RecentUrls = ({ refreshTrigger }) => {
                             </span>
                           </div>
                         )}
-                      </div>
-                      <div className="hidden group-hover:block">
-                        <ProfileHoverCard author={url.author} />
                       </div>
                     </div>
 
@@ -183,6 +192,12 @@ const RecentUrls = ({ refreshTrigger }) => {
           ))}
         </div>
       </div>
+      {hoveredAuthor && hoverAnchorEl && (
+        <ProfileHoverCard 
+          author={hoveredAuthor}
+          anchorEl={hoverAnchorEl}
+        />
+      )}
     </div>
   );
 };

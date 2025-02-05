@@ -93,7 +93,7 @@ const DocumentList = () => {
             <span className="text-text-secondary">Total: {documents.length}</span>
             <Link 
               to="/new" 
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white hover:text-white rounded-md transition-colors"
             >
               <FiPlus className="w-4 h-4" />
               New Document

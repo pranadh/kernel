@@ -10,6 +10,8 @@ const RecentImages = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedUrl, setCopiedUrl] = useState(null);
+  const [hoveredAuthor, setHoveredAuthor] = useState(null);
+  const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -54,6 +56,16 @@ const RecentImages = () => {
     }
   };
 
+  const handleMouseEnter = (e, author) => {
+    setHoverAnchorEl(e.currentTarget);
+    setHoveredAuthor(author);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverAnchorEl(null);
+    setHoveredAuthor(null);
+  };
+
   const handleCardClick = (imageId, e) => {
     if (e.target.closest('button') || e.target.closest('a')) {
       return;
@@ -94,14 +106,13 @@ const RecentImages = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-3">
-                    {/* Author and Link Section - Left */}
                     <div className="flex items-center gap-4">
-                      <div className="relative group flex-shrink-0">
-                        <div className="block w-8 h-8 rounded-full overflow-hidden border border-white/5 cursor-pointer"
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               window.location.href = `/u/${image.author.handle}`;
-                             }}>
+                      <div 
+                        className="relative flex-shrink-0"
+                        onMouseEnter={(e) => handleMouseEnter(e, image.author)}
+                        onMouseLeave={handleMouseLeave}
+                      >
+                        <div className="block w-8 h-8 rounded-full overflow-hidden border border-white/5 cursor-pointer">
                           {image.author.avatar ? (
                             <img 
                               src={image.author.avatar} 
@@ -115,9 +126,6 @@ const RecentImages = () => {
                               </span>
                             </div>
                           )}
-                        </div>
-                        <div className="hidden group-hover:block">
-                          <ProfileHoverCard author={image.author} />
                         </div>
                       </div>
 
@@ -179,6 +187,12 @@ const RecentImages = () => {
           ))}
         </div>
       </div>
+      {hoveredAuthor && hoverAnchorEl && (
+        <ProfileHoverCard 
+          author={hoveredAuthor}
+          anchorEl={hoverAnchorEl}
+        />
+      )}
     </div>
   );
 };

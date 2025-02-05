@@ -12,6 +12,18 @@ const UrlInfo = () => {
   const [urlInfo, setUrlInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hoveredAuthor, setHoveredAuthor] = useState(null);
+  const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
+
+  const handleMouseEnter = (e, author) => {
+    setHoverAnchorEl(e.currentTarget);
+    setHoveredAuthor(author);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverAnchorEl(null);
+    setHoveredAuthor(null);
+  };
 
   useEffect(() => {
     const fetchUrlInfo = async () => {
@@ -67,14 +79,14 @@ const UrlInfo = () => {
     <div className="min-h-screen bg-[#101113] flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
         <div className="flex items-center gap-4 mb-8">
-        <button
+          <button
             onClick={() => navigate(-1)}
             className="w-8 h-8 rounded-lg border border-white/5 
                     bg-surface-2/50 hover:bg-surface-2 
                     flex items-center justify-center transition-colors p-0"
-            >
-            <FiArrowLeft className="w-4 h-4 text-white/75" /> {/* Increased from w-5 h-5 */}
-        </button>
+          >
+            <FiArrowLeft className="w-4 h-4 text-white/75" />
+          </button>
           <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 
                        bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 
                        flex items-center justify-center">
@@ -91,32 +103,33 @@ const UrlInfo = () => {
           <Link 
             to={`/user/${urlInfo.author.handle}`} 
             className="flex items-center gap-4 hover:bg-surface-2/50 p-2 rounded-lg transition-colors cursor-pointer"
+          >
+            <div 
+              className="relative flex-shrink-0"
+              onMouseEnter={(e) => handleMouseEnter(e, urlInfo.author)}
+              onMouseLeave={handleMouseLeave}
             >
-            <div className="relative group flex-shrink-0">
-                <div className="block w-10 h-10 rounded-full overflow-hidden border border-white/5">
+              <div className="block w-10 h-10 rounded-full overflow-hidden border border-white/5">
                 {urlInfo.author.avatar ? (
-                    <img 
+                  <img 
                     src={urlInfo.author.avatar}
                     alt={urlInfo.author.username}
                     className="w-full h-full object-cover"
-                    />
+                  />
                 ) : (
-                    <div className="w-full h-full bg-surface-2 flex items-center justify-center">
+                  <div className="w-full h-full bg-surface-2 flex items-center justify-center">
                     <span className="text-lg font-semibold text-white">
-                        {urlInfo.author.username.charAt(0).toUpperCase()}
+                      {urlInfo.author.username.charAt(0).toUpperCase()}
                     </span>
-                    </div>
+                  </div>
                 )}
-                </div>
-                <div className="hidden group-hover:block">
-                <ProfileHoverCard author={urlInfo.author} />
-                </div>
+              </div>
             </div>
             <div>
-                <div className="text-white font-medium">{urlInfo.author.username}</div>
-                <div className="text-gray-400 text-sm">@{urlInfo.author.handle}</div>
+              <div className="text-white font-medium">{urlInfo.author.username}</div>
+              <div className="text-gray-400 text-sm">@{urlInfo.author.handle}</div>
             </div>
-            </Link>
+          </Link>
 
           {/* URL Info */}
           <div className="space-y-4 bg-surface-2/50 rounded-lg p-4 border border-white/5">
@@ -174,6 +187,13 @@ const UrlInfo = () => {
           </div>
         </div>
       </div>
+
+      {hoveredAuthor && hoverAnchorEl && (
+        <ProfileHoverCard 
+          author={hoveredAuthor}
+          anchorEl={hoverAnchorEl}
+        />
+      )}
     </div>
   );
 };

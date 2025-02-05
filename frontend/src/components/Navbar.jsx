@@ -133,7 +133,7 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-[70px] bg-[#1a1b1e] flex items-center justify-between px-8 z-[100] border-b border-zinc-800">
-      <Link to="/" className="hover:opacity-80 transition-opacity">
+      <Link to="/" className="hover:scale-125 transition-transform duration-200"> {/* Changed hover:opacity-80 to hover:scale-110 */}
         <img src={logo} alt="ToroX Logo" className="h-8" />
       </Link>
 

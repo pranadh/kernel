@@ -60,7 +60,7 @@ const ShareXConfig = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={handleDownload}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md 
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white hover:border-red-400 rounded-md 
             transition-colors flex items-center gap-2"
             >
               <FiDownload className="w-4 h-4" />
