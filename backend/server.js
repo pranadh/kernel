@@ -11,15 +11,6 @@ const PORT = process***REMOVED***.PORT || 5000;
 // Initialize express
 const app = express();
 
-mongoose.connect(process***REMOVED***.MONGO_URI)
-  .then((connection) => {
-    app.locals.db = connection.connection;
-    console.log('MongoDB Connected:', connection.connection.host);
-  })
-  .catch((error) => {
-    console.error('MongoDB connection error:', error);
-  });
-
 // Middleware
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
@@ -79,10 +70,10 @@ app.get('/api/health', (req, res) => {
 
 // Start server
 try {
-  await connectDB();
+  const connection = await connectDB();
+  app.locals.db = connection.connection; // Store connection in app.locals
   await ensureUploadDir();
   
-  // Run cleanup every 24 hours
   setInterval(cleanupOrphanedImages, 24 * 60 * 60 * 1000);
   
   app.listen(PORT, '0.0.0.0', () => {
