@@ -4,6 +4,7 @@ import GlobalDocuments from '../components/GlobalDocuments';
 import UrlShortener from '../components/UrlShortener';
 import RecentUrls from '../components/RecentUrls';
 import ShareXConfig from '../components/ShareXConfig';
+import RecentImages from '../components/RecentImages';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
@@ -15,18 +16,29 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen pt-[70px] bg-[#101113]">
-      <div className="container mx-auto max-w-[1920px] px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-3 space-y-8">  
+    <div className="min-h-screen pt-[70px] bg-[#101113]"> {/* Increased top padding */}
+      <div className="container mx-auto max-w-[2160px] px-4"> {/* Increased max width, reduced horizontal padding */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12"> {/* Increased gap between columns */}
+          {/* Left Column - Documents */}
+          <div className="space-y-8">
             <DocumentList />
             <GlobalDocuments showUrlSection={false} />
           </div>
-          
-          <div className="lg:col-span-2 space-y-8">
+
+          {/* Middle Column - URLs */}
+          <div className="space-y-8">
             <UrlShortener onUrlCreated={handleUrlCreated} />
-            {user && <ShareXConfig />}
             <RecentUrls refreshTrigger={refreshCounter} />
+          </div>
+
+          {/* Right Column - Images */}
+          <div className="space-y-8 mt-4"> {/* Added top margin */}
+            {user && (
+              <>
+                <ShareXConfig />
+                <RecentImages />
+              </>
+            )}
           </div>
         </div>
       </div>

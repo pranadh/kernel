@@ -103,3 +103,14 @@ export const getUserImages = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+export const getAllImages = async (req, res) => {
+  try {
+    const images = await Image.find({})
+      .populate('author', 'username handle')
+      .sort({ createdAt: -1 });
+    res.json(images);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

@@ -29,6 +29,10 @@ const imageSchema = new mongoose.Schema({
   isPublic: {
     type: Boolean,
     default: true
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true

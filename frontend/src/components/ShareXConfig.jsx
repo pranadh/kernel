@@ -56,8 +56,8 @@ const ShareXConfig = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={handleDownload}
-              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md 
-                       transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md 
+            transition-colors flex items-center gap-2"
             >
               <FiDownload className="w-4 h-4" />
               Download Config
@@ -84,11 +84,11 @@ const ShareXConfig = () => {
           <div className="bg-surface-2/50 rounded-lg p-4 border border-white/5">
             <h4 className="text-sm font-medium text-white mb-2">Setup Instructions:</h4>
             <ol className="list-decimal list-inside text-sm text-gray-400 space-y-2">
-              <li>Download and install ShareX from <a href="https://getsharex.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary-hover">getsharex.com</a></li>
+              <li>Download and install ShareX from <a href="https://getsharex.com" target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600">getsharex.com</a></li>
               <li>Download the config file using the button above</li>
               <li>Double-click the downloaded config file to import it into ShareX</li>
               <li>Take a screenshot using ShareX (default: Print Screen)</li>
-              <li>Your screenshot will be uploaded to i.exlt.tech automatically</li>
+              <li>Your screenshot will be uploaded to <a href="https://exlt.tech" target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600">i.exlt.tech</a> automatically</li>
             </ol>
           </div>
         </div>
