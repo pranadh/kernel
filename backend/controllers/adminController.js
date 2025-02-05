@@ -9,14 +9,14 @@ export const getSystemStats = async (req, res) => {
       if (!db) {
         throw new Error('Database connection not available');
       }
-  
+
       // Get stats for each collection
-      const collections = await db.listCollections().toArray();
+      const collections = await db.db.listCollections().toArray();
       let totalDataSize = 0;
       let collectionStats = [];
-  
+
       for (const collection of collections) {
-        const stats = await db.collection(collection.name).stats();
+        const stats = await db.db.collection(collection.name).stats();
         totalDataSize += stats.size;
         collectionStats.push({
           name: collection.name,
@@ -35,13 +35,16 @@ export const getSystemStats = async (req, res) => {
 
       // Get CPU load
       const cpuLoad = os.loadavg()[0];
+
+      // Get MongoDB database stats
+      const dbStats = await db.db.stats();
   
       res.json({
         mongodb: {
           totalSpace: 512 * 1024 * 1024, // 512MB Atlas free tier limit
           usedSpace: totalDataSize,
           collections: collections.length,
-          documents: (await db.stats()).objects,
+          documents: dbStats.objects,
           collectionSizes: collectionStats
         },
         server: {
