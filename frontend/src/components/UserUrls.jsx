@@ -348,7 +348,7 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
                           e.stopPropagation();
                           handleRenew(url._id);
                         }}
-                        className="p-2 text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 
+                        className="p-2 text-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/20 hover:text-yellow-400  
                                 rounded-full transition-colors relative group"
                       >
                         <LuAlarmClock className="w-4 h-4" />
@@ -363,7 +363,7 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
                           e.stopPropagation();
                           handleEdit(url);
                         }}
-                        className="p-2 text-primary hover:text-white hover:bg-white/5 rounded-full transition-colors relative group"
+                        className="p-2 text-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/20 hover:text-yellow-400  rounded-full transition-colors relative group"
                       >
                         <FiEdit2 className="w-4 h-4" />
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
@@ -379,7 +379,7 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
                         }}
                         className={`p-2 rounded-full transition-colors relative group
                                 ${currentUser?.isVerified 
-                                  ? "text-white hover:text-white hover:bg-white/5" 
+                                  ? "text-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/20 hover:text-yellow-400 " 
                                   : "text-gray-600 cursor-not-allowed bg-surface-2/50"}`}
                       >
                         <BiInfinite className="w-4 h-4" />
@@ -393,7 +393,7 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
 
                       <button
                         onClick={(e) => handleDelete(e, url)}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-full transition-colors relative group"
+                        className="p-2 text-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/20 hover:text-yellow-400  rounded-full transition-colors relative group"
                         >
                         <FiTrash2 className="w-4 h-4" />
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded

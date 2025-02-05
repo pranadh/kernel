@@ -9,11 +9,11 @@ const formatDate = (dateString) => {
   if (!dateString) return 'Invalid date';
   try {
     return new Date(dateString).toLocaleString(undefined, {
-      year: 'numeric', 
-      month: 'numeric',
+      year: 'numeric',
+      month: 'numeric', 
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit', 
+      minute: '2-digit',
       hour12: true
     });
   } catch (error) {
@@ -36,7 +36,7 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
   const [editForm, setEditForm] = useState({ imageId: '' });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [imageToDelete, setImageToDelete] = useState(null);
-  
+
   const handleCopy = async (url, id) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -61,11 +61,6 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
     setEditForm({ imageId: image.imageId });
   };
 
-  const handleCancel = () => {
-    setEditingImage(null);
-    setEditForm({ imageId: '' });
-  };
-
   const handleSave = async (e, imageId) => {
     e.stopPropagation();
     if (editForm.imageId.length > 8) {
@@ -76,10 +71,9 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
       });
       return;
     }
-  
+
     try {
-      // Change from _id to imageId in the endpoint
-      const { data } = await axios.put(`/api/images/${imageId}`, editForm);
+      const { data } = await axios.put(`/api/images/id/${imageId}`, editForm);
       setImages(prevImages => 
         prevImages.map(img => 
           img.imageId === imageId ? { ...img, ...data } : img
@@ -109,7 +103,7 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
 
   const handleConfirmDelete = async () => {
     try {
-      await axios.delete(`/api/images/${imageToDelete.imageId}`); // Using imageId instead of _id
+      await axios.delete(`/api/images/${imageToDelete.imageId}`);
       setImages(prevImages => prevImages.filter(img => img.imageId !== imageToDelete.imageId));
       setToast({
         show: true,
@@ -136,6 +130,8 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
 
   if (loading) return <div className="text-center py-8">Loading images...</div>;
 
+  const isOwnProfile = currentUser?.handle === handle;
+
   return (
     <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 mt-3">
       <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
@@ -147,13 +143,13 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
         </div>
         <span className="text-text-secondary">Total: {images?.length || 0}</span>
       </div>
-      
+
       <div className="w-full max-h-[60vh] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         <div className="w-full p-3 flex flex-col space-y-2">
           {images?.length > 0 ? (
             images.map((image) => (
               <div 
-                key={image._id} 
+                key={image._id}
                 onClick={(e) => handleCardClick(image.imageId, e)}
                 className="p-3 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
                           transition-all duration-300 hover:border-red-500/20 hover:shadow-lg 
@@ -168,9 +164,9 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
                     />
                   </div>
 
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 flex items-center justify-between min-w-0">
                     {editingImage === image._id ? (
-                      <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex-1 space-y-2" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="text"
                           value={editForm.imageId}
@@ -182,7 +178,7 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
                         <div className="flex gap-2">
                           <button
                             onClick={(e) => handleSave(e, image.imageId)}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-500 rounded"
+                            className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-500 rounded"
                           >
                             <FiSave className="w-4 h-4" />
                             Save
@@ -202,86 +198,100 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
                       </div>
                     ) : (
                       <>
-                        <a 
-                          href={`https://i.exlt.tech/${image.imageId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-red-500 hover:text-red-400 font-medium truncate"
-                        >
-                          i.exlt.tech/{image.imageId}
-                        </a>
+                        <div className="min-w-0">
+                          <a 
+                            href={`https://i.exlt.tech/${image.imageId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-red-500 hover:text-red-400 font-medium truncate block"
+                          >
+                            i.exlt.tech/{image.imageId}
+                          </a>
+                        </div>
 
-                        <div className="flex items-center gap-4 text-sm text-text-secondary mt-2">
-                          <div className="flex items-center gap-2">
-                            <LuAlarmClock className="w-4 h-4" />
-                            <span>{formatDate(image.createdAt)}</span>
-                          </div>
-                          <div className="h-8 w-px bg-white/30" />
-                          <div className="flex items-center gap-2">
-                            <FiHardDrive className="w-4 h-4" />
-                            <span>{formatSize(image.size)}</span>
-                          </div>
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                            {/* Metadata */}
+                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <LuAlarmClock className="w-4 h-4 text-text-secondary" />
+                                <span className="text-sm text-text-secondary whitespace-nowrap">
+                                {formatDate(image.createdAt)}
+                                </span>
+                            </div>
+                            <div className="h-8 w-px bg-white/30" />
+                            <div className="flex items-center gap-2">
+                                <FiHardDrive className="w-4 h-4 text-text-secondary" />
+                                <span className="text-sm text-text-secondary whitespace-nowrap">
+                                {formatSize(image.size)}
+                                </span>
+                            </div>
+                            </div>
+
+                            {/* Buttons */}
+                            <div className={`grid gap-2 flex-shrink-0 ${!isOwnProfile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                <button
+                                    onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCopy(`https://i.exlt.tech/${image.imageId}`, image._id);
+                                    }}
+                                    className="p-2 text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400
+                                            rounded-full transition-colors relative group"
+                                >
+                                    {copiedUrl === image._id ? <FiCheck className="w-4 h-4" /> : <FiCopy className="w-4 h-4" />}
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                                opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                    Copy URL
+                                    </div>
+                                </button>
+
+                                <a
+                                    href={`https://i.exlt.tech/${image.imageId}`}
+                                    download
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-2 text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400 
+                                            rounded-full transition-colors relative group"
+                                >
+                                    <FiDownload className="w-4 h-4" />
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                                opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                    Download
+                                    </div>
+                                </a>
+
+                                {isOwnProfile && (
+                                    <>
+                                    <button
+                                        onClick={(e) => handleEdit(e, image)}
+                                        className={`p-2 rounded-full transition-colors relative group
+                                                ${currentUser?.isVerified 
+                                                ? "text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400" 
+                                                : "text-gray-600 cursor-not-allowed bg-surface-2/50"}`}
+                                    >
+                                        <FiEdit2 className="w-4 h-4" />
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                                    opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                        {currentUser?.isVerified ? "Edit Image ID" : "Verified users only"}
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={(e) => handleDelete(e, image)}
+                                        className="p-2 text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400 
+                                                rounded-full transition-colors relative group"
+                                    >
+                                        <FiTrash2 className="w-4 h-4" />
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
+                                                    opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                        Delete Image
+                                        </div>
+                                    </button>
+                                    </>
+                                )}
+                                </div>
                         </div>
                       </>
                     )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCopy(`https://i.exlt.tech/${image.imageId}`, image._id);
-                      }}
-                      className="p-2 text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400
-                              rounded-full transition-colors relative group"
-                    >
-                      {copiedUrl === image._id ? <FiCheck className="w-4 h-4" /> : <FiCopy className="w-4 h-4" />}
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
-                                  opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        Copy URL
-                      </div>
-                    </button>
-
-                    <a
-                      href={`https://i.exlt.tech/${image.imageId}`}
-                      download
-                      onClick={(e) => e.stopPropagation()}
-                      className="p-2 text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400 
-                              rounded-full transition-colors relative group"
-                    >
-                      <FiDownload className="w-4 h-4" />
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
-                                  opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        Download
-                      </div>
-                    </a>
-
-                    <button
-                      onClick={(e) => handleEdit(e, image)}
-                      className={`p-2 rounded-full transition-colors relative group
-                              ${currentUser?.isVerified 
-                                ? "text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400" 
-                                : "text-gray-600 cursor-not-allowed bg-surface-2/50"}`}
-                    >
-                      <FiEdit2 className="w-4 h-4" />
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
-                                  opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        {currentUser?.isVerified ? "Edit Image ID" : "Verified users only"}
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={(e) => handleDelete(e, image)}
-                      className="p-2 text-red-500 bg-red-500/10 hover:bg-red-500/20 hover:text-red-400 
-                              rounded-full transition-colors relative group"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-xs text-white rounded
-                                  opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        Delete Image
-                      </div>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -296,31 +306,32 @@ const UserImages = ({ images = [], loading, username, handle, currentUser, setIm
             </div>
           )}
         </div>
-            {showDeleteModal && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-surface-2 rounded-lg border border-white/5 p-6 max-w-md w-full mx-4">
-                <div className="flex items-center gap-3 mb-4">
-                <FiTrash2 className="w-6 h-6 text-red-400 " />
+              <div className="flex items-center gap-3 mb-4">
+                <FiTrash2 className="w-6 h-6 text-red-400" />
                 <h3 className="text-xl font-semibold text-white">Delete Image</h3>
-                </div>
-                <p className="text-gray-300 mb-6">
+              </div>
+              <p className="text-gray-300 mb-6">
                 Are you sure you want to delete this image? This action cannot be undone.
-                </p>
-                <div className="flex justify-end gap-4">
+              </p>
+              <div className="flex justify-end gap-4">
                 <button
-                    onClick={() => {
+                  onClick={() => {
                     setShowDeleteModal(false);
                     setImageToDelete(null);
-                    }}
-                    className="px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-md transition-colors"
+                  }}
+                  className="px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-md transition-colors"
                 >
-                    Cancel
+                  Cancel
                 </button>
                 <button
-                    onClick={handleConfirmDelete}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
                 >
-                    Delete
+                  Delete
                 </button>
               </div>
             </div>
