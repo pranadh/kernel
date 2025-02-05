@@ -131,3 +131,29 @@ export const getImageInfo = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const adminDeleteImage = async (req, res) => {
+  try {
+    const image = await Image.findOne({ imageId: req.params.id });
+    
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    const filePath = path.resolve('/var/www/kernel/backend/uploads/images', image.filename);
+    
+    // Delete file from server
+    try {
+      await fs.unlink(filePath);
+    } catch (error) {
+      console.error('File deletion error:', error);
+    }
+
+    // Delete from database
+    await Image.deleteOne({ _id: image._id });
+    
+    res.json({ message: "Image deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

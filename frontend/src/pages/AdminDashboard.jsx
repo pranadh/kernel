@@ -4,6 +4,7 @@ import { FiChevronDown } from 'react-icons/fi';
 import UserManagement from '../components/admin/UserManagement';
 import DocumentManagement from '../components/admin/DocumentManagement';
 import UrlManagement from '../components/admin/UrlManagement';
+import ImageManagement from '../components/admin/ImageManagement';
 import axios from '../api';
 
 const AdminDashboard = () => {
@@ -18,7 +19,8 @@ const AdminDashboard = () => {
   const sections = {
     users: 'User Management',
     documents: 'Document Management',
-    urls: 'URL Management'
+    urls: 'URL Management',
+    images: 'Image Management'
   };
 
   useEffect(() => {
@@ -129,6 +131,7 @@ const AdminDashboard = () => {
             )}
             {activeSection === 'documents' && <DocumentManagement />}
             {activeSection === 'urls' && <UrlManagement />}
+            {activeSection === 'images' && <ImageManagement />}
           </div>
         </div>
       </div>
