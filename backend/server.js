@@ -42,6 +42,20 @@ const ensureUploadDir = async () => {
   }
 };
 
+app.use((req, res, next) => {
+  console.log('Subdomain:', req.subdomains[0]); // Debug
+  console.log('Path:', req.path); // Debug
+  
+  if (req.subdomains[0] === 'i') {
+    const imageId = req.path.substring(1);
+    if (imageId) {
+      console.log('Rewriting to:', `/api/images/${imageId}`); // Debug
+      req.url = `/api/images/${imageId}`;
+    }
+  }
+  next();
+});
+
 // Routes
 app.use(apiLimiter);
 app.use("/api/users", userRoutes);
@@ -52,17 +66,6 @@ app.use("/api/images", imageRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
-});
-
-app.use((req, res, next) => {
-  if (req.subdomains[0] === 'i') {
-    const imageId = req.path.substring(1); // Remove leading slash
-    if (imageId) {
-      req.url = `/api/images/${imageId}`;
-      return next();
-    }
-  }
-  next();
 });
 
 // Start server
