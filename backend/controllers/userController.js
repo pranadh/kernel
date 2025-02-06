@@ -106,7 +106,10 @@ export const getCurrentUser = async (req, res) => {
       isVerified: user.isVerified,
       followers: user.followers,
       following: user.following,
-      // ... other user fields
+      avatar: user.avatar,
+      bannerImage: user.bannerImage,
+      bannerColor: user.bannerColor,
+      createdAt: user.createdAt
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

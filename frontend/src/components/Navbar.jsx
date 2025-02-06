@@ -14,7 +14,6 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
   const [userStats, setUserStats] = useState({ followers: [], following: [] });
@@ -22,6 +21,7 @@ const Navbar = () => {
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
   const hideOnPaths = ['/register', '/login'];
 
   const searchDocuments = async (query) => {
@@ -96,83 +96,46 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const renderAvatar = () => {
-    if (!user) return null;
-  
-    const avatarUrl = user.avatar?.startsWith('http') 
-      ? user.avatar 
-      : user.avatar 
-        ? `https://i.exlt.tech/avatar/${user.avatar}` 
-        : null;
-  
-    if (!avatarUrl) {
-      return (
-        <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-          <span className="text-lg font-semibold text-white">
-            {user.username?.charAt(0).toUpperCase()}
-          </span>
-        </div>
-      );
-    }
-  
-    return (
-      <img 
-        src={avatarUrl}
-        alt={user.username}
-        className="w-full h-full object-cover pointer-events-none select-none"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.parentElement.innerHTML = `
-            <div class="w-full h-full bg-surface-2 flex items-center justify-center">
-              <span class="text-lg font-semibold text-white">
-                ${user.username?.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          `;
-        }}
-      />
-    );
-  };
-
-  if (hideOnPaths.includes(location.pathname)) {
-    return null;
-  }
+  if (hideOnPaths.includes(location.pathname)) return null;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 h-[70px] bg-[#1a1b1e] flex items-center justify-between px-8 z-[100] border-b border-zinc-800">
-      <Link to="/" className="hover:scale-125 transition-transform duration-200"> {/* Changed hover:opacity-80 to hover:scale-110 */}
-        <img src={logo} alt="ToroX Logo" className="h-8" />
+    <nav className="fixed top-0 left-0 right-0 h-[70px] bg-surface-1 backdrop-blur-sm 
+                    flex items-center justify-between px-8 z-[100] border-b border-white/5">
+      <Link to="/" className="hover:scale-110 transition-transform duration-200">
+        <img src={logo} alt="Exalt" className="h-8" />
       </Link>
 
       <div className="flex-1 max-w-lg mx-auto px-4 relative" ref={searchRef}>
         <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
           <input
             type="text"
             placeholder="Search documents..."
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => setShowResults(true)}
-            className="w-full bg-gray-800/50 text-gray-200 pl-10 pr-4 py-2 rounded-md border border-gray-700 
-                     focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+            className="w-full bg-surface-2/50 text-text-primary pl-10 pr-4 py-2 rounded-md 
+                     border border-white/5 placeholder:text-text-secondary/50
+                     focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50
+                     transition-all duration-300"
           />
         </div>
 
         {showResults && (
           <div className="absolute top-full left-0 right-0 mt-2 z-[101]">
-            <div className="bg-surface-2/95 backdrop-blur-sm rounded-lg border border-gray-700 shadow-lg">
+            <div className="bg-surface-2/95 backdrop-blur-sm rounded-lg border border-white/5 shadow-lg">
               {isSearching ? (
-                <div className="px-4 py-8 text-center text-gray-400">
+                <div className="px-4 py-8 text-center text-text-secondary">
                   Searching...
                 </div>
               ) : searchError ? (
-                <div className="px-4 py-8 text-center text-red-400">
+                <div className="px-4 py-8 text-center text-status-error">
                   {searchError}
                 </div>
               ) : searchResults.length > 0 ? (
                 <>
-                  <div className="px-4 py-2 border-b border-gray-700">
-                    <span className="text-sm text-gray-400">
+                  <div className="px-4 py-2 border-b border-white/5">
+                    <span className="text-sm text-text-secondary">
                       Found {searchResults.length} document{searchResults.length !== 1 ? 's' : ''}
                     </span>
                   </div>
@@ -185,7 +148,8 @@ const Navbar = () => {
                           setShowResults(false);
                           setSearchQuery('');
                         }}
-                        className="flex items-center justify-between gap-3 p-3 hover:bg-gray-700/50 border-b border-gray-700 last:border-0"
+                        className="flex items-center justify-between gap-3 p-3 hover:bg-white/5 
+                                 border-b border-white/5 last:border-0 transition-colors"
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 
@@ -195,28 +159,30 @@ const Navbar = () => {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-gray-200 font-medium truncate flex items-center gap-2">
+                            <h4 className="text-text-primary font-medium truncate flex items-center gap-2">
                               {doc.title || 'Untitled Document'}
                             </h4>
                             <div className="flex items-center gap-2 mt-1">
                               <div className="w-5 h-5 rounded-full overflow-hidden border border-white/5 flex-shrink-0">
-                              {doc.author.avatar ? (
-                                <img 
-                                  src={doc.author.avatar.startsWith('http') 
-                                    ? doc.author.avatar 
-                                    : `https://i.exlt.tech/avatar/${doc.author.avatar}`}
-                                  alt={doc.author.username}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-                                  <span className="text-xs font-semibold text-white">
-                                    {doc.author.username.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
+                                {doc.author.avatar ? (
+                                  <img 
+                                    src={doc.author.avatar.startsWith('http') 
+                                      ? doc.author.avatar 
+                                      : `https://i.exlt.tech/avatar/${doc.author.avatar}`}
+                                    alt={doc.author.username}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary-hover/10 
+                                               flex items-center justify-center">
+                                    <span className="text-xs font-semibold text-text-primary">
+                                      {doc.author.username.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
-                              <span className="text-gray-400 text-sm truncate flex items-center gap-1">
+                              <span className="text-text-secondary text-sm truncate flex items-center gap-1">
                                 {doc.author.username}
                                 {doc.author.isVerified && (
                                   <VscVerifiedFilled className="w-4 h-4 text-primary" />
@@ -225,7 +191,7 @@ const Navbar = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-400 pl-3 border-l border-gray-700">
+                        <div className="flex items-center gap-2 text-text-secondary pl-3 border-l border-white/5">
                           <FiEye className="w-4 h-4" />
                           <span className="text-sm whitespace-nowrap">
                             {doc.viewCount || 0} views
@@ -236,7 +202,7 @@ const Navbar = () => {
                   </div>
                 </>
               ) : searchQuery ? (
-                <div className="px-4 py-8 text-center text-gray-400">
+                <div className="px-4 py-8 text-center text-text-secondary">
                   No documents found.
                 </div>
               ) : null}
@@ -250,39 +216,53 @@ const Navbar = () => {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-10 h-10 rounded-full overflow-hidden border-2 border-transparent hover:border-primary transition-colors"
-              style={{ padding: 0 }}
+              className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-surface-2 
+                       hover:bg-surface-2/80 border border-transparent hover:border-primary
+                       transition-all duration-200 p-0"
             >
-              {renderAvatar()}
+              {user.avatar ? (
+                <img 
+                  src={user.avatar}
+                  alt={user.username}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary-hover/10 
+                             flex items-center justify-center">
+                  <span className="text-lg font-semibold text-text-primary">
+                    {user.username.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
             </button>
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-700 z-[102]">
-                <div className="px-4 py-3 bg-gray-900">
+              <div className="absolute right-0 mt-2 w-56 bg-[#101113]/95 backdrop-blur-sm rounded-lg 
+                           shadow-lg overflow-hidden border border-white/5 z-[102]">
+                <div className="px-4 py-3 bg-[#16171a]">
                   <div className="flex items-start justify-between">
-                    <div className="-mt-0.5">
-                      <p className="text-sm font-medium text-gray-200">{user?.username}</p>
-                      <p className="text-xs text-gray-400">@{user?.handle}</p>
+                    <div>
+                      <p className="text-sm font-medium text-text-primary">{user?.username}</p>
+                      <p className="text-xs text-text-secondary">@{user?.handle}</p>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <div className="flex items-center gap-3 text-xs text-text-secondary">
                       <div className="text-center">
                         <div className="font-medium">{userStats.followers.length}</div>
-                        <div className="text-gray-500">Followers</div>
+                        <div className="text-text-muted">Followers</div>
                       </div>
-                      <div className="h-8 w-px bg-gray-700"></div>
+                      <div className="h-8 w-px bg-white/10"></div>
                       <div className="text-center">
                         <div className="font-medium">{userStats.following.length}</div>
-                        <div className="text-gray-500">Following</div>
+                        <div className="text-text-muted">Following</div>
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Rest of dropdown content remains the same */}
-                <div className="border-t border-gray-700"></div>
+                <div className="border-t border-white/5"></div>
                 <div className="py-1">
                   <Link 
                     to={`/u/${user.handle}`} 
-                    className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-text-secondary hover:bg-white/5 hover:text-white transition-colors"
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     <FaUser className="text-sm" />
@@ -291,7 +271,7 @@ const Navbar = () => {
                   {user.roles?.includes('admin') && (
                     <Link 
                       to="/admin" 
-                      className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-text-secondary hover:bg-white/5 hover:text-red-400 transition-colors"
                       onClick={() => setIsDropdownOpen(false)}
                     >
                       <FaUserShield className="text-sm" />
@@ -300,10 +280,11 @@ const Navbar = () => {
                   )}
                   <button 
                     onClick={handleLogout} 
-                    className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-3 bg-[#101113] text-status-error 
+                             hover:bg-status-error/10 transition-colors hover:border-red-500 rounded-lg"
                   >
                     <FaSignOutAlt className="text-sm" />
-                    <span>Log out</span>
+                    <span>Log Out</span>
                   </button>
                 </div>
               </div>
@@ -311,8 +292,12 @@ const Navbar = () => {
           </div>
         ) : (
           <>
-            <Link to="/login" className="text-gray-300 hover:text-white transition-colors">Login</Link>
-            <Link to="/register" className="text-gray-300 hover:text-white transition-colors">Register</Link>
+            <Link to="/login" className="text-text-secondary hover:text-text-primary transition-colors">
+              Login
+            </Link>
+            <Link to="/register" className="text-text-secondary hover:text-text-primary transition-colors">
+              Register
+            </Link>
           </>
         )}
       </div>
