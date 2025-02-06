@@ -12,14 +12,40 @@ export const uploadImage = async (req, res) => {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
+    const filePath = req.file.path;
+    const fileSize = req.file.size;
+    
+    // Only compress if file is larger than 1MB and not a GIF
+    if (fileSize > 1024 * 1024 && !req.file.mimetype.includes('gif')) {
+      const compressedFilePath = path.join(
+        path.dirname(filePath),
+        `compressed_${req.file.filename}`
+      );
+
+      await sharp(filePath)
+        .resize(2000, 2000, {
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .jpeg({ quality: 80 })
+        .toFile(compressedFilePath);
+
+      // Replace original file with compressed version
+      await fs.unlink(filePath);
+      await fs.rename(compressedFilePath, filePath);
+      
+      // Update file size
+      const stats = await fs.stat(filePath);
+      req.file.size = stats.size;
+    }
+
     const image = await Image.create({
       filename: req.file.filename,
-      mimeType: req.file.mimetype,
+      mimeType: req.file.mimetype, 
       size: req.file.size,
       author: req.user._id
     });
 
-    // Fix URL construction
     const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
       ? 'https://i.exlt.tech'
       : `${req.protocol}://i.${req.get('host')}`;
@@ -29,6 +55,9 @@ export const uploadImage = async (req, res) => {
       deleteUrl: `https://exlt.tech/api/images/${image.imageId}`
     });
   } catch (error) {
+    if (req.file?.path) {
+      await fs.unlink(req.file.path).catch(console.error);
+    }
     res.status(400).json({ message: error.message });
   }
 };
