@@ -12,8 +12,10 @@ import {
   getImageInfo, 
   adminDeleteImage, 
   updateImage,
-  uploadAvatar,    // Add these
-  uploadBanner     // Add these
+  uploadAvatar,
+  uploadBanner,
+  deleteAvatar,
+  deleteBanner
 } from '../controllers/imageController.js';
 
 const router = express.Router();
