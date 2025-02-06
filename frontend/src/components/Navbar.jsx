@@ -97,18 +97,19 @@ const Navbar = () => {
   };
 
   const renderAvatar = () => {
-    // Debug user state
-    console.log('User state in Navbar:', {
-      hasAvatar: !!user?.avatar,
-      avatarURL: user?.avatar,
-      avatarError
-    });
+    if (!user) return null;
   
-    if (!user?.avatar || avatarError) {
+    const avatarUrl = user.avatar?.startsWith('http') 
+      ? user.avatar 
+      : user.avatar 
+        ? `https://i.exlt.tech/avatar/${user.avatar}` 
+        : null;
+  
+    if (!avatarUrl) {
       return (
-        <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-          <span className="text-lg font-semibold text-gray-300 select-none">
-            {user?.username?.charAt(0).toUpperCase()}
+        <div className="w-full h-full bg-surface-2 flex items-center justify-center">
+          <span className="text-lg font-semibold text-white">
+            {user.username?.charAt(0).toUpperCase()}
           </span>
         </div>
       );
@@ -116,12 +117,18 @@ const Navbar = () => {
   
     return (
       <img 
-        src={user.avatar}
+        src={avatarUrl}
         alt={user.username}
         className="w-full h-full object-cover pointer-events-none select-none"
         onError={(e) => {
-          console.error('Avatar load error:', e);
-          setAvatarError(true);
+          e.target.onerror = null;
+          e.target.parentElement.innerHTML = `
+            <div class="w-full h-full bg-surface-2 flex items-center justify-center">
+              <span class="text-lg font-semibold text-white">
+                ${user.username?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          `;
         }}
       />
     );
@@ -193,19 +200,21 @@ const Navbar = () => {
                             </h4>
                             <div className="flex items-center gap-2 mt-1">
                               <div className="w-5 h-5 rounded-full overflow-hidden border border-white/5 flex-shrink-0">
-                                {doc.author.avatar ? (
-                                  <img 
-                                    src={doc.author.avatar}
-                                    alt={doc.author.username}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-                                    <span className="text-xs font-semibold text-white">
-                                      {doc.author.username.charAt(0).toUpperCase()}
-                                    </span>
-                                  </div>
-                                )}
+                              {doc.author.avatar ? (
+                                <img 
+                                  src={doc.author.avatar.startsWith('http') 
+                                    ? doc.author.avatar 
+                                    : `https://i.exlt.tech/avatar/${doc.author.avatar}`}
+                                  alt={doc.author.username}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-surface-2 flex items-center justify-center">
+                                  <span className="text-xs font-semibold text-white">
+                                    {doc.author.username.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
                               </div>
                               <span className="text-gray-400 text-sm truncate flex items-center gap-1">
                                 {doc.author.username}

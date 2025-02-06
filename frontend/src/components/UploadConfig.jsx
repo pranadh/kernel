@@ -174,7 +174,7 @@ const UploadConfig = () => {
                 <li>Replace YOURTOKEN with your authentication token:
                   <div className="inline-flex items-center gap-2 ml-2">
                     <code className="bg-surface-2 px-2 py-1 rounded text-xs text-gray-300">
-                      Bearer {token?.substring(0, 20)}...
+                      {token?.substring(0, 30)}...
                     </code>
                   </div>
                 </li>

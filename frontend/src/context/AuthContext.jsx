@@ -7,11 +7,25 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to format user data and ensure consistent avatar URL format
+  const formatUserData = (userData) => {
+    if (!userData) return null;
+    return {
+      ...userData,
+      avatar: userData.avatar?.startsWith('http') 
+        ? userData.avatar 
+        : userData.avatar 
+          ? `https://i.exlt.tech/avatar/${userData.avatar}` 
+          : null
+    };
+  };
+
   const login = async (credentials) => {
     const { data } = await axios.post('/api/users/login', credentials);
+    const formattedUser = formatUserData(data);
     localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+    localStorage.setItem('user', JSON.stringify(formattedUser));
+    setUser(formattedUser);
     axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
   };
 
@@ -30,23 +44,16 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          let currentUser = null;
+          // First try to use stored user data
           if (storedUser) {
-            currentUser = JSON.parse(storedUser);
-            setUser(currentUser);
+            const parsedUser = JSON.parse(storedUser);
+            setUser(formatUserData(parsedUser));
           }
-  
+          // Then fetch fresh data
           const { data } = await axios.get('/api/users/me');
-          const updatedUser = {
-            ...data,
-            avatar: currentUser?.avatar || data.avatar
-          };
-  
-          setUser(updatedUser);
-          // Store the merged data, not just API response
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-  
+          const formattedUser = formatUserData(data);
+          setUser(formattedUser);
+          localStorage.setItem('user', JSON.stringify(formattedUser));
         } catch (error) {
           console.error('Auth load error:', error);
           localStorage.removeItem('token');
@@ -59,14 +66,15 @@ export const AuthProvider = ({ children }) => {
   }, []);
   
   const updateUser = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    const formattedUser = formatUserData(userData);
+    setUser(formattedUser);
+    localStorage.setItem('user', JSON.stringify(formattedUser));
   };
 
   return (
     <AuthContext.Provider value={{ 
       user, 
-      setUser, 
+      setUser: (userData) => setUser(formatUserData(userData)), 
       loading,
       login,
       logout,
