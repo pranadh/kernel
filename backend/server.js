@@ -37,9 +37,18 @@ import { cleanupOrphanedImages } from './utils/imageCleanup.js';
 
 const ensureUploadDirs = async () => {
   try {
-    await fs.mkdir('uploads/images', { recursive: true });
-    await fs.mkdir('uploads/avatars', { recursive: true });
-    await fs.mkdir('uploads/banners', { recursive: true });
+    // Create directories with proper permissions
+    await fs.mkdir('uploads/avatars', { recursive: true, mode: 0o755 });
+    await fs.mkdir('uploads/banners', { recursive: true, mode: 0o755 });
+    await fs.mkdir('uploads/images', { recursive: true, mode: 0o755 });
+    
+    // Ensure proper ownership if running as root
+    if (process.getuid && process.getuid() === 0) {
+      const user = process***REMOVED***.USER || 'www-data';
+      await fs.chown('uploads/avatars', user, user);
+      await fs.chown('uploads/banners', user, user);
+      await fs.chown('uploads/images', user, user);
+    }
   } catch (error) {
     console.error('Failed to create upload directories:', error);
     process.exit(1);
@@ -48,11 +57,15 @@ const ensureUploadDirs = async () => {
 
 app.use((req, res, next) => {
   if (req.subdomains[0] === 'i') {
-    const imageId = req.path.substring(1);
-    if (imageId) {
-      req.url = `/api/images/${imageId}`;
-      return next(); // Important: return here
+    const path = req.path.substring(1);
+    // Check if it's an avatar/banner request
+    if (path.startsWith('avatar/') || path.startsWith('banner/')) {
+      req.url = `/${path}`; // Keep the full path
+    } else {
+      // Handle regular images
+      req.url = `/api/images/${path}`;
     }
+    return next();
   }
   next();
 });

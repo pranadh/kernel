@@ -38,21 +38,18 @@ export const uploadAvatar = async (req, res) => {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
-    if (req.file.mimetype === 'image/gif' && !req.user.isVerified) {
-      return res.status(403).json({ message: "Only verified users can upload GIF banners" });
-    }
-
     const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
       ? 'https://i.exlt.tech'
       : `${req.protocol}://i.${req.get('host')}`;
 
-    // Update user's avatar URL
+    // Update user's avatar URL with correct path
+    const avatarUrl = `${baseUrl}/avatar/${req.file.filename}`;
     await User.findByIdAndUpdate(req.user._id, {
-      avatar: `${baseUrl}/avatar/${req.file.filename}`
+      avatar: avatarUrl
     });
 
     res.status(201).json({
-      url: `${baseUrl}/avatar/${req.file.filename}`
+      url: avatarUrl
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
