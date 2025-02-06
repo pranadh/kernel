@@ -4,6 +4,7 @@ import { HiOutlineSparkles } from "react-icons/hi2";
 import { useAuth } from '../context/AuthContext';
 import axios from '../api';
 import Toast from '../components/Toast';
+import EffectSection from '../components/EffectSection';
 
 const Settings = () => {
   const { user, updateUser } = useAuth();
@@ -12,21 +13,19 @@ const Settings = () => {
   const [effect, setEffect] = useState(user?.effects?.type || null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [openEffect, setOpenEffect] = useState(null);
+  const [effectsEnabled, setEffectsEnabled] = useState(user?.effects?.enabled || false);
   const [effectConfig, setEffectConfig] = useState({
     lightning: {
       color: user?.effects?.config?.color || '#FFFFF',
-      frequency: user?.effects?.config?.frequency || 200,
-      enabled: user?.effects?.enabled && user?.effects?.type === 'lightning' || false
+      frequency: user?.effects?.config?.frequency || 200
     },
     sparkle: {
       color: user?.effects?.config?.color || '#FFFFFF', 
-      frequency: user?.effects?.config?.frequency || 100,
-      enabled: user?.effects?.enabled && user?.effects?.type === 'sparkle' || false
+      frequency: user?.effects?.config?.frequency || 100
     },
     glow: {
       color: user?.effects?.config?.color || '#FFFFF',
-      frequency: user?.effects?.config?.frequency || 2000,
-      enabled: user?.effects?.enabled && user?.effects?.type === 'glow' || false
+      frequency: user?.effects?.config?.frequency || 2000
     }
   });
   
@@ -63,70 +62,52 @@ const Settings = () => {
     try {
       const { data } = await axios.put('/api/users/effects', {
         type,
-        enabled: effectConfig[type].enabled,
+        enabled: effectsEnabled,
         config: {
           color: effectConfig[type].color,
           frequency: parseInt(effectConfig[type].frequency)
         }
       });
   
-      // Update both effect type and config
       setEffect(type);
-      updateUser(data); // Update the user context with new data
-  
-      setEffectConfig(prev => ({
-        ...prev,
-        [type]: {
-          ...prev[type],
-          enabled: data.effects.enabled
-        }
-      }));
+      updateUser(data);
   
       setToast({
         show: true,
-        message: 'Effect updated successfully', 
+        message: 'Effect updated successfully',
         type: 'success'
       });
     } catch (error) {
       setToast({
         show: true,
         message: 'Failed to update effect',
-        type: 'error' 
+        type: 'error'
       });
     }
   };
 
-  const handleEffectToggle = async (type) => {
+  const handleEffectToggle = async () => {
     try {
-      // Send update to backend first
+      const currentEffect = openEffect || effect;
+      if (!currentEffect) return;
+  
       const { data } = await axios.put('/api/users/effects', {
-        type,
-        enabled: !effectConfig[type].enabled, // Toggle from current state
+        type: currentEffect,
+        enabled: !effectsEnabled, // Toggle global enabled state
         config: {
-          color: effectConfig[type].color,
-          frequency: parseInt(effectConfig[type].frequency)
+          color: effectConfig[currentEffect].color,
+          frequency: parseInt(effectConfig[currentEffect].frequency)
         }
       });
   
-      // Update local state after successful backend update
-      setEffect(type);
+      setEffectsEnabled(data.effects.enabled);
       updateUser(data);
   
-      // Update effect config from server response
-      setEffectConfig(prev => ({
-        ...prev,
-        [type]: {
-          ...prev[type],
-          enabled: data.effects.enabled
-        }
-      }));
-  
       setToast({
-        show: true, 
+        show: true,
         message: `Effects ${data.effects.enabled ? 'enabled' : 'disabled'}`,
         type: 'success'
       });
-  
     } catch (error) {
       setToast({
         show: true,
@@ -144,7 +125,7 @@ const Settings = () => {
             <FiSettings className="w-8 h-8 text-primary" />
             <h1 className="text-3xl font-bold text-white">Settings</h1>
           </div>
-
+  
           <div className="flex gap-8">
             {/* Navigation Sidebar */}
             <div className="w-64 flex-shrink-0">
@@ -159,7 +140,7 @@ const Settings = () => {
                   <FiUser className="w-5 h-5" />
                   <span>Profile Settings</span>
                 </button>
-
+  
                 <button
                   onClick={() => user?.isVerified && setActiveSection('effects')}
                   className={`w-full flex items-center rounded-none gap-3 px-4 py-3 transition-colors
@@ -174,11 +155,12 @@ const Settings = () => {
                 </button>
               </div>
             </div>
-
+  
             {/* Content Area */}
             <div className="flex-1">
               <div className="bg-surface-1 rounded-lg border border-white/5 p-6">
                 {activeSection === 'profile' ? (
+                  // Profile Section
                   <>
                     <div className="flex items-center gap-4 mb-6">
                       <FiUser className="w-6 h-6 text-primary" />
@@ -187,7 +169,7 @@ const Settings = () => {
                         <p className="text-text-secondary">Update your username</p>
                       </div>
                     </div>
-
+  
                     <form onSubmit={handleUsernameSubmit} className="space-y-6">
                       <div>
                         <label className="text-sm font-medium text-white">Username</label>
@@ -200,7 +182,7 @@ const Settings = () => {
                           placeholder="Enter new username"
                         />
                       </div>
-
+  
                       <button
                         type="submit"
                         className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg 
@@ -211,7 +193,8 @@ const Settings = () => {
                     </form>
                   </>
                 ) : (
-                    <>
+                  // Effects Section
+                  <>
                     <div className="flex items-center gap-4 mb-6">
                       <FiZap className="w-6 h-6 text-primary" />
                       <div>
@@ -219,221 +202,67 @@ const Settings = () => {
                         <p className="text-text-secondary">Customize your profile effects</p>
                       </div>
                     </div>
-                  
+  
+                    {/* Global Effects Toggle - Moved to top */}
+                    <div className="flex items-center justify-between p-4 bg-surface-2 rounded-lg border border-white/5 mb-4">
+                      <span className="text-white font-medium">Enable Effects</span>
+                      <button
+                        onClick={handleEffectToggle}
+                        className={`px-4 py-2 rounded transition-colors ${
+                          effectsEnabled
+                            ? 'bg-primary text-white hover:bg-primary-hover'
+                            : 'bg-surface-1 text-text-secondary hover:bg-surface-1/80'
+                        }`}
+                      >
+                        {effectsEnabled ? 'Enabled' : 'Disabled'}
+                      </button>
+                    </div>
+  
                     <div className="space-y-4">
-                      {/* Lightning Effect Dropdown */}
-                      <div className="border border-white/5 rounded-lg overflow-hidden">
-                        <button
-                          onClick={() => setOpenEffect(openEffect === 'lightning' ? null : 'lightning')}
-                          className="w-full p-4 flex items-center justify-between bg-surface-2 hover:bg-surface-2/80 transition-colors"
-                        >
-                          <div className="flex items-center gap-4">
-                            <FiZap className="w-5 h-5 text-primary" />
-                            <span className="text-white font-medium">Lightning Effect</span>
-                          </div>
-                          {openEffect === 'lightning' ? (
-                            <FiChevronDown className="w-5 h-5 text-text-secondary" />
-                          ) : (
-                            <FiChevronRight className="w-5 h-5 text-text-secondary" />
-                          )}
-                        </button>
-                        
-                        {openEffect === 'lightning' && (
-                          <div className="p-4 bg-surface-1 border-t border-white/5">
-                            <div className="space-y-4">
-                              <div>
-                                <label className="text-sm text-text-secondary">Color (Hex)</label>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <input
-                                    type="text"
-                                    value={effectConfig.glow.color}
-                                    onChange={(e) => setEffectConfig(prev => ({
-                                        ...prev,
-                                        glow: { ...prev.glow, color: e.target.value }
-                                    }))}
-                                    className="flex-1 p-2 bg-surface-2 rounded border border-white/5 
-                                                text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                                    placeholder="#00FFFF"
-                                    />
-                                    <ColorPreview color={effectConfig.glow.color} />
-                                </div>
-                              </div>
-                              <div>
-                                <label className="text-sm text-text-secondary">Frequency (ms)</label>
-                                <input
-                                  type="number"
-                                  value={effectConfig.lightning.frequency}
-                                  onChange={(e) => setEffectConfig(prev => ({
-                                    ...prev,
-                                    lightning: { ...prev.lightning, frequency: e.target.value }
-                                  }))}
-                                  className="mt-1 w-full p-2 bg-surface-2 rounded border border-white/5 
-                                           text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                                  placeholder="200"
-                                />
-                              </div>
-                              <div className="flex justify-end">
-                                <button
-                                  onClick={() => handleEffectSave('lightning')}
-                                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded 
-                                           transition-colors"
-                                >
-                                  Save Configuration
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                  
-                      {/* Sparkle Effect Dropdown */}
-                      <div className="border border-white/5 rounded-lg overflow-hidden">
-                        <button
-                          onClick={() => setOpenEffect(openEffect === 'sparkle' ? null : 'sparkle')}
-                          className="w-full p-4 flex items-center justify-between bg-surface-2 hover:bg-surface-2/80 transition-colors"
-                        >
-                          <div className="flex items-center gap-4">
-                            <HiOutlineSparkles className="w-5 h-5 text-primary" />
-                            <span className="text-white font-medium">Sparkle Effect</span>
-                          </div>
-                          {openEffect === 'sparkle' ? (
-                            <FiChevronDown className="w-5 h-5 text-text-secondary" />
-                          ) : (
-                            <FiChevronRight className="w-5 h-5 text-text-secondary" />
-                          )}
-                        </button>
-                        
-                        {openEffect === 'sparkle' && (
-                          <div className="p-4 bg-surface-1 border-t border-white/5">
-                            <div className="space-y-4">
-                              <div>
-                                <label className="text-sm text-text-secondary">Color (Hex)</label>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <input
-                                    type="text"
-                                    value={effectConfig.glow.color}
-                                    onChange={(e) => setEffectConfig(prev => ({
-                                        ...prev,
-                                        glow: { ...prev.glow, color: e.target.value }
-                                    }))}
-                                    className="flex-1 p-2 bg-surface-2 rounded border border-white/5 
-                                                text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                                    placeholder="#00FFFF"
-                                    />
-                                    <ColorPreview color={effectConfig.glow.color} />
-                                </div>
-                              </div>
-                              <div>
-                                <label className="text-sm text-text-secondary">Frequency (ms)</label>
-                                <input
-                                  type="number"
-                                  value={effectConfig.sparkle.frequency}
-                                  onChange={(e) => setEffectConfig(prev => ({
-                                    ...prev,
-                                    sparkle: { ...prev.sparkle, frequency: e.target.value }
-                                  }))}
-                                  className="mt-1 w-full p-2 bg-surface-2 rounded border border-white/5 
-                                           text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                                  placeholder="100"
-                                />
-                              </div>
-                              <div className="flex justify-end">
-                                <button
-                                  onClick={() => handleEffectSave('sparkle')}
-                                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded 
-                                           transition-colors"
-                                >
-                                  Save Configuration
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Glow Effect Dropdown */}
-                        <div className="border border-white/5 rounded-lg overflow-hidden">
-                            <button
-                            onClick={() => setOpenEffect(openEffect === 'glow' ? null : 'glow')}
-                            className="w-full p-4 flex items-center justify-between bg-surface-2 hover:bg-surface-2/80 transition-colors"
-                            >
-                            <div className="flex items-center gap-4">
-                                <FiZap className="w-5 h-5 text-primary" />
-                                <span className="text-white font-medium">Glow Effect</span>
-                            </div>
-                            {openEffect === 'glow' ? (
-                                <FiChevronDown className="w-5 h-5 text-text-secondary" />
-                            ) : (
-                                <FiChevronRight className="w-5 h-5 text-text-secondary" />
-                            )}
-                            </button>
-                            
-                            {openEffect === 'glow' && (
-                            <div className="p-4 bg-surface-1 border-t border-white/5">
-                                <div className="space-y-4">
-                                <div>
-                                    <label className="text-sm text-text-secondary">Color (Hex)</label>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <input
-                                        type="text"
-                                        value={effectConfig.glow.color}
-                                        onChange={(e) => setEffectConfig(prev => ({
-                                            ...prev,
-                                            glow: { ...prev.glow, color: e.target.value }
-                                        }))}
-                                        className="flex-1 p-2 bg-surface-2 rounded border border-white/5 
-                                                    text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                                        placeholder="#00FFFF"
-                                        />
-                                        <ColorPreview color={effectConfig.glow.color} />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-sm text-text-secondary">Frequency (ms)</label>
-                                    <input
-                                    type="number"
-                                    value={effectConfig.glow.frequency}
-                                    onChange={(e) => setEffectConfig(prev => ({
-                                        ...prev,
-                                        glow: { ...prev.glow, frequency: e.target.value }
-                                    }))}
-                                    className="mt-1 w-full p-2 bg-surface-2 rounded border border-white/5 
-                                            text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                                    placeholder="2000"
-                                    />
-                                </div>
-                                <div className="flex justify-end">
-                                    <button
-                                    onClick={() => handleEffectSave('glow')}
-                                    className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded 
-                                            transition-colors"
-                                    >
-                                    Save Configuration
-                                    </button>
-                                </div>
-                                </div>
-                            </div>
-                            )}
-                        </div>
-                  
-                      {/* Global Effects Toggle */}
-                      <div className="flex items-center justify-between p-4 bg-surface-2 rounded-lg border border-white/5">
-                        <span className="text-white font-medium">Enable Effects</span>
-                        <button
-                            onClick={() => {
-                                const currentEffect = openEffect || effect;
-                                if (!currentEffect) return;
-                                handleEffectToggle(currentEffect);
-                            }}
-                            className={`px-4 py-2 rounded transition-colors ${
-                                effectConfig[openEffect || effect]?.enabled
-                                ? 'bg-primary text-white hover:bg-primary-hover'
-                                : 'bg-surface-1 text-text-secondary hover:bg-surface-1/80'
-                            }`}
-                            >
-                            {effectConfig[openEffect || effect]?.enabled ? 'Enabled' : 'Disabled'}
-                            </button>
-                        </div>
+                      {/* Lightning Effect */}
+                      <EffectSection 
+                        type="lightning"
+                        icon={<FiZap className="w-5 h-5 text-primary" />}
+                        title="Lightning Effect"
+                        isOpen={openEffect === 'lightning'}
+                        onToggle={() => setOpenEffect(openEffect === 'lightning' ? null : 'lightning')}
+                        config={effectConfig.lightning}
+                        onConfigChange={(config) => setEffectConfig(prev => ({
+                          ...prev,
+                          lightning: config
+                        }))}
+                        onSave={() => handleEffectSave('lightning')}
+                      />
+  
+                      {/* Sparkle Effect */}
+                      <EffectSection 
+                        type="sparkle"
+                        icon={<HiOutlineSparkles className="w-5 h-5 text-primary" />}
+                        title="Sparkle Effect"
+                        isOpen={openEffect === 'sparkle'}
+                        onToggle={() => setOpenEffect(openEffect === 'sparkle' ? null : 'sparkle')}
+                        config={effectConfig.sparkle}
+                        onConfigChange={(config) => setEffectConfig(prev => ({
+                          ...prev,
+                          sparkle: config
+                        }))}
+                        onSave={() => handleEffectSave('sparkle')}
+                      />
+  
+                      {/* Glow Effect */}
+                      <EffectSection 
+                        type="glow"
+                        icon={<FiZap className="w-5 h-5 text-primary" />}
+                        title="Glow Effect"
+                        isOpen={openEffect === 'glow'}
+                        onToggle={() => setOpenEffect(openEffect === 'glow' ? null : 'glow')}
+                        config={effectConfig.glow}
+                        onConfigChange={(config) => setEffectConfig(prev => ({
+                          ...prev,
+                          glow: config
+                        }))}
+                        onSave={() => handleEffectSave('glow')}
+                      />
                     </div>
                   </>
                 )}
@@ -442,7 +271,7 @@ const Settings = () => {
           </div>
         </div>
       </div>
-
+  
       {toast.show && (
         <Toast
           message={toast.message}

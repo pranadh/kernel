@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 
-const Lightning = ({ color = '#FFF', size = 4, style = {} }) => {
+const Lightning = ({ color = '#FFF', size = 8, style = {} }) => {
   return (
     <span
       className="absolute inline-block animate-lightning"
@@ -15,7 +15,7 @@ const Lightning = ({ color = '#FFF', size = 4, style = {} }) => {
         <path
           d="M16 32L12 24H14L10 16H18L14 8H20L16 0" 
           stroke={color}
-          strokeWidth="2"
+          strokeWidth="4"
           fill="none"
         />
       </svg>

@@ -447,7 +447,7 @@ const handleBannerUpload = async (e) => {
                 ) : (
                   <div className="w-full h-full bg-gray-700 flex items-center justify-center">
                     <span className="text-4xl text-gray-300">
-                      {profile.username.charAt(0).toUpperCase()}
+                      {profile?.username?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   </div>
                 )}

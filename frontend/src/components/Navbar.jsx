@@ -294,7 +294,7 @@ const Navbar = () => {
                       <p className="text-sm font-medium text-text-primary flex items-center gap-1">
                       <UsernameDisplay 
                         user={user}
-                        className=""
+                        className="text-sm font-medium text-text-primary"
                       />
                         {user?.isVerified && (
                           <VscVerifiedFilled className="w-4 h-4 text-primary" />
