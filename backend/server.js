@@ -48,10 +48,17 @@ const ensureUploadDirs = async () => {
 
 app.use((req, res, next) => {
   if (req.subdomains[0] === 'i') {
+    // Check if it's an avatar/banner request
+    if (req.path.startsWith('/avatar/') || req.path.startsWith('/banner/')) {
+      // Keep the original path for avatars and banners
+      return next();
+    }
+    
+    // Handle regular image requests
     const imageId = req.path.substring(1);
     if (imageId) {
       req.url = `/api/images/${imageId}`;
-      return next(); // Important: return here
+      return next();
     }
   }
   next();
@@ -67,12 +74,11 @@ app.use("/api/documents", documentRoutes);
 app.use("/api/urls", shortUrlRoutes);
 app.use("/api/images", imageRoutes);
 app.use("/api/admin", adminRoutes);
-app.use('/avatar', express.static('uploads/avatars'));
-app.use('/banner', express.static('uploads/banners'));
-
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });
+app.use('/avatar', express.static('uploads/avatars'));
+app.use('/banner', express.static('uploads/banners'));
 
 // Start server
 try {

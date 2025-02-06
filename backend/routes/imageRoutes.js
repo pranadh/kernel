@@ -52,6 +52,9 @@ router.use((error, req, res, next) => {
   next(error);
 });
 
+router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
+router.post('/banner', protect, upload.single('banner'), uploadBanner);
+router.post('/', protect, upload.single('image'), uploadImage);
 router.get('/', protect, getAllImages);
 router.get('/info/:id', protect, getImageInfo);
 router.get('/:id', getImage);
@@ -59,8 +62,5 @@ router.delete('/:id', protect, deleteImage);
 router.get('/user/:handle', protect, getUserImages);
 router.delete('/:id', protect, admin, adminDeleteImage);
 router.put('/:imageId', protect, updateImage);
-router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
-router.post('/banner', protect, upload.single('banner'), uploadBanner);
-router.post('/', protect, upload.single('image'), uploadImage);
 
 export default router;

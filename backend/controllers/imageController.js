@@ -42,8 +42,8 @@ export const uploadAvatar = async (req, res) => {
       ? 'https://i.exlt.tech'
       : `${req.protocol}://i.${req.get('host')}`;
 
-    // Update user's avatar URL with correct path
     const avatarUrl = `${baseUrl}/avatar/${req.file.filename}`;
+    
     await User.findByIdAndUpdate(req.user._id, {
       avatar: avatarUrl
     });
@@ -62,7 +62,6 @@ export const uploadBanner = async (req, res) => {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
-    // Verify GIF permissions
     if (req.file.mimetype === 'image/gif' && !req.user.isVerified) {
       return res.status(403).json({ message: "Only verified users can upload GIF banners" });
     }
@@ -71,13 +70,14 @@ export const uploadBanner = async (req, res) => {
       ? 'https://i.exlt.tech'
       : `${req.protocol}://i.${req.get('host')}`;
 
-    // Update user's banner URL
+    const bannerUrl = `${baseUrl}/banner/${req.file.filename}`;
+
     await User.findByIdAndUpdate(req.user._id, {
-      bannerImage: `${baseUrl}/banner/${req.file.filename}`
+      bannerImage: bannerUrl
     });
 
     res.status(201).json({
-      url: `${baseUrl}/banner/${req.file.filename}`
+      url: bannerUrl
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
