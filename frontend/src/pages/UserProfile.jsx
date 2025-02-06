@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { FaRegCalendarAlt, FaUserPlus, FaUserCheck, FaCamera } from "react-icons/fa";
+import { FaRegCalendarAlt, FaUserPlus, FaUserCheck } from "react-icons/fa";
 import { FiTrash2, FiX } from "react-icons/fi";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { TbCameraPlus } from "react-icons/tb";
@@ -203,7 +203,7 @@ const UserProfile = () => {
     accept={profile?.isVerified ? "image/*,.gif" : "image/jpeg,image/png,image/webp"}
     onChange={handleAvatarUpload}
   />
-  <FaCamera className="text-white w-4 h-4" />
+  <TbCameraPlus className="text-white w-4 h-4" />
   <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
     <div className="bg-black text-xs text-white rounded px-2 py-1 whitespace-nowrap">
       {profile?.isVerified ? 'Upload image or GIF' : 'Upload image'}
@@ -249,7 +249,7 @@ const handleBannerUpload = async (e) => {
     } catch (error) {
       setToast({
         show: true,
-        message: "Failed to remove avatar",
+        message: error.response?.data?.message || "Failed to remove avatar",
         type: 'error'
       });
     }
@@ -263,7 +263,7 @@ const handleBannerUpload = async (e) => {
     } catch (error) {
       setToast({
         show: true,
-        message: "Failed to remove banner",
+        message: error.response?.data?.message || "Failed to remove banner",
         type: 'error'
       });
     }
@@ -457,7 +457,7 @@ const handleBannerUpload = async (e) => {
                       accept="image/*"
                       onChange={handleAvatarUpload}
                     />
-                    <FaCamera className="text-white w-4 h-4" />
+                    <TbCameraPlus className="text-white w-4 h-4" />
                   </label>
                 </div>
               )}
