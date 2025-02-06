@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FaRegCalendarAlt, FaUserPlus, FaUserCheck, FaCamera } from "react-icons/fa";
+import { FiTrash2, FiX } from "react-icons/fi";
 import { VscVerifiedFilled } from "react-icons/vsc";
+import { TbCameraPlus } from "react-icons/tb";
+import { LuPaintbrush } from "react-icons/lu";
 import { SketchPicker } from 'react-color';
 import axios from "../api";
 import UserBadges from '../components/UserBadges';
@@ -237,6 +240,34 @@ const handleBannerUpload = async (e) => {
     });
   }
 };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      await axios.put('/api/users/profile', { avatar: null });
+      setProfile(prev => ({ ...prev, avatar: null }));
+      setUser(prev => ({ ...prev, avatar: null }));
+    } catch (error) {
+      setToast({
+        show: true,
+        message: "Failed to remove avatar",
+        type: 'error'
+      });
+    }
+  };
+
+  const handleRemoveBanner = async () => {
+    try {
+      await axios.put('/api/users/profile', { bannerImage: null });
+      setProfile(prev => ({ ...prev, bannerImage: null }));
+      setBannerImage(null);
+    } catch (error) {
+      setToast({
+        show: true,
+        message: "Failed to remove banner",
+        type: 'error'
+      });
+    }
+  };
   
   const handleColorChange = async (color) => {
     try {
@@ -301,28 +332,40 @@ const handleBannerUpload = async (e) => {
         }}
       >
         {currentUser?._id === profile._id && (
-          <div className="absolute bottom-6 right-6 flex gap-2 z=10">
-            <label className="backdrop-blur-sm px-4 py-2 rounded-md cursor-pointer
-                          transition-colors hover:bg-white/20 text-white">
-              <input 
-                type="file" 
-                className="hidden"
-                accept={profile?.isVerified ? "image/*,.gif" : "image/jpeg,image/png,image/webp"}
-                onChange={handleBannerUpload}
-              />
-              Upload Banner
-            </label>
+        <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-10">
+          <label className="backdrop-blur-sm p-3 rounded-md cursor-pointer
+                          transition-colors bg-black/40 text-white hover:bg-black/30 w-12 h-12
+                          flex items-center justify-center">
+            <input 
+              type="file" 
+              className="hidden"
+              accept={profile?.isVerified ? "image/*,.gif" : "image/jpeg,image/png,image/webp"}
+              onChange={handleBannerUpload}
+            />
+            <TbCameraPlus className="w-6 h-6" />
+          </label>
+          {profile.bannerImage && (
             <button
-              onClick={() => setShowColorPicker(!showColorPicker)}
-              className={`backdrop-blur-sm px-4 py-2 rounded-md transition-colors
-                        ${isLightColor(bannerColor) 
-                          ? 'bg-black/10 text-black hover:bg-black/20' 
-                          : 'bg-white/10 text-white hover:bg-white/20'}`}
+              onClick={handleRemoveBanner}
+              className="backdrop-blur-sm p-0 rounded-md transition-colors
+                      bg-black/40 text-white hover:bg-black/30 w-12 h-12
+                      flex items-center justify-center"
             >
-              Change Color
+              <FiX className="w-6 h-6" />
             </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            className={`backdrop-blur-sm p-3 rounded-md transition-colors w-12 h-12
+                      flex items-center justify-center
+                      ${isLightColor(bannerColor) 
+                        ? 'bg-black/40 text-white hover:bg-black/30' 
+                        : 'bg-black/40 text-white hover:bg-black/30'}`}
+          >
+            <LuPaintbrush className="w-6 h-6" />
+          </button>
+        </div>
+      )}
         {showColorPicker && (
           <div className="absolute bottom-0 right-6 translate-y-full mt-2 z-50">
             <div className="p-4 bg-surface-2 rounded-lg border border-white/10">
@@ -397,16 +440,26 @@ const handleBannerUpload = async (e) => {
                 )}
               </div>
               {currentUser?._id === profile._id && (
-                <label className="absolute bottom-0 right-0 bg-primary hover:bg-primary-hover 
-                                p-2 rounded-full cursor-pointer">
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                  />
-                  <FaCamera className="text-white w-4 h-4" />
-                </label>
+                <div className="absolute bottom-0 left-0 right-0 flex justify-between"> {/* Changed: positioning and layout */}
+                  {profile.avatar && (
+                    <button
+                      onClick={handleRemoveAvatar}
+                      className="bg-red-500 hover:bg-red-600 p-2 rounded-full translate-x-[-8px]" /* Added: translate for positioning */
+                      title="Remove avatar"
+                    >
+                      <FiTrash2 className="text-white w-4 h-4" />
+                    </button>
+                  )}
+                  <label className="bg-primary hover:bg-primary-hover p-2 rounded-full cursor-pointer translate-x-[8px]"> {/* Added: translate for positioning */}
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                    />
+                    <FaCamera className="text-white w-4 h-4" />
+                  </label>
+                </div>
               )}
             </div>
 
