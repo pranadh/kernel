@@ -14,7 +14,8 @@ import {
   getFollowing,
   updateProfile,
   getUserDocuments,
-  updateUserEffects
+  updateUserEffects,
+  updateUsername
 } from "../controllers/userController.js";
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -28,6 +29,7 @@ router.post("/login", loginUser);
 router.get("/me", protect, getCurrentUser);
 router.get("/all", protect, getAllUsers);
 router.put("/profile", protect, updateProfile);
+router.put("/settings/username", protect, updateUsername);
 
 // User profile routes
 router.get("/:handle", getUserProfile);

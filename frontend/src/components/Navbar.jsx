@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaUser, FaSignOutAlt, FaUserShield } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaUserShield, FaCog } from 'react-icons/fa';
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { FiSearch, FiFile, FiEye } from 'react-icons/fi';
 import { FaRegUserCircle } from "react-icons/fa";
@@ -321,6 +321,14 @@ const Navbar = () => {
                   >
                     <FaUser className="text-sm" />
                     <span>Profile</span>
+                  </Link>
+                  <Link 
+                    to="/settings"
+                    className="flex items-center gap-2 px-4 py-2 text-text-secondary hover:bg-white/5 hover:text-white transition-colors"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
+                    <FaCog className="text-sm" />
+                    <span>Settings</span>
                   </Link>
                   {user.roles?.includes('admin') && (
                     <Link 

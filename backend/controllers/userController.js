@@ -327,3 +327,29 @@ export const updateUserEffects = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const updateUsername = async (req, res) => {
+  try {
+    const { username } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Validate username
+    if (!username || username.length < 1 || username.length > 12) {
+      return res.status(400).json({ message: "Username must be between 1 and 12 characters" });
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return res.status(400).json({ message: "Username can only contain letters, numbers and underscores" });
+    }
+
+    user.username = username;
+    await user.save();
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

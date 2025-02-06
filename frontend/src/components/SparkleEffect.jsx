@@ -31,7 +31,7 @@ const SparkleEffect = ({ children, enabled = false }) => {
       id: Math.random(),
       createdAt: Date.now(),
       color: ['#FFF', '#FFD', '#FFE'][Math.floor(Math.random() * 3)],
-      size: Math.random() * 4 + 2, // Increased size range
+      size: Math.random() * 8 + 4, // Increased size range
       style: {
         top: Math.random() * 100 - 10 + '%', // Expanded range above and below
         left: Math.random() * 110 - 10 + '%', // Expanded range left and right

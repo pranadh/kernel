@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import UserProfile from "./pages/UserProfile";
 import AdminDashboard from "./pages/AdminDashboard";
+import Settings from "./pages/Settings";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import DocumentEditor from "./pages/DocumentEditor";
 import DocumentViewer from "./components/DocumentViewer";
@@ -81,6 +82,11 @@ const App = () => {
         <Route path="/info/i/:imageId" element={
           <PrivateRoute>
             <ImageInfo />
+          </PrivateRoute>
+        } />
+        <Route path="/settings" element={
+          <PrivateRoute>
+            <Settings />
           </PrivateRoute>
         } />
       </Routes>
