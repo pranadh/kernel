@@ -6,6 +6,7 @@ import RecentUrls from '../components/RecentUrls';
 import ShareXConfig from '../components/ShareXConfig';
 import RecentImages from '../components/RecentImages';
 import IosSetup from '../components/IosSetup';
+import UploadConfig from '../components/UploadConfig';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
@@ -36,8 +37,7 @@ const Home = () => {
           <div className="space-y-8">
             {user && (
               <>
-                <ShareXConfig />
-                <IosSetup />
+                <UploadConfig />
                 <RecentImages />
               </>
             )}
