@@ -137,19 +137,28 @@ const UserProfile = () => {
     const file = e.target.files[0];
     if (!file) return;
   
-    const formData = new FormData();
-    formData.append('avatar', file);
-  
-    try {
-      const { data } = await axios.post('/api/images/avatar', formData);
-      setProfile(prev => ({ ...prev, avatar: data.url }));
-      setUser(prev => ({ ...prev, avatar: data.url }));
-    } catch (error) {
-      setToast({
-        show: true,
-        message: "Failed to upload avatar",
-        type: 'error'
-      });
+    // Don't compress if it's a GIF
+    if (!file.type.includes('gif')) {
+      try {
+        // Compress image before uploading
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1024
+        };
+        const compressedFile = await imageCompression(file, options);
+        const formData = new FormData();
+        formData.append('avatar', compressedFile);
+        
+        const { data } = await axios.post('/api/images/avatar', formData);
+        setProfile(prev => ({ ...prev, avatar: data.url }));
+        setUser(prev => ({ ...prev, avatar: data.url }));
+      } catch (error) {
+        setToast({
+          show: true,
+          message: "Failed to upload avatar",
+          type: 'error'
+        });
+      }
     }
   };
 
