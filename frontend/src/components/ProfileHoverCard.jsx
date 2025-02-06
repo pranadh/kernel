@@ -112,7 +112,7 @@ const ProfileHoverCard = ({ author, anchorEl }) => {
             {userData?.avatar ? (
               <img src={userData.avatar} alt={userData.username} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-surface-1 flex items-center justify-center">
+              <div className="w-full h-full bg-surface-1/100 flex items-center justify-center">
                 <span className="text-xl font-semibold text-white">
                   {userData?.username.charAt(0).toUpperCase()}
                 </span>

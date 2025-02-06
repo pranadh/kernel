@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaSignOutAlt, FaUserShield } from 'react-icons/fa';
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { FiSearch, FiFile, FiEye } from 'react-icons/fi';
+import { FaRegUserCircle } from "react-icons/fa";
 import { debounce } from 'lodash';
 import axios from '../api';
 import logo from '../assets/logo.png';
@@ -21,6 +22,8 @@ const Navbar = () => {
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [dropdownWidth, setDropdownWidth] = useState(288); // default 72 * 4
+  const statsRef = useRef(null);
 
   const hideOnPaths = ['/register', '/login'];
 
@@ -95,6 +98,25 @@ const Navbar = () => {
     setUser(null);
     navigate('/login');
   };
+
+  useEffect(() => {
+    if (!isDropdownOpen || !statsRef.current) return;
+  
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const contentWidth = entry.target.scrollWidth;
+        const containerWidth = entry.target.clientWidth;
+        
+        if (contentWidth > containerWidth) {
+          // Content is overflowing, increase dropdown width
+          setDropdownWidth(Math.min(contentWidth + 64, 384)); // max 96 * 4
+        }
+      }
+    });
+  
+    observer.observe(statsRef.current);
+    return () => observer.disconnect();
+  }, [isDropdownOpen]);
 
   if (hideOnPaths.includes(location.pathname)) return null;
 
@@ -236,23 +258,46 @@ const Navbar = () => {
               )}
             </button>
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-[#101113]/95 backdrop-blur-sm rounded-lg 
-                           shadow-lg overflow-hidden border border-white/5 z-[102]">
+              <div className={`absolute right-0 mt-2 w-[${dropdownWidth}px] bg-[#101113]/95 backdrop-blur-sm rounded-sm 
+              shadow-lg overflow-hidden border border-white/5 z-[102]`}>
                 <div className="px-4 py-3 bg-[#16171a]">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-text-primary">{user?.username}</p>
-                      <p className="text-xs text-text-secondary">@{user?.handle}</p>
+                  <div className="flex items-start gap-2 mt-1">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/5 -ml-2">
+                      {user.avatar ? (
+                        <img 
+                          src={user.avatar}
+                          alt={user.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary-hover/10 
+                                    flex items-center justify-center">
+                          <span className="text-lg font-semibold text-text-primary">
+                            {user.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-text-secondary">
-                      <div className="text-center">
-                        <div className="font-medium">{userStats.followers.length}</div>
-                        <div className="text-text-muted">Followers</div>
+
+                    <div className="flex items-start justify-between flex-1">
+                      <div>
+                        <p className="text-sm font-medium text-text-primary">{user?.username}</p>
+                        <p className="text-xs text-text-secondary">@{user?.handle}</p>
                       </div>
-                      <div className="h-8 w-px bg-white/10"></div>
-                      <div className="text-center">
-                        <div className="font-medium">{userStats.following.length}</div>
-                        <div className="text-text-muted">Following</div>
+
+                      <div ref={statsRef} div className="flex items-center gap-2 -mt-1 ml-9">
+                        <FaRegUserCircle className="w-4 h-4 text-text-secondary" />
+                        <div className="flex flex-col items-end text-xs text-text-secondary">
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">{userStats.followers.length}</span>
+                            <span className="text-text-muted">Followers</span>
+                          </div>
+                          <div className="w-full h-px bg-white/10 my-1.5"></div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">{userStats.following.length}</span>
+                            <span className="text-text-muted">Following</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -278,10 +323,13 @@ const Navbar = () => {
                       <span>Admin Dashboard</span>
                     </Link>
                   )}
+                  
+                  <div className="border-t border-white/5"></div>
+                  
                   <button 
                     onClick={handleLogout} 
-                    className="w-full flex items-center gap-2 px-4 py-3 bg-[#101113] text-status-error 
-                             hover:bg-status-error/10 transition-colors hover:border-red-500 rounded-lg"
+                    className="w-full flex items-center gap-2 px-4 py-3 text-status-error
+                             hover:bg-status-error/10 hover:border-red-600 bg-[#101113]/95 transition-colors"
                   >
                     <FaSignOutAlt className="text-sm" />
                     <span>Log Out</span>
