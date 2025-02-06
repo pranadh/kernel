@@ -1,6 +1,7 @@
 import Image from '../models/Image.js';
 import User from '../models/User.js';
 import { promises as fs } from 'fs';
+import sharp from 'sharp';
 import path from 'path';
 
 const UPLOAD_DIR = 'uploads/images';
@@ -361,6 +362,33 @@ export const uploadIosImage = async (req, res) => {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
+    const filePath = req.file.path;
+    const fileSize = req.file.size;
+    
+    // Only compress if file is larger than 1MB and not a GIF
+    if (fileSize > 1024 * 1024 && !req.file.mimetype.includes('gif')) {
+      const compressedFilePath = path.join(
+        path.dirname(filePath),
+        `compressed_${req.file.filename}`
+      );
+
+      await sharp(filePath)
+        .resize(2000, 2000, { // Max dimensions
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .jpeg({ quality: 80 }) // Adjust quality as needed
+        .toFile(compressedFilePath);
+
+      // Replace original file with compressed version
+      await fs.unlink(filePath);
+      await fs.rename(compressedFilePath, filePath);
+      
+      // Update file size in request object
+      const stats = await fs.stat(filePath);
+      req.file.size = stats.size;
+    }
+
     const image = await Image.create({
       filename: req.file.filename,
       mimeType: req.file.mimetype,
@@ -376,7 +404,12 @@ export const uploadIosImage = async (req, res) => {
       url: `${baseUrl}/${image.imageId}`,
       deleteUrl: `https://exlt.tech/api/images/${image.imageId}`
     });
+
   } catch (error) {
+    // Clean up file if exists
+    if (req.file?.path) {
+      await fs.unlink(req.file.path).catch(console.error);
+    }
     res.status(400).json({ message: error.message });
   }
 };
