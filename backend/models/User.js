@@ -52,7 +52,7 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    default: null // Will store URL or Base64 string
+    default: null
   },
   bannerImage: {
     type: String,

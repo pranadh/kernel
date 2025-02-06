@@ -35,11 +35,13 @@ import { apiLimiter } from './middleware/rateLimitMiddleware.js';
 import { promises as fs } from 'fs';
 import { cleanupOrphanedImages } from './utils/imageCleanup.js';
 
-const ensureUploadDir = async () => {
+const ensureUploadDirs = async () => {
   try {
     await fs.mkdir('uploads/images', { recursive: true });
+    await fs.mkdir('uploads/avatars', { recursive: true });
+    await fs.mkdir('uploads/banners', { recursive: true });
   } catch (error) {
-    console.error('Failed to create upload directory:', error);
+    console.error('Failed to create upload directories:', error);
     process.exit(1);
   }
 };
@@ -65,6 +67,8 @@ app.use("/api/documents", documentRoutes);
 app.use("/api/urls", shortUrlRoutes);
 app.use("/api/images", imageRoutes);
 app.use("/api/admin", adminRoutes);
+app.use('/avatar', express.static('uploads/avatars'));
+app.use('/banner', express.static('uploads/banners'));
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
@@ -74,7 +78,7 @@ app.get('/api/health', (req, res) => {
 try {
   const connection = await connectDB();
   app.locals.db = connection.connection; // Store connection in app.locals
-  await ensureUploadDir();
+  await ensureUploadDirs();
   
   setInterval(cleanupOrphanedImages, 24 * 60 * 60 * 1000);
   

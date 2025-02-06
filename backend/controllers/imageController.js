@@ -32,6 +32,61 @@ export const uploadImage = async (req, res) => {
   }
 };
 
+export const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    if (req.file.mimetype === 'image/gif' && !req.user.isVerified) {
+      return res.status(403).json({ message: "Only verified users can upload GIF banners" });
+    }
+
+    const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
+      ? 'https://i.exlt.tech'
+      : `${req.protocol}://i.${req.get('host')}`;
+
+    // Update user's avatar URL
+    await User.findByIdAndUpdate(req.user._id, {
+      avatar: `${baseUrl}/avatar/${req.file.filename}`
+    });
+
+    res.status(201).json({
+      url: `${baseUrl}/avatar/${req.file.filename}`
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const uploadBanner = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    // Verify GIF permissions
+    if (req.file.mimetype === 'image/gif' && !req.user.isVerified) {
+      return res.status(403).json({ message: "Only verified users can upload GIF banners" });
+    }
+
+    const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
+      ? 'https://i.exlt.tech'
+      : `${req.protocol}://i.${req.get('host')}`;
+
+    // Update user's banner URL
+    await User.findByIdAndUpdate(req.user._id, {
+      bannerImage: `${baseUrl}/banner/${req.file.filename}`
+    });
+
+    res.status(201).json({
+      url: `${baseUrl}/banner/${req.file.filename}`
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 export const getImage = async (req, res) => {
   try {
     const image = await Image.findOne({ imageId: req.params.id });

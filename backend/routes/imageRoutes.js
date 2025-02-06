@@ -3,12 +3,29 @@ import multer from 'multer';
 import path from 'path';
 import User from '../models/User.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { uploadImage, getImage, deleteImage, getUserImages, getAllImages, getImageInfo, adminDeleteImage, updateImage } from '../controllers/imageController.js';
+import { 
+  uploadImage, 
+  getImage, 
+  deleteImage, 
+  getUserImages, 
+  getAllImages, 
+  getImageInfo, 
+  adminDeleteImage, 
+  updateImage,
+  uploadAvatar,    // Add these
+  uploadBanner     // Add these
+} from '../controllers/imageController.js';
 
 const router = express.Router();
 
 const storage = multer.diskStorage({
-  destination: 'uploads/images',
+  destination: (req, file, cb) => {
+    const type = req.path.split('/')[1]; // 'avatar' or 'banner'
+    const dir = type === 'avatar' ? 'uploads/avatars' : 
+                type === 'banner' ? 'uploads/banners' : 
+                'uploads/images';
+    cb(null, dir);
+  },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${Date.now()}${ext}`);
@@ -17,9 +34,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.mimetype)) {
       return cb(new Error('Invalid file type'));
     }
@@ -43,5 +60,7 @@ router.delete('/:id', protect, deleteImage);
 router.get('/user/:handle', protect, getUserImages);
 router.delete('/:id', protect, admin, adminDeleteImage);
 router.put('/:imageId', protect, updateImage);
+router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
+router.post('/banner', protect, upload.single('banner'), uploadBanner);
 
 export default router;

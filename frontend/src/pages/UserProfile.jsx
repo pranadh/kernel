@@ -137,62 +137,19 @@ const UserProfile = () => {
     const file = e.target.files[0];
     if (!file) return;
   
-    const isGif = file.type === 'image/gif';
-    if (isGif && !profile?.isVerified) {
-      setToast({
-        show: true,
-        message: "Only verified users can upload GIF avatars",
-        type: 'error'
-      });
-      return;
-    }
+    const formData = new FormData();
+    formData.append('avatar', file);
   
     try {
-      let imageData;
-  
-      if (isGif) {
-        // Handle GIF directly without compression
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            const { data } = await axios.put('/api/users/profile', {
-              avatar: reader.result
-            });
-            setProfile(prev => ({ ...prev, avatar: data.avatar }));
-            setUser(prev => ({ ...prev, ...data }));
-          } catch (error) {
-            setError("Failed to upload avatar");
-            console.error('Upload error:', error);
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // Handle other image formats with compression
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1024,
-          useWebWorker: true
-        };
-        
-        const compressedFile = await imageCompression(file, options);
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            const { data } = await axios.put('/api/users/profile', {
-              avatar: reader.result
-            });
-            setProfile(prev => ({ ...prev, avatar: data.avatar }));
-            setUser(prev => ({ ...prev, ...data }));
-          } catch (error) {
-            setError("Failed to upload avatar");
-            console.error('Upload error:', error);
-          }
-        };
-        reader.readAsDataURL(compressedFile);
-      }
+      const { data } = await axios.post('/api/images/avatar', formData);
+      setProfile(prev => ({ ...prev, avatar: data.url }));
+      setUser(prev => ({ ...prev, avatar: data.url }));
     } catch (error) {
-      setError("Failed to process image");
-      console.error('Image processing error:', error);
+      setToast({
+        show: true,
+        message: "Failed to upload avatar",
+        type: 'error'
+      });
     }
   };
 
@@ -243,74 +200,34 @@ const UserProfile = () => {
 </label>
 
 const handleBannerUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-  
-    const isGif = file.type === 'image/gif';
-    if (isGif && !profile?.isVerified) {
-      setToast({
-        show: true,
-        message: "Only verified users can upload GIF banners",
-        type: 'error'
-      });
-      return;
-    }
-  
-    try {
-      if (isGif) {
-        // Handle GIF directly
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            const { data } = await axios.put('/api/users/profile', {
-              bannerImage: reader.result
-            });
-            setBannerImage(data.bannerImage);
-            setProfile(prev => ({ ...prev, bannerImage: data.bannerImage }));
-          } catch (error) {
-            setToast({
-              show: true,
-              message: "Failed to upload banner",
-              type: 'error'
-            });
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // Compress and handle other image formats
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true
-        };
-        
-        const compressedFile = await imageCompression(file, options);
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            const { data } = await axios.put('/api/users/profile', {
-              bannerImage: reader.result
-            });
-            setBannerImage(data.bannerImage);
-            setProfile(prev => ({ ...prev, bannerImage: data.bannerImage }));
-          } catch (error) {
-            setToast({
-              show: true,
-              message: "Failed to upload banner",
-              type: 'error'
-            });
-          }
-        };
-        reader.readAsDataURL(compressedFile);
-      }
-    } catch (error) {
-      setToast({
-        show: true,
-        message: "Failed to process image",
-        type: 'error'
-      });
-    }
-  };
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const isGif = file.type === 'image/gif';
+  if (isGif && !profile?.isVerified) {
+    setToast({
+      show: true, 
+      message: "Only verified users can upload GIF banners",
+      type: 'error'
+    });
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('banner', file);
+
+  try {
+    const { data } = await axios.post('/api/images/banner', formData);
+    setBannerImage(data.url);
+    setProfile(prev => ({ ...prev, bannerImage: data.url }));
+  } catch (error) {
+    setToast({
+      show: true,
+      message: "Failed to upload banner",
+      type: 'error' 
+    });
+  }
+};
   
   const handleColorChange = async (color) => {
     try {
