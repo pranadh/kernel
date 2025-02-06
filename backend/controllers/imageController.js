@@ -44,9 +44,17 @@ export const uploadAvatar = async (req, res) => {
 
     const avatarUrl = `${baseUrl}/avatar/${req.file.filename}`;
     
+    // Get user and their old avatar URL
+    const user = await User.findById(req.user._id);
+    const oldAvatarUrl = user.avatar;
+
+    // Update user's avatar URL
     await User.findByIdAndUpdate(req.user._id, {
       avatar: avatarUrl
     });
+
+    // Delete old avatar file if it exists
+    await deleteOldFile(oldAvatarUrl);
 
     res.status(201).json({
       url: avatarUrl
@@ -72,9 +80,17 @@ export const uploadBanner = async (req, res) => {
 
     const bannerUrl = `${baseUrl}/banner/${req.file.filename}`;
 
+    // Get user and their old banner URL
+    const user = await User.findById(req.user._id);
+    const oldBannerUrl = user.bannerImage;
+
+    // Update user's banner URL
     await User.findByIdAndUpdate(req.user._id, {
       bannerImage: bannerUrl
     });
+
+    // Delete old banner file if it exists
+    await deleteOldFile(oldBannerUrl);
 
     res.status(201).json({
       url: bannerUrl
@@ -144,6 +160,28 @@ export const deleteImage = async (req, res) => {
     res.json({ message: "Image deleted" });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+const deleteOldFile = async (url) => {
+  if (!url) return;
+  
+  try {
+    // Extract filename from URL
+    const filename = url.split('/').pop();
+    if (!filename) return;
+
+    // Determine directory based on URL path
+    const isAvatar = url.includes('/avatar/');
+    const isBanner = url.includes('/banner/');
+    const dir = isAvatar ? 'uploads/avatars' : 
+                isBanner ? 'uploads/banners' : 
+                'uploads/images';
+
+    const filePath = path.join(dir, filename);
+    await fs.unlink(filePath);
+  } catch (error) {
+    console.error('Failed to delete old file:', error);
   }
 };
 
