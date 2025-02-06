@@ -6,6 +6,7 @@ import { VscVerifiedFilled } from "react-icons/vsc";
 import { FiSearch, FiFile, FiEye } from 'react-icons/fi';
 import { FaRegUserCircle } from "react-icons/fa";
 import { debounce } from 'lodash';
+import UsernameDisplay from "./UsernameDisplay";
 import axios from '../api';
 import logo from '../assets/logo.png';
 
@@ -282,7 +283,10 @@ const Navbar = () => {
                     <div className="flex items-start justify-between flex-1">
                     <div>
                       <p className="text-sm font-medium text-text-primary flex items-center gap-1">
-                        {user?.username}
+                      <UsernameDisplay 
+                        user={user}
+                        className=""
+                      />
                         {user?.isVerified && (
                           <VscVerifiedFilled className="w-4 h-4 text-primary" />
                         )}

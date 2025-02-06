@@ -4,6 +4,7 @@ import { FaUserFriends } from "react-icons/fa";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import axios from "../api";
 import UserBadges from "./UserBadges";
+import UsernameDisplay from "./UsernameDisplay";
 
 const UserList = () => {
   const [users, setUsers] = useState([]);

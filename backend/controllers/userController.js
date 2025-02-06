@@ -70,7 +70,8 @@ export const getUserProfile = async (req, res) => {
         createdAt: user.createdAt,
         avatar: user.avatar,
         bannerColor: user.bannerColor,
-        bannerImage: user.bannerImage
+        bannerImage: user.bannerImage,
+        effects: user.effects
       });
     } else {
       res.status(404).json({ message: "User not found" });
@@ -109,7 +110,8 @@ export const getCurrentUser = async (req, res) => {
       avatar: user.avatar,
       bannerImage: user.bannerImage,
       bannerColor: user.bannerColor,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      effects: user.effects
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -224,7 +226,7 @@ export const followUser = async (req, res) => {
 export const getFollowers = async (req, res) => {
   try {
     const user = await User.findOne({ handle: req.params.handle })
-      .populate('followers', 'username handle roles isVerified avatar');
+      .populate('followers', 'username handle roles isVerified avatar effects');
       
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -240,7 +242,7 @@ export const getFollowers = async (req, res) => {
 export const getFollowing = async (req, res) => {
   try {
     const user = await User.findOne({ handle: req.params.handle })
-      .populate('following', 'username handle roles isVerified avatar');
+      .populate('following', 'username handle roles isVerified avatar effects');
       
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -306,6 +308,22 @@ export const getUserDocuments = async (req, res) => {
     res.json(documents);
   } catch (error) {
     console.error("Error fetching user documents:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateUserEffects = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.effects = {
+      ...user.effects,
+      ...req.body
+    };
+    await user.save();
+    res.json(user);
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };

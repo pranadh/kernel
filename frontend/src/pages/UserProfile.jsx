@@ -15,6 +15,7 @@ import imageCompression from 'browser-image-compression';
 import UserDocuments from '../components/UserDocuments';
 import UserUrls from '../components/UserUrls';
 import UserImages from '../components/UserImages';
+import UsernameDisplay from '../components/UsernameDisplay';
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -481,9 +482,10 @@ const handleBannerUpload = async (e) => {
               <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold text-white">
-                      {profile.username}
-                    </h1>
+                    <UsernameDisplay 
+                      user={profile}
+                      className="text-2xl font-bold text-white"
+                    />
                     {profile.isVerified && (
                       <div className="relative group">
                       <VscVerifiedFilled className="w-5 h-5 text-primary" />

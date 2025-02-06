@@ -13,7 +13,8 @@ import {
   getFollowers,
   getFollowing,
   updateProfile,
-  getUserDocuments
+  getUserDocuments,
+  updateUserEffects
 } from "../controllers/userController.js";
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -30,6 +31,7 @@ router.put("/profile", protect, updateProfile);
 
 // User profile routes
 router.get("/:handle", getUserProfile);
+router.put("/effects", protect, updateUserEffects);
 router.post("/:handle/follow", protect, followUser);
 router.get("/:handle/followers", protect, getFollowers);
 router.get("/:handle/following", protect, getFollowing);

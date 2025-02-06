@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import axios from '../api';
 import UserBadges from './UserBadges';
+import UsernameDisplay from './UsernameDisplay';
 import { VscVerifiedFilled } from "react-icons/vsc";
 
 const ProfileHoverCard = ({ author, anchorEl }) => {
@@ -138,7 +139,10 @@ const ProfileHoverCard = ({ author, anchorEl }) => {
       <div className={`px-4 pb-4 ${(!userData?.roles?.length && !userData?.isVerified) ? 'mt-10' : 'mt-2'}`}>
         <div className="w-full bg-surface-1/50 rounded-lg px-4 py-2 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-white text-xl">{userData?.username}</span>
+            <UsernameDisplay 
+              user={userData}
+              className="text-xl font-semibold text-white"
+            />
             {userData?.isVerified && <VscVerifiedFilled className="w-5 h-5 text-primary" />}
           </div>
           <p className="text-sm text-gray-400">@{userData?.handle}</p>

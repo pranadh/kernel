@@ -68,6 +68,14 @@ const userSchema = new mongoose.Schema({
       message: 'Invalid hex color code'
     }
   },
+  effects: {
+    type: Object,
+    default: {
+      type: null, // 'lightning', 'sparkle', etc.
+      enabled: false,
+      config: {} // Store effect-specific configuration
+    }
+  },
 }, {
   timestamps: false, // Disable automatic timestamps
 });

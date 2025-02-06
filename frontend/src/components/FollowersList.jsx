@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import UserBadges from './UserBadges';
+import UsernameDisplay from './UsernameDisplay';
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { FaUserFriends } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
@@ -69,9 +70,10 @@ const FollowersList = ({ users, title, onClose, onUserClick }) => {
                     
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-text-primary text-lg group-hover:text-primary transition-colors">
-                          {user.username}
-                        </span>
+                        <UsernameDisplay 
+                          user={user}
+                          className="font-medium text-text-primary text-lg group-hover:text-primary transition-colors"
+                        />
                         {user.isVerified && (
                           <VscVerifiedFilled className="w-4 h-4 text-primary" />
                         )}
