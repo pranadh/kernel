@@ -354,3 +354,29 @@ export const deleteBanner = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const uploadIosImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    const image = await Image.create({
+      filename: req.file.filename,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+      author: req.user._id
+    });
+
+    const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
+      ? 'https://i.exlt.tech'
+      : `${req.protocol}://i.${req.get('host')}`;
+
+    res.status(201).json({
+      url: `${baseUrl}/${image.imageId}`,
+      deleteUrl: `https://exlt.tech/api/images/${image.imageId}`
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};

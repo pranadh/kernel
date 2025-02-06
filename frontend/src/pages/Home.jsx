@@ -5,6 +5,7 @@ import UrlShortener from '../components/UrlShortener';
 import RecentUrls from '../components/RecentUrls';
 import ShareXConfig from '../components/ShareXConfig';
 import RecentImages from '../components/RecentImages';
+import IosSetup from '../components/IosSetup';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
@@ -16,9 +17,9 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen pt-[70px] bg-[#101113]"> {/* Increased top padding */}
-      <div className="container mx-auto max-w-[2160px] px-1"> {/* Increased max width, reduced horizontal padding */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12"> {/* Increased gap between columns */}
+    <div className="min-h-screen pt-[70px] bg-[#101113]">
+      <div className="container mx-auto max-w-[2160px] px-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Left Column - Documents */}
           <div className="space-y-8">
             <DocumentList />
@@ -32,10 +33,11 @@ const Home = () => {
           </div>
 
           {/* Right Column - Images */}
-          <div className="space-y-8"> {/* Added top margin */}
+          <div className="space-y-8">
             {user && (
               <>
                 <ShareXConfig />
+                <IosSetup />
                 <RecentImages />
               </>
             )}

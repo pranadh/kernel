@@ -15,7 +15,8 @@ import {
   uploadAvatar,
   uploadBanner,
   deleteAvatar,
-  deleteBanner
+  deleteBanner,
+  uploadIosImage
 } from '../controllers/imageController.js';
 
 const router = express.Router();
@@ -60,6 +61,7 @@ router.delete('/avatar', protect, deleteAvatar);
 router.delete('/banner', protect, deleteBanner);
 
 router.post('/', protect, upload.single('image'), uploadImage);
+router.post('/ios', protect, upload.single('image'), uploadIosImage);
 router.get('/', protect, getAllImages);
 router.get('/info/:id', protect, getImageInfo);
 router.get('/:id', getImage);
