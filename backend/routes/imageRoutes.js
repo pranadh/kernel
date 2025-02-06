@@ -56,6 +56,8 @@ router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
 router.post('/banner', protect, upload.single('banner'), uploadBanner);
 router.post('/', protect, upload.single('image'), uploadImage);
 router.get('/', protect, getAllImages);
+router.delete('/avatar', protect, deleteAvatar);
+router.delete('/banner', protect, deleteBanner);
 router.get('/info/:id', protect, getImageInfo);
 router.get('/:id', getImage);
 router.delete('/:id', protect, deleteImage);

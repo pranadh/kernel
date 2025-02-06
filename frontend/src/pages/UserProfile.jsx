@@ -243,7 +243,7 @@ const handleBannerUpload = async (e) => {
 
   const handleRemoveAvatar = async () => {
     try {
-      await axios.put('/api/users/profile', { avatar: null });
+      await axios.delete('/api/images/avatar');
       setProfile(prev => ({ ...prev, avatar: null }));
       setUser(prev => ({ ...prev, avatar: null }));
     } catch (error) {
@@ -257,7 +257,7 @@ const handleBannerUpload = async (e) => {
 
   const handleRemoveBanner = async () => {
     try {
-      await axios.put('/api/users/profile', { bannerImage: null });
+      await axios.delete('/api/images/banner');
       setProfile(prev => ({ ...prev, bannerImage: null }));
       setBannerImage(null);
     } catch (error) {
