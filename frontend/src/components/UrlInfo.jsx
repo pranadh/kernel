@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FiLink, FiUser, FiClock, FiEye, FiArrowLeft } from 'react-icons/fi';
 import { LuMousePointerClick } from "react-icons/lu";
 import { Link } from 'react-router-dom';
+import { VscVerifiedFilled } from "react-icons/vsc";
 import ProfileHoverCard from './ProfileHoverCard';
 import axios from '../api';
 
@@ -126,7 +127,12 @@ const UrlInfo = () => {
               </div>
             </div>
             <div>
-              <div className="text-white font-medium">{urlInfo.author.username}</div>
+              <div className="text-white font-medium flex items-center gap-1">
+                {urlInfo.author.username}
+                {urlInfo.author.isVerified && (
+                  <VscVerifiedFilled className="w-4 h-4 text-primary" />
+                )}
+              </div>
               <div className="text-gray-400 text-sm">@{urlInfo.author.handle}</div>
             </div>
           </Link>

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FiImage, FiClock, FiArrowLeft, FiExternalLink, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import { PiMouseScroll } from "react-icons/pi";
 import { SlMagnifier } from "react-icons/sl";
+import { VscVerifiedFilled } from "react-icons/vsc";
 import ProfileHoverCard from './ProfileHoverCard';
 import axios from '../api';
 
@@ -159,7 +160,12 @@ const ImageInfo = () => {
               </div>
             </div>
             <div>
-              <div className="text-white font-medium">{imageInfo.author.username}</div>
+              <div className="text-white font-medium flex items-center gap-1">
+                {imageInfo.author.username}
+                {imageInfo.author.isVerified && (
+                  <VscVerifiedFilled className="w-4 h-4 text-primary" />
+                )}
+              </div>
               <div className="text-gray-400 text-sm">@{imageInfo.author.handle}</div>
             </div>
           </Link>

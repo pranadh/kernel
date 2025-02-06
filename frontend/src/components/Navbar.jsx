@@ -280,12 +280,17 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex items-start justify-between flex-1">
-                      <div>
-                        <p className="text-sm font-medium text-text-primary">{user?.username}</p>
-                        <p className="text-xs text-text-secondary">@{user?.handle}</p>
-                      </div>
+                    <div>
+                      <p className="text-sm font-medium text-text-primary flex items-center gap-1">
+                        {user?.username}
+                        {user?.isVerified && (
+                          <VscVerifiedFilled className="w-4 h-4 text-primary" />
+                        )}
+                      </p>
+                      <p className="text-xs text-text-secondary">@{user?.handle}</p>
+                    </div>
 
-                      <div ref={statsRef} div className="flex items-center gap-2 -mt-1 ml-9">
+                      <div ref={statsRef} className="flex items-center gap-2 -mt-1 ml-9">
                         <FaRegUserCircle className="w-4 h-4 text-text-secondary" />
                         <div className="flex flex-col items-end text-xs text-text-secondary">
                           <div className="flex items-center gap-1">
@@ -304,7 +309,7 @@ const Navbar = () => {
                 </div>
                 
                 <div className="border-t border-white/5"></div>
-                <div className="py-1">
+                <div className="">
                   <Link 
                     to={`/u/${user.handle}`} 
                     className="flex items-center gap-2 px-4 py-2 text-text-secondary hover:bg-white/5 hover:text-white transition-colors"
