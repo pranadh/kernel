@@ -140,14 +140,22 @@ const UserProfile = () => {
     const file = e.target.files[0];
     if (!file) return;
   
+    const isGif = file.type === 'image/gif';
+    if (isGif && !profile?.isVerified) {
+      setToast({
+        show: true,
+        message: "Only verified users can upload GIF avatars",
+        type: 'error'
+      });
+      return;
+    }
+  
     try {
       const formData = new FormData();
       
       if (file.type.includes('gif')) {
-        // For GIFs, upload directly without compression
         formData.append('avatar', file);
       } else {
-        // For other images, compress first
         const options = {
           maxSizeMB: 1,
           maxWidthOrHeight: 1024
