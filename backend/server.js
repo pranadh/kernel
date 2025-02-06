@@ -48,18 +48,21 @@ const ensureUploadDirs = async () => {
 
 app.use((req, res, next) => {
   if (req.subdomains[0] === 'i') {
-    // Check if it's an avatar/banner request
+    console.log('Image request:', {
+      path: req.path,
+      subdomain: req.subdomains[0],
+      fullUrl: req.url
+    });
+    
     if (req.path.startsWith('/avatar/') || req.path.startsWith('/banner/')) {
-      // Keep the original path for avatars and banners
       return next();
     }
     
-    // Handle regular image requests
     const imageId = req.path.substring(1);
     if (imageId) {
       req.url = `/api/images/${imageId}`;
-      return next();
     }
+    return next();
   }
   next();
 });
