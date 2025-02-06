@@ -333,7 +333,7 @@ const handleBannerUpload = async (e) => {
     <div className="min-h-screen bg-[#101113]">
       {/* Banner */}
       <div 
-        className="h-48 md:h-100 lg:h-96 w-full relative" // Updated height classes
+        className="h-[192px] md:h-[320px] lg:h-[400px] w-full relative" // Updated height classes
         style={{ 
           backgroundColor: bannerColor,
           backgroundImage: profile.bannerImage ? `url(${profile.bannerImage})` : null,
