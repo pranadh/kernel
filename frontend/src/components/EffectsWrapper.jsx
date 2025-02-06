@@ -1,8 +1,17 @@
 import React from 'react';
 import LightningEffect from './LightningEffect';
 import SparkleEffect from './SparkleEffect';
+import GlowEffect from './GlowEffect';
 
-const EffectsWrapper = ({ user, children }) => {
+const EffectsWrapper = ({ user, children, location }) => {
+    
+  // Get size based on current context
+  const getEffectSize = () => {
+    if (location?.includes('/u/')) return 'large';
+    if (location?.includes('profile-hover')) return 'large';
+    return 'normal';
+  };
+
   if (!user?.effects?.enabled) {
     return children;
   }
@@ -19,6 +28,17 @@ const EffectsWrapper = ({ user, children }) => {
         <SparkleEffect enabled={true} config={user?.effects?.config}>
           {children}
         </SparkleEffect>
+      );
+    // In the switch statement:
+    case 'glow':
+      return (
+        <GlowEffect 
+          enabled={true} 
+          config={user?.effects?.config}
+          size={getEffectSize()}
+        >
+          {children}
+        </GlowEffect>
       );
     default:
       return children;

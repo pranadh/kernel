@@ -5,6 +5,7 @@ import { LuMousePointerClick } from "react-icons/lu";
 import { Link } from 'react-router-dom';
 import { VscVerifiedFilled } from "react-icons/vsc";
 import ProfileHoverCard from './ProfileHoverCard';
+import UsernameDisplay from './UsernameDisplay';
 import axios from '../api';
 
 const UrlInfo = () => {
@@ -128,7 +129,10 @@ const UrlInfo = () => {
             </div>
             <div>
               <div className="text-white font-medium flex items-center gap-1">
-                {urlInfo.author.username}
+                <UsernameDisplay 
+                  user={urlInfo.author}
+                  className="text-white font-medium"
+                />
                 {urlInfo.author.isVerified && (
                   <VscVerifiedFilled className="w-4 h-4 text-primary" />
                 )}

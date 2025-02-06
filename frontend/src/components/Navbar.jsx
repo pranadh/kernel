@@ -7,6 +7,7 @@ import { FiSearch, FiFile, FiEye } from 'react-icons/fi';
 import { FaRegUserCircle } from "react-icons/fa";
 import { debounce } from 'lodash';
 import UsernameDisplay from "./UsernameDisplay";
+import SparkleEffect from './SparkleEffect';
 import axios from '../api';
 import logo from '../assets/logo.png';
 
@@ -23,7 +24,8 @@ const Navbar = () => {
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const [dropdownWidth, setDropdownWidth] = useState(288); // default 72 * 4
+  const [dropdownWidth, setDropdownWidth] = useState(288);
+  const [logoHovered, setLogoHovered] = useState(false);
   const statsRef = useRef(null);
 
   const hideOnPaths = ['/register', '/login'];
@@ -124,8 +126,15 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 h-[70px] bg-surface-1 backdrop-blur-sm 
                     flex items-center justify-between px-8 z-[100] border-b border-white/5">
-      <Link to="/" className="hover:scale-110 transition-transform duration-200">
-        <img src={logo} alt="Exalt" className="h-8" />
+      <Link 
+        to="/" 
+        className="hover:scale-110 transition-transform duration-100 relative"
+        onMouseEnter={() => setLogoHovered(true)}
+        onMouseLeave={() => setLogoHovered(false)}
+      >
+        <SparkleEffect enabled={logoHovered}>
+          <img src={logo} alt="Exalt" className="h-8" />
+        </SparkleEffect>
       </Link>
 
       <div className="flex-1 max-w-lg mx-auto px-4 relative" ref={searchRef}>

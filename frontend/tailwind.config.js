@@ -51,7 +51,8 @@ export default {
         'fade-out': 'fadeOut 200ms ease-out',
         'progress': 'progress 3s linear',
         'sparkle-fade': 'sparkle-fade 1000ms ease-in-out forwards',
-        'lightning': 'lightning 300ms ease-out forwards'
+        'lightning': 'lightning 300ms ease-out forwards',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite'
       },
       keyframes: {
         slideUp: {
@@ -100,6 +101,11 @@ export default {
             transform: 'translate(-50%, -50%) scale(0) rotate(var(--rotation))',
             opacity: '0' 
           }
+        },
+        'pulse-glow': {
+          '0%': { opacity: 0.4 },
+          '50%': { opacity: 1 },
+          '100%': { opacity: 0.4 }
         }
       },
       backgroundImage: {

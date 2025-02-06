@@ -5,6 +5,7 @@ import { PiMouseScroll } from "react-icons/pi";
 import { SlMagnifier } from "react-icons/sl";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import ProfileHoverCard from './ProfileHoverCard';
+import UsernameDisplay from './UsernameDisplay';
 import axios from '../api';
 
 const ImageInfo = () => {
@@ -161,7 +162,10 @@ const ImageInfo = () => {
             </div>
             <div>
               <div className="text-white font-medium flex items-center gap-1">
-                {imageInfo.author.username}
+                <UsernameDisplay 
+                  user={imageInfo.author}
+                  className="text-white font-medium"
+                />
                 {imageInfo.author.isVerified && (
                   <VscVerifiedFilled className="w-4 h-4 text-primary" />
                 )}

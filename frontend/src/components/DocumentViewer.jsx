@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { FiEye, FiEdit2, FiTrash2, FiCopy, FiCheck, FiArrowLeft } from 'react-icons/fi';
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { VscVerifiedFilled } from "react-icons/vsc";
-import ProfileHoverCard from '../components/ProfileHoverCard';
+import ProfileHoverCard from './ProfileHoverCard';
+import UsernameDisplay from './UsernameDisplay';
 import axios from '../api';
 
 const DocumentViewer = () => {
@@ -112,7 +113,10 @@ const DocumentViewer = () => {
                     
                     <div>
                       <h3 className="text-lg font-medium text-white group-hover:text-primary transition-colors flex items-center gap-2">
-                        {document.author.username}
+                        <UsernameDisplay 
+                          user={document.author}
+                          className="text-lg font-medium text-white group-hover:text-primary transition-colors"
+                        />
                         {document.author.isVerified && (
                           <VscVerifiedFilled className="w-5 h-5 text-primary" />
                         )}

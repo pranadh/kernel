@@ -14,7 +14,7 @@ const Settings = () => {
   const [openEffect, setOpenEffect] = useState(null);
   const [effectConfig, setEffectConfig] = useState({
     lightning: {
-      color: user?.effects?.config?.color || '#00FFFF',
+      color: user?.effects?.config?.color || '#FFFFF',
       frequency: user?.effects?.config?.frequency || 200,
       enabled: user?.effects?.enabled && user?.effects?.type === 'lightning' || false
     },
@@ -22,8 +22,23 @@ const Settings = () => {
       color: user?.effects?.config?.color || '#FFFFFF', 
       frequency: user?.effects?.config?.frequency || 100,
       enabled: user?.effects?.enabled && user?.effects?.type === 'sparkle' || false
+    },
+    glow: {
+      color: user?.effects?.config?.color || '#FFFFF',
+      frequency: user?.effects?.config?.frequency || 2000,
+      enabled: user?.effects?.enabled && user?.effects?.type === 'glow' || false
     }
   });
+  
+  const ColorPreview = ({ color }) => (
+    <div 
+      className="w-6 h-6 rounded border border-white/10" 
+      style={{ 
+        backgroundColor: color,
+        boxShadow: `0 0 10px ${color}`
+      }}
+    />
+  );
 
   const handleUsernameSubmit = async (e) => {
     e.preventDefault();
@@ -228,17 +243,20 @@ const Settings = () => {
                             <div className="space-y-4">
                               <div>
                                 <label className="text-sm text-text-secondary">Color (Hex)</label>
-                                <input
-                                  type="text"
-                                  value={effectConfig.lightning.color}
-                                  onChange={(e) => setEffectConfig(prev => ({
-                                    ...prev,
-                                    lightning: { ...prev.lightning, color: e.target.value }
-                                  }))}
-                                  className="mt-1 w-full p-2 bg-surface-2 rounded border border-white/5 
-                                           text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                                  placeholder="#00FFFF"
-                                />
+                                <div className="flex items-center gap-2 mt-1">
+                                    <input
+                                    type="text"
+                                    value={effectConfig.glow.color}
+                                    onChange={(e) => setEffectConfig(prev => ({
+                                        ...prev,
+                                        glow: { ...prev.glow, color: e.target.value }
+                                    }))}
+                                    className="flex-1 p-2 bg-surface-2 rounded border border-white/5 
+                                                text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                                    placeholder="#00FFFF"
+                                    />
+                                    <ColorPreview color={effectConfig.glow.color} />
+                                </div>
                               </div>
                               <div>
                                 <label className="text-sm text-text-secondary">Frequency (ms)</label>
@@ -290,17 +308,20 @@ const Settings = () => {
                             <div className="space-y-4">
                               <div>
                                 <label className="text-sm text-text-secondary">Color (Hex)</label>
-                                <input
-                                  type="text"
-                                  value={effectConfig.sparkle.color}
-                                  onChange={(e) => setEffectConfig(prev => ({
-                                    ...prev,
-                                    sparkle: { ...prev.sparkle, color: e.target.value }
-                                  }))}
-                                  className="mt-1 w-full p-2 bg-surface-2 rounded border border-white/5 
-                                           text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                                  placeholder="#FFFFFF"
-                                />
+                                <div className="flex items-center gap-2 mt-1">
+                                    <input
+                                    type="text"
+                                    value={effectConfig.glow.color}
+                                    onChange={(e) => setEffectConfig(prev => ({
+                                        ...prev,
+                                        glow: { ...prev.glow, color: e.target.value }
+                                    }))}
+                                    className="flex-1 p-2 bg-surface-2 rounded border border-white/5 
+                                                text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                                    placeholder="#00FFFF"
+                                    />
+                                    <ColorPreview color={effectConfig.glow.color} />
+                                </div>
                               </div>
                               <div>
                                 <label className="text-sm text-text-secondary">Frequency (ms)</label>
@@ -329,6 +350,71 @@ const Settings = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* Glow Effect Dropdown */}
+                        <div className="border border-white/5 rounded-lg overflow-hidden">
+                            <button
+                            onClick={() => setOpenEffect(openEffect === 'glow' ? null : 'glow')}
+                            className="w-full p-4 flex items-center justify-between bg-surface-2 hover:bg-surface-2/80 transition-colors"
+                            >
+                            <div className="flex items-center gap-4">
+                                <FiZap className="w-5 h-5 text-primary" />
+                                <span className="text-white font-medium">Glow Effect</span>
+                            </div>
+                            {openEffect === 'glow' ? (
+                                <FiChevronDown className="w-5 h-5 text-text-secondary" />
+                            ) : (
+                                <FiChevronRight className="w-5 h-5 text-text-secondary" />
+                            )}
+                            </button>
+                            
+                            {openEffect === 'glow' && (
+                            <div className="p-4 bg-surface-1 border-t border-white/5">
+                                <div className="space-y-4">
+                                <div>
+                                    <label className="text-sm text-text-secondary">Color (Hex)</label>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <input
+                                        type="text"
+                                        value={effectConfig.glow.color}
+                                        onChange={(e) => setEffectConfig(prev => ({
+                                            ...prev,
+                                            glow: { ...prev.glow, color: e.target.value }
+                                        }))}
+                                        className="flex-1 p-2 bg-surface-2 rounded border border-white/5 
+                                                    text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                                        placeholder="#00FFFF"
+                                        />
+                                        <ColorPreview color={effectConfig.glow.color} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-sm text-text-secondary">Frequency (ms)</label>
+                                    <input
+                                    type="number"
+                                    value={effectConfig.glow.frequency}
+                                    onChange={(e) => setEffectConfig(prev => ({
+                                        ...prev,
+                                        glow: { ...prev.glow, frequency: e.target.value }
+                                    }))}
+                                    className="mt-1 w-full p-2 bg-surface-2 rounded border border-white/5 
+                                            text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                                    placeholder="2000"
+                                    />
+                                </div>
+                                <div className="flex justify-end">
+                                    <button
+                                    onClick={() => handleEffectSave('glow')}
+                                    className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded 
+                                            transition-colors"
+                                    >
+                                    Save Configuration
+                                    </button>
+                                </div>
+                                </div>
+                            </div>
+                            )}
+                        </div>
                   
                       {/* Global Effects Toggle */}
                       <div className="flex items-center justify-between p-4 bg-surface-2 rounded-lg border border-white/5">

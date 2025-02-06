@@ -25,7 +25,7 @@ export const getUserDocuments = async (req, res) => {
 export const getDocument = async (req, res) => {
   try {
     const document = await Document.findOne({ documentId: req.params.id })
-      .populate('author', 'username handle avatar isVerified') // Add isVerified to populated fields
+      .populate('author', 'username handle avatar isVerified effects')
       .select('title content documentId viewCount updatedAt createdAt author');
     
     if (!document) {
@@ -83,7 +83,7 @@ export const updateDocument = async (req, res) => {
         { documentId: req.params.id },
         { $inc: { viewCount: 1 } },
         { new: true, timestamps: false }
-      ).populate('author', 'username handle avatar isVerified');
+      ).populate('author', 'username handle avatar isVerified effects');
       
       if (!document) {
         return res.status(404).json({ message: 'Document not found' });
@@ -100,7 +100,7 @@ export const updateDocument = async (req, res) => {
       const documents = await Document.find({ isPublic: true })
         .sort({ createdAt: -1 })
         .limit(20)
-        .populate('author', 'username handle avatar isVerified')
+        .populate('author', 'username handle avatar isVerified effects')
         .select('title content documentId viewCount updatedAt createdAt');
       
       res.json(documents);
@@ -122,7 +122,7 @@ export const updateDocument = async (req, res) => {
       })
       .limit(10)
       .sort({ updatedAt: -1 })
-      .populate('author', 'username handle avatar isVerified')
+      .populate('author', 'username handle avatar isVerified effects')
       .select('title documentId author viewCount updatedAt createdAt');
   
       res.json(documents);
@@ -135,7 +135,7 @@ export const updateDocument = async (req, res) => {
     try {
       const documents = await Document.find({})
         .sort({ createdAt: -1 })
-        .populate('author', 'username handle avatar isVerified')
+        .populate('author', 'username handle avatar isVerified effects')
         .select('title documentId viewCount updatedAt createdAt author');
       
       res.json(documents);

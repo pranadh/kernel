@@ -222,7 +222,7 @@ export const getUrlInfo = async (req, res) => {
     
     const url = await ShortUrl.findOne({ 
       shortId
-    }).populate('author', 'username handle avatar isVerified');
+    }).populate('author', 'username handle avatar isVerified effects');
 
     if (!url) {
       return res.status(404).json({ message: "URL not found" });

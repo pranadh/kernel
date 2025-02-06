@@ -85,7 +85,7 @@ export const getUserProfile = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find({})
-      .select('username handle roles isVerified followers following createdAt avatar');
+      .select('username handle roles isVerified followers following createdAt avatar effects');
     res.json(users);
   } catch (error) {
     console.error("Get users error:", error);

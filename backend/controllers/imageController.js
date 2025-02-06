@@ -251,7 +251,7 @@ export const getAllImages = async (req, res) => {
 export const getImageInfo = async (req, res) => {
   try {
     const image = await Image.findOne({ imageId: req.params.id })
-      .populate('author', 'username handle avatar isVerified');
+      .populate('author', 'username handle avatar isVerified effects');
     
     if (!image) {
       return res.status(404).json({ message: "Image not found" });

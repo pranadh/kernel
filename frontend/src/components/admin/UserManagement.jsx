@@ -4,6 +4,7 @@ import { FaUsers, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
 import { FiChevronDown } from 'react-icons/fi';
 import UserBadges from '../UserBadges';
 import RoleManager from '../RoleManager';
+import UsernameDisplay from '../UsernameDisplay';
 
 const UserManagement = ({ 
   users,
@@ -161,9 +162,10 @@ const UserManagement = ({
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-text-primary text-lg">
-                      {user.username}
-                    </span>
+                    <UsernameDisplay 
+                      user={user}
+                      className="text-white text-lg font-medium"
+                    />
                   </div>
                   <div className="text-sm text-text-secondary">
                     @{user.handle}
