@@ -98,14 +98,14 @@ const RecentUrls = ({ refreshTrigger }) => {
           {shortUrls.map((url) => (
             <div 
               key={url._id} 
-              className="p-4 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
+              className="p-4 rounded-lg bg-yellow-500/5 hover:bg-yellow-200/5 border border-white/5 
                         transition-all duration-300 hover:border-yellow-500/20 hover:shadow-lg 
                         hover:shadow-yellow-500/5 cursor-pointer"
               onClick={(e) => handleCardClick(url.shortId, e)}
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 
-                              bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 
+                              bg-gradient-to-br from-yellow-200/10 to-yellow-600/10 
                               flex items-center justify-center flex-shrink-0">
                   <FiLink className="w-6 h-6 text-yellow-500/75" />
                 </div>

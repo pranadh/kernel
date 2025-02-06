@@ -91,7 +91,7 @@ const RecentImages = () => {
             <div 
               key={image._id} 
               onClick={(e) => handleCardClick(image.imageId, e)}
-              className="p-3 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
+              className="p-3 rounded-lg bg-red-500/5 hover:bg-red-200/5 border border-white/5 
                         transition-all duration-300 hover:border-red-500/20 hover:shadow-lg 
                         hover:shadow-red-500/5 cursor-pointer"
             >

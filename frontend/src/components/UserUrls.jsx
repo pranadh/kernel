@@ -238,7 +238,7 @@ const UserUrls = ({ urls = [], loading, username, handle, currentUser, onUrlsUpd
               <div 
                 key={url._id} 
                 onClick={(e) => handleCardClick(url.shortId, e)}
-                className="p-4 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-white/5 
+                className="p-4 rounded-lg bg-yellow-500/5 hover:bg-yellow-200/5 border border-white/5 
                         transition-all duration-300 hover:border-yellow-500/20 hover:shadow-lg 
                         hover:shadow-yellow-500/5 cursor-pointer"
               >

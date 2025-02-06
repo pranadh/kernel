@@ -67,7 +67,7 @@ const UploadConfig = () => {
 
       <div className="flex border-b border-white/5">
       <button
-        className={`flex-1 px-6 py-3 text-sm font-medium focus:outline-none focus-visible:border-red-500 ${
+        className={`rounded-none flex-1 px-6 py-3 text-sm font-medium focus:outline-none focus-visible:border-red-500 ${
             activeTab === 'sharex' 
             ? 'text-red-500 border-b-2 border-red-500 hover:border-red-500'
             : 'text-gray-400 hover:text-white border-b-2 border-transparent hover:border-transparent'
@@ -80,7 +80,7 @@ const UploadConfig = () => {
         </div>
         </button>
         <button
-        className={`flex-1 px-6 py-3 text-sm font-medium focus:outline-none focus-visible:border-red-500 ${
+        className={`rounded-none flex-1 px-6 py-3 text-sm font-medium focus:outline-none focus-visible:border-red-500 ${
             activeTab === 'ios' 
             ? 'text-red-500 border-b-2 border-red-500 hover:border-red-500' 
             : 'text-gray-400 hover:text-white border-b-2 border-transparent hover:border-transparent'
