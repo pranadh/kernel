@@ -6,6 +6,7 @@ import { SlMagnifier } from "react-icons/sl";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import ProfileHoverCard from './ProfileHoverCard';
 import UsernameDisplay from './UsernameDisplay';
+import ErrorRedirect from './ErrorRedirect';
 import axios from '../api';
 
 const ImageInfo = () => {
@@ -83,6 +84,9 @@ const ImageInfo = () => {
         setImageInfo(data);
       } catch (error) {
         setError(error.response?.data?.message || 'Failed to fetch image information');
+        setTimeout(() => {
+          window.location.href = 'https://exlt.tech';
+        }, 3000);
       } finally {
         setLoading(false);
       }
@@ -103,11 +107,7 @@ const ImageInfo = () => {
     </div>
   );
 
-  if (error) return (
-    <div className="min-h-screen bg-[#101113] flex items-center justify-center p-4">
-      <div className="text-red-400 text-xl font-semibold">{error}</div>
-    </div>
-  );
+  if (error) return <ErrorRedirect message={error} />;
 
   return (
     <div className="min-h-screen bg-[#101113] flex items-center justify-center p-4">

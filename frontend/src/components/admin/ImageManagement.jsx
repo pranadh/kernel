@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiImage, FiSearch, FiTrash2, FiChevronDown } from 'react-icons/fi';
 import { FiClock, FiHardDrive } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 import ProfileHoverCard from '../ProfileHoverCard';
 import Toast from '../Toast';
 import axios from '../../api';
@@ -12,6 +13,8 @@ const ImageManagement = () => {
   const [filteredImages, setFilteredImages] = useState([]);
   const [searchType, setSearchType] = useState('imageId');
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [hoveredAuthor, setHoveredAuthor] = useState(null);
+  const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [error, setError] = useState(null);
 
@@ -87,6 +90,16 @@ const ImageManagement = () => {
         type: 'error'
       });
     }
+  };
+
+  const handleMouseEnter = (e, author) => {
+    setHoverAnchorEl(e.currentTarget);
+    setHoveredAuthor(author);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverAnchorEl(null);
+    setHoveredAuthor(null);
   };
 
   if (loading) return <div className="text-center py-8">Loading...</div>;
@@ -169,27 +182,30 @@ const ImageManagement = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="relative group flex-shrink-0">
-                      <div className="block w-8 h-8 rounded-full overflow-hidden border border-white/5 cursor-pointer"
-                           onClick={() => window.location.href = `/u/${image.author.handle}`}>
-                        {image.author.avatar ? (
-                          <img 
-                            src={image.author.avatar} 
-                            alt={image.author.username}
-                            className="w-full h-full object-cover" 
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-                            <span className="text-sm font-semibold text-white">
-                              {image.author.username.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="hidden group-hover:block">
-                        <ProfileHoverCard author={image.author} />
-                      </div>
-                    </div>
+                  <div 
+                    className="relative flex-shrink-0"
+                    onMouseEnter={(e) => handleMouseEnter(e, image.author)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <Link 
+                      to={`/u/${image.author.handle}`}
+                      className="block w-8 h-8 rounded-full overflow-hidden border border-white/5"
+                    >
+                      {image.author.avatar ? (
+                        <img 
+                          src={image.author.avatar} 
+                          alt={image.author.username}
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-surface-2 flex items-center justify-center">
+                          <span className="text-sm font-semibold text-white">
+                            {image.author.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </Link>
+                  </div>
 
                     <div>
                       <a 
@@ -241,6 +257,12 @@ const ImageManagement = () => {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast({ show: false, message: '', type: 'error' })}
+        />
+      )}
+      {hoveredAuthor && hoverAnchorEl && (
+        <ProfileHoverCard 
+          author={hoveredAuthor}
+          anchorEl={hoverAnchorEl}
         />
       )}
     </>

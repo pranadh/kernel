@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { VscVerifiedFilled } from "react-icons/vsc";
 import ProfileHoverCard from './ProfileHoverCard';
 import UsernameDisplay from './UsernameDisplay';
+import ErrorRedirect from './ErrorRedirect';
 import axios from '../api';
 
 const UrlInfo = () => {
@@ -34,6 +35,9 @@ const UrlInfo = () => {
         setUrlInfo(data);
       } catch (error) {
         setError(error.response?.data?.message || 'Failed to fetch URL information');
+        setTimeout(() => {
+          window.location.href = 'https://exlt.tech';
+        }, 3000);
       } finally {
         setLoading(false);
       }
@@ -50,13 +54,7 @@ const UrlInfo = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#101113] flex items-center justify-center p-4">
-        <div className="text-red-400 text-xl font-semibold">{error}</div>
-      </div>
-    );
-  }
+  if (error) return <ErrorRedirect message={error} />;
 
   const getTimeUntilExpiry = (expiresAt) => {
     if (!expiresAt) return 'Never expires';

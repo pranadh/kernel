@@ -29,7 +29,7 @@ export const getDocument = async (req, res) => {
       .select('title content documentId viewCount updatedAt createdAt author');
     
     if (!document) {
-      return res.status(404).json({ message: "Document not found" });
+      return res.status(404).json({ message: "Document not found." });
     }
 
     res.json(document);
@@ -42,7 +42,7 @@ export const updateDocument = async (req, res) => {
   try {
     const document = await Document.findOne({ documentId: req.params.id });
     if (!document) {
-      return res.status(404).json({ message: 'Document not found' });
+      return res.status(404).json({ message: 'Document not found.' });
     }
 
     // Allow admins to edit any document, otherwise check if user is author
@@ -62,7 +62,7 @@ export const updateDocument = async (req, res) => {
     try {
       const document = await Document.findOne({ documentId: req.params.id });
       if (!document) {
-        return res.status(404).json({ message: 'Document not found' });
+        return res.status(404).json({ message: 'Document not found.' });
       }
   
       // Allow admins to delete any document, otherwise check if user is author
@@ -86,7 +86,7 @@ export const updateDocument = async (req, res) => {
       ).populate('author', 'username handle avatar isVerified effects');
       
       if (!document) {
-        return res.status(404).json({ message: 'Document not found' });
+        return res.status(404).json({ message: 'Document not found.' });
       }
       
       res.json(document);

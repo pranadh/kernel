@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiLink, FiSearch, FiTrash2, FiEdit2, FiSave, FiX, FiChevronDown } from 'react-icons/fi';
 import { LuAlarmClock, LuMousePointerClick } from "react-icons/lu";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
+import { Link } from 'react-router-dom';
 import ProfileHoverCard from '../ProfileHoverCard';
 import Toast from '../Toast';
 import axios from '../../api';
@@ -16,6 +17,8 @@ const UrlManagement = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [error, setError] = useState(null);
   const [editingUrl, setEditingUrl] = useState(null);
+  const [hoveredAuthor, setHoveredAuthor] = useState(null);
+  const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
   const [editForm, setEditForm] = useState({
     shortId: '',
     originalUrl: ''
@@ -81,6 +84,16 @@ const UrlManagement = () => {
   const handleCancel = () => {
     setEditingUrl(null);
     setEditForm({ shortId: '', originalUrl: '' });
+  };
+
+  const handleMouseEnter = (e, author) => {
+    setHoverAnchorEl(e.currentTarget);
+    setHoveredAuthor(author);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverAnchorEl(null);
+    setHoveredAuthor(null);
   };
 
   const handleSave = async (urlId) => {
@@ -256,9 +269,15 @@ const UrlManagement = () => {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <div className="relative group flex-shrink-0">
-                      <div className="block w-8 h-8 rounded-full overflow-hidden border border-white/5 cursor-pointer"
-                           onClick={() => window.location.href = `/u/${url.author.handle}`}>
+                    <div 
+                      className="relative flex-shrink-0"
+                      onMouseEnter={(e) => handleMouseEnter(e, url.author)}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      <Link 
+                        to={`/u/${url.author.handle}`}
+                        className="block w-8 h-8 rounded-full overflow-hidden border border-white/5"
+                      >
                         {url.author.avatar ? (
                           <img 
                             src={url.author.avatar} 
@@ -272,10 +291,7 @@ const UrlManagement = () => {
                             </span>
                           </div>
                         )}
-                      </div>
-                      <div className="hidden group-hover:block">
-                        <ProfileHoverCard author={url.author} />
-                      </div>
+                      </Link>
                     </div>
 
                     <div className="flex flex-col gap-1 min-w-0">
@@ -336,6 +352,12 @@ const UrlManagement = () => {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast({ show: false, message: '', type: 'error' })}
+        />
+      )}
+      {hoveredAuthor && hoverAnchorEl && (
+        <ProfileHoverCard 
+          author={hoveredAuthor}
+          anchorEl={hoverAnchorEl}
         />
       )}
     </>

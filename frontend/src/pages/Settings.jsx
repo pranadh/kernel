@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FiSettings, FiUser, FiZap, FiChevronDown, FiChevronRight } from 'react-icons/fi';
+import { FiSettings, FiUser, FiZap, FiCloud } from 'react-icons/fi';
+import { VscFlame } from "react-icons/vsc";
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { useAuth } from '../context/AuthContext';
 import axios from '../api';
@@ -25,6 +26,14 @@ const Settings = () => {
     },
     glow: {
       color: user?.effects?.config?.color || '#FFFFF',
+      frequency: user?.effects?.config?.frequency || 2000
+    },
+    fire: {
+      color: user?.effects?.config?.color || '#FF4500',
+      frequency: user?.effects?.config?.frequency || 100
+    },
+    icy: {
+      color: user?.effects?.config?.color || '#00FFFF',
       frequency: user?.effects?.config?.frequency || 2000
     }
   });
@@ -262,6 +271,36 @@ const Settings = () => {
                           glow: config
                         }))}
                         onSave={() => handleEffectSave('glow')}
+                      />
+
+                      {/* Fire Effect */}
+                      <EffectSection 
+                        type="fire"
+                        icon={<VscFlame className="w-5 h-5 text-primary" />}
+                        title="Fire Effect"
+                        isOpen={openEffect === 'fire'}
+                        onToggle={() => setOpenEffect(openEffect === 'fire' ? null : 'fire')}
+                        config={effectConfig.fire}
+                        onConfigChange={(config) => setEffectConfig(prev => ({
+                          ...prev,
+                          fire: config
+                        }))}
+                        onSave={() => handleEffectSave('fire')}
+                      />
+
+                      {/* Icy Effect */}
+                      <EffectSection 
+                        type="icy"
+                        icon={<FiCloud className="w-5 h-5 text-primary" />}
+                        title="Icy Effect"
+                        isOpen={openEffect === 'icy'}
+                        onToggle={() => setOpenEffect(openEffect === 'icy' ? null : 'icy')}
+                        config={effectConfig.icy}
+                        onConfigChange={(config) => setEffectConfig(prev => ({
+                          ...prev,
+                          icy: config
+                        }))}
+                        onSave={() => handleEffectSave('icy')}
                       />
                     </div>
                   </>

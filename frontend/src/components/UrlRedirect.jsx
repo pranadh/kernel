@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FiExternalLink } from 'react-icons/fi';
+import ErrorRedirect from './ErrorRedirect';
 import axios from '../api';
 
 const UrlRedirect = () => {
@@ -23,16 +24,13 @@ const UrlRedirect = () => {
         }, 3000);
       } catch (error) {
         setError(error.response?.data?.message || 'Failed to redirect');
-        console.error('Redirect failed:', error);
-        // Redirect to exlt.tech after 3 seconds on error
-        setTimeout(() => {
-          window.location.href = 'https://exlt.tech';
-        }, 3000);
       }
     };
   
     redirect();
   }, [shortId]);
+
+  if (error) return <ErrorRedirect message={error} />;
 
   // Extract domain from URL for display
   const getDomain = (url) => {

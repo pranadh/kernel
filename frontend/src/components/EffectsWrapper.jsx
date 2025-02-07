@@ -2,6 +2,8 @@ import React from 'react';
 import LightningEffect from './LightningEffect';
 import SparkleEffect from './SparkleEffect';
 import GlowEffect from './GlowEffect';
+import FireEffect from './FireEffect';
+import IcyEffect from './IcyEffect';
 
 const EffectsWrapper = ({ user, children, location }) => {
     
@@ -39,6 +41,18 @@ const EffectsWrapper = ({ user, children, location }) => {
         >
           {children}
         </GlowEffect>
+      );
+    case 'fire':
+      return (
+        <FireEffect enabled={true} config={user?.effects?.config}>
+          {children}
+        </FireEffect>
+      );
+    case 'icy':
+      return (
+        <IcyEffect enabled={true} config={user?.effects?.config}>
+          {children}
+        </IcyEffect>
       );
     default:
       return children;

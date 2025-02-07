@@ -6,6 +6,7 @@ import { VscVerifiedFilled } from "react-icons/vsc";
 import { TbCameraPlus } from "react-icons/tb";
 import { LuPaintbrush } from "react-icons/lu";
 import { SketchPicker } from 'react-color';
+import ErrorRedirect from "../components/ErrorRedirect";
 import axios from "../api";
 import UserBadges from '../components/UserBadges';
 import FollowersList from '../components/FollowersList';
@@ -75,7 +76,10 @@ const UserProfile = () => {
         }
         setBannerImage(data.bannerImage || null);
       } catch (error) {
-        setError("Profile not found");
+        setError(error.response?.data?.message || "Profile not found");
+        setTimeout(() => {
+          window.location.href = 'https://exlt.tech';
+        }, 3000);
       } finally {
         setLoading(false);
       }
@@ -197,13 +201,13 @@ const UserProfile = () => {
 
   useEffect(() => {
     if (profile) {
-      document.title = `${profile.username} (@${profile.handle}) > Exalt`;
+      document.title = `${profile.username} (@${profile.handle}) | Exalt`;
     } else {
-      document.title = 'Profile > Exalt';
+      document.title = 'Profile | Exalt';
     }
 
     return () => {
-      document.title = 'Home > Exalt';
+      document.title = 'Home | Exalt';
     };
   }, [profile]);
   
@@ -328,7 +332,7 @@ const handleBannerUpload = async (e) => {
   };
 
   if (loading) return <div className="text-center mt-20">Loading...</div>;
-  if (error) return <div className="text-red-500 text-center mt-20">{error}</div>;
+  if (error) return <ErrorRedirect message={error} />;
   if (!profile) return <div className="text-center mt-20">No profile found</div>;
 
   return (

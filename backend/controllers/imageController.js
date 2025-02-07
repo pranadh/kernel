@@ -134,7 +134,7 @@ export const getImage = async (req, res) => {
   try {
     const image = await Image.findOne({ imageId: req.params.id });
     if (!image) {
-      return res.status(404).json({ message: "Image not found" });
+      return res.status(404).json({ message: "Image not found." });
     }
 
     const filePath = path.resolve('/var/www/kernel/backend/uploads/images', image.filename);
@@ -254,7 +254,7 @@ export const getImageInfo = async (req, res) => {
       .populate('author', 'username handle avatar isVerified effects');
     
     if (!image) {
-      return res.status(404).json({ message: "Image not found" });
+      return res.status(404).json({ message: "Image not found." });
     }
 
     res.json(image);

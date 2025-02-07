@@ -6,6 +6,7 @@ import { FaRegCalendarAlt } from "react-icons/fa";
 import { VscVerifiedFilled } from "react-icons/vsc";
 import ProfileHoverCard from './ProfileHoverCard';
 import UsernameDisplay from './UsernameDisplay';
+import ErrorRedirect from './ErrorRedirect';
 import axios from '../api';
 
 const DocumentViewer = () => {
@@ -15,6 +16,7 @@ const DocumentViewer = () => {
   const [hoveredAuthor, setHoveredAuthor] = useState(null);
   const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(null);
   const { documentId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ const DocumentViewer = () => {
         const { data } = await axios.post(`/api/documents/${documentId}/view`);
         setDocument(data);
       } catch (error) {
-        console.error('Error fetching document:', error);
+        setError(error.response?.data?.message || 'Document not found.');
       } finally {
         setLoading(false);
       }
@@ -65,6 +67,7 @@ const DocumentViewer = () => {
   };
 
   if (loading) return <div className="min-h-screen pt-[70px] bg-[#101113] flex items-center justify-center">Loading...</div>;
+  if (error) return <ErrorRedirect message={error} />;
   if (!document) return <div className="min-h-screen pt-[70px] bg-[#101113] flex items-center justify-center">Document not found</div>;
 
   const isAuthor = user?._id === document.author._id;

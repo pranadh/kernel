@@ -13,6 +13,8 @@ const DocumentManagement = () => {
   const [filteredDocs, setFilteredDocs] = useState([]);
   const [error, setError] = useState(null);
   const [searchType, setSearchType] = useState('title');
+  const [hoveredAuthor, setHoveredAuthor] = useState(null);
+  const [hoverAnchorEl, setHoverAnchorEl] = useState(null);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
 
@@ -88,6 +90,16 @@ const DocumentManagement = () => {
         type: 'error'
       });
     }
+  };
+
+  const handleMouseEnter = (e, author) => {
+    setHoverAnchorEl(e.currentTarget);
+    setHoveredAuthor(author);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverAnchorEl(null);
+    setHoveredAuthor(null);
   };
 
   if (loading) return <div className="text-center py-8">Loading...</div>;
@@ -166,27 +178,30 @@ const DocumentManagement = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
-                    <div className="relative group flex-shrink-0">
-                      <div className="block w-8 h-8 rounded-full overflow-hidden border border-white/5 cursor-pointer"
-                           onClick={() => window.location.href = `/u/${doc.author.handle}`}>
-                        {doc.author.avatar ? (
-                          <img 
-                            src={doc.author.avatar}
-                            alt={doc.author.username}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-surface-2 flex items-center justify-center">
-                            <span className="text-sm font-semibold text-white">
-                              {doc.author.username.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="hidden group-hover:block">
-                        <ProfileHoverCard author={doc.author} />
-                      </div>
-                    </div>
+                  <div 
+                    className="relative flex-shrink-0"
+                    onMouseEnter={(e) => handleMouseEnter(e, doc.author)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <Link 
+                      to={`/u/${doc.author.handle}`}
+                      className="block w-8 h-8 rounded-full overflow-hidden border border-white/5"
+                    >
+                      {doc.author.avatar ? (
+                        <img 
+                          src={doc.author.avatar} 
+                          alt={doc.author.username}
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-surface-2 flex items-center justify-center">
+                          <span className="text-sm font-semibold text-white">
+                            {doc.author.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </Link>
+                  </div>
 
                     <div className="min-w-0">
                       <h3 className="font-medium text-lg text-white truncate">
@@ -237,6 +252,12 @@ const DocumentManagement = () => {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast({ show: false, message: '', type: 'error' })}
+        />
+      )}
+      {hoveredAuthor && hoverAnchorEl && (
+        <ProfileHoverCard 
+          author={hoveredAuthor}
+          anchorEl={hoverAnchorEl}
         />
       )}
     </>

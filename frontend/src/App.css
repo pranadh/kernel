@@ -34,7 +34,6 @@
 
 /* Base Styles */
 body {
-  background: var(--bg-gradient);
   color: var(--text-primary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
