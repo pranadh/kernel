@@ -68,6 +68,6 @@ router.get('/:id', getImage);
 router.delete('/:id', protect, deleteImage);
 router.get('/user/:handle', protect, getUserImages);
 router.delete('/:id', protect, admin, adminDeleteImage);
-router.put('id/:imageId', protect, updateImage);
+router.put('/id/:imageId', protect, updateImage);
 
 export default router;
