@@ -23,6 +23,7 @@ const ImageInfo = () => {
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
   const [zoomLevel, setZoomLevel] = useState(400);
   const [magnifierEnabled, setMagnifierEnabled] = useState(true);
+  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
 
   const handleWheel = (e) => {
     if (!isZoomed || !magnifierEnabled) return;
@@ -62,8 +63,14 @@ const ImageInfo = () => {
     setHoveredAuthor(null);
   };
 
-  const handleImageLoad = () => {
+  const handleImageLoad = (e) => {
+    const { naturalWidth, naturalHeight } = e.target;
+    setImageDimensions({ width: naturalWidth, height: naturalHeight });
     setImageLoaded(true);
+    
+    // If height > width (iOS image), set zoom to 100%, otherwise 400%
+    const isPortrait = naturalHeight > naturalWidth;
+    setZoomLevel(isPortrait ? 100 : 400);
   };
 
   const toggleZoom = (e) => {
@@ -84,9 +91,6 @@ const ImageInfo = () => {
         setImageInfo(data);
       } catch (error) {
         setError(error.response?.data?.message || 'Failed to fetch image information');
-        setTimeout(() => {
-          window.location.href = 'https://exlt.tech';
-        }, 3000);
       } finally {
         setLoading(false);
       }
@@ -178,7 +182,7 @@ const ImageInfo = () => {
         <div className="relative">
             {isZoomed && (
                 <div 
-                    className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 mt-16
+                    className="fixed inset-0 z-50 backdrop-blur-sm flex items-center justify-center p-4 mt-16
                    animate-in fade-in duration-500"
                     onClick={handleZoomClose}
                 >

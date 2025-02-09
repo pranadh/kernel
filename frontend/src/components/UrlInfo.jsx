@@ -35,9 +35,6 @@ const UrlInfo = () => {
         setUrlInfo(data);
       } catch (error) {
         setError(error.response?.data?.message || 'Failed to fetch URL information');
-        setTimeout(() => {
-          window.location.href = 'https://exlt.tech';
-        }, 3000);
       } finally {
         setLoading(false);
       }

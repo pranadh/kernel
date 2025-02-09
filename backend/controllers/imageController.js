@@ -442,3 +442,36 @@ export const uploadIosImage = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+export const cropImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    const image = await Image.findOne({ imageId: req.params.imageId });
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    // Verify ownership
+    if (image.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const filePath = req.file.path;
+    
+    // Process and save the cropped image
+    await sharp(filePath)
+      .jpeg({ quality: 80 })
+      .toFile(`uploads/images/${image.filename}`);
+
+    // Cleanup temporary file
+    await fs.unlink(filePath);
+
+    res.json({ message: "Image cropped successfully" });
+  } catch (error) {
+    console.error('Crop error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};

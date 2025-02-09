@@ -13,6 +13,7 @@ import Navbar from './components/Navbar';
 import UrlRedirect from './components/UrlRedirect';
 import UrlInfo from './components/UrlInfo';
 import ImageInfo from './components/ImageInfo';
+import Crop from './pages/Crop';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -87,6 +88,11 @@ const App = () => {
         <Route path="/settings" element={
           <PrivateRoute>
             <Settings />
+          </PrivateRoute>
+        } />
+        <Route path="/crop" element={
+          <PrivateRoute>
+            <Crop />
           </PrivateRoute>
         } />
       </Routes>
