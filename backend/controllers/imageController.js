@@ -155,7 +155,6 @@ export const getImage = async (req, res) => {
       return res.status(404).json({ message: "Image file not found" });
     }
 
-    // Set proper headers
     res.setHeader('Content-Type', image.mimeType);
     res.setHeader('Cache-Control', 'public, max-age=31536000');
     
