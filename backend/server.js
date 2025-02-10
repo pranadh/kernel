@@ -19,7 +19,8 @@ app.use(cors({
     origin: ['http://localhost:5173', 'https://exlt.tech', 'https://www.exlt.tech', 'https://i.exlt.tech'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Cross-Origin-Resource-Policy']
 }));
 
 // Routes imports

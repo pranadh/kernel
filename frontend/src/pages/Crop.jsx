@@ -179,6 +179,7 @@ const Crop = () => {
                 <img
                   src={`https://i.exlt.tech/${selectedImage.imageId}`}
                   className="crop-image max-h-[70vh] w-auto mx-auto"
+                  crossOrigin="anonymous"
                 />
               </ReactCrop>
 
