@@ -138,6 +138,9 @@ export default {
         'primary-gradient': 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
         'secondary-gradient': 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
         'bg-gradient': 'radial-gradient(circle at top right, #1e1e2f 0%, #0f0f1a 100%)'
+      },
+      minHeight: {
+        'screen': 'calc(100vh - 70px)',
       }
     },
   },

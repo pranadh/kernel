@@ -15,6 +15,7 @@ import UrlRedirect from './components/UrlRedirect';
 import UrlInfo from './components/UrlInfo';
 import ImageInfo from './components/ImageInfo';
 import Crop from './pages/Crop';
+import PlatformStats from "./pages/PlatformStats";
 import WordCounter from './pages/WordCounter';
 import './App.css';
 
@@ -106,6 +107,7 @@ const App = () => {
               <WordCounter />
             </PrivateRoute>
           } />
+          <Route path="/stats" element={<PlatformStats />} />
         </Routes>
       </div>
     </>

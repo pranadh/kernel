@@ -145,27 +145,29 @@ const Crop = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
-            <button
+            {selectedImage && (
+              <button
                 onClick={() => setSelectedImage(null)}
                 className="w-10 h-10 rounded-lg border border-white/5 
                         bg-surface-2/50 hover:bg-surface-2 
                         flex items-center justify-center transition-colors"
-            >
+              >
                 <FiArrowLeft className="w-5 h-5 text-white/75" />
-            </button>
+              </button>
+            )}
             <div className="flex items-center gap-3">
-                <FiImage className="w-8 h-8 text-red-500" />
-                <div>
+              <FiImage className="w-8 h-8 text-red-500" />
+              <div>
                 <h1 className="text-3xl font-bold text-white">
-                    {selectedImage 
+                  {selectedImage 
                     ? `Cropping i.exlt.tech/${selectedImage.imageId}`
                     : 'Crop Images'
-                    }
+                  }
                 </h1>
                 {selectedImage && (
-                    <p className="text-gray-400 mt-1">Select an area to crop</p>
+                  <p className="text-gray-400 mt-1">Select an area to crop</p>
                 )}
-                </div>
+              </div>
             </div>
           </div>
 

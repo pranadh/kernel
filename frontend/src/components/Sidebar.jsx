@@ -20,10 +20,10 @@ const Sidebar = () => {
       description: 'Count words and characters'
     },
     {
-      path: '/metrics',
-      name: 'URL Metrics',
+      path: '/stats',
+      name: 'Website Metrics',
       icon: <TbRuler className="w-5 h-5" />,
-      description: 'Analyse URL performance'
+      description: 'View platform statistics'
     }
   ];
 
