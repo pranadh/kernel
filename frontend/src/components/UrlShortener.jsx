@@ -128,7 +128,7 @@ const UrlShortener = ({ onUrlCreated }) => {
   };
 
   return (
-    <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-5 mt-6">
+    <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-5 -mt-8">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
         <FiLink className="w-6 h-6 text-yellow-500" />
         <h2 className="text-xl font-semibold text-white">URL Shortener</h2>

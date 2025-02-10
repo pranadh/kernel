@@ -57,7 +57,7 @@ const UploadConfig = () => {
   };
 
   return (
-    <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 mt-6">
+    <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 -mt-8">
       <div className="px-6 py-4 border-b border-white/5">
         <div className="flex items-center">
             <FiImage className="w-6 h-6 text-red-500 mr-3" />

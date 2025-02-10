@@ -9,11 +9,13 @@ import Settings from "./pages/Settings";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import DocumentEditor from "./pages/DocumentEditor";
 import DocumentViewer from "./components/DocumentViewer";
+import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import UrlRedirect from './components/UrlRedirect';
 import UrlInfo from './components/UrlInfo';
 import ImageInfo from './components/ImageInfo';
 import Crop from './pages/Crop';
+import WordCounter from './pages/WordCounter';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -24,6 +26,8 @@ const PrivateRoute = ({ children }) => {
 const App = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const hideSidebarPaths = ['/login', '/register'];
+  const showSidebar = !hideSidebarPaths.includes(location.pathname);
 
   useEffect(() => {
     // Redirect www to non-www
@@ -46,56 +50,64 @@ const App = () => {
   return (
     <>
       <Navbar />
-      <Routes>
-        <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
-        <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-        <Route path="/admin" element={
-          <PrivateRoute>
-            <AdminDashboard />
-          </PrivateRoute>
-        } />
-        <Route path="/" element={
-          <PrivateRoute>
-            <Home />
-          </PrivateRoute>
-        } />
-        <Route path="/u/:handle" element={<UserProfile />} />
-        <Route path="/user/:handle" element={<UserProfile />} />
-        <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} />
-        <Route path="/new" element={
-          <PrivateRoute>
-            <DocumentEditor />
-          </PrivateRoute>
-        } />
-        <Route path="/d/:documentId" element={<DocumentViewer />} />
-        <Route path="/d/:documentId/edit" element={
-          <PrivateRoute>
-            <DocumentEditor />
-          </PrivateRoute>
-        } />
-        <Route path="/s/:shortId" element={<UrlRedirect />} />
-        <Route path="/info/s/:shortId" element={
-          <PrivateRoute>
-            <UrlInfo />
-          </PrivateRoute>
-        } />
-        <Route path="/s/:shortId" element={<UrlRedirect />} />
-        <Route path="/info/i/:imageId" element={
-          <PrivateRoute>
-            <ImageInfo />
-          </PrivateRoute>
-        } />
-        <Route path="/settings" element={
-          <PrivateRoute>
-            <Settings />
-          </PrivateRoute>
-        } />
-        <Route path="/crop" element={
-          <PrivateRoute>
-            <Crop />
-          </PrivateRoute>
-        } />
-      </Routes>
+        {showSidebar && <Sidebar />}
+        <div className={`${showSidebar ? 'ml-64' : ''} pt-[70px]`}>
+        <Routes>
+          <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
+          <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+          <Route path="/admin" element={
+            <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          } />
+          <Route path="/" element={
+            <PrivateRoute>
+              <Home />
+            </PrivateRoute>
+          } />
+          <Route path="/u/:handle" element={<UserProfile />} />
+          <Route path="/user/:handle" element={<UserProfile />} />
+          <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} />
+          <Route path="/new" element={
+            <PrivateRoute>
+              <DocumentEditor />
+            </PrivateRoute>
+          } />
+          <Route path="/d/:documentId" element={<DocumentViewer />} />
+          <Route path="/d/:documentId/edit" element={
+            <PrivateRoute>
+              <DocumentEditor />
+            </PrivateRoute>
+          } />
+          <Route path="/s/:shortId" element={<UrlRedirect />} />
+          <Route path="/info/s/:shortId" element={
+            <PrivateRoute>
+              <UrlInfo />
+            </PrivateRoute>
+          } />
+          <Route path="/s/:shortId" element={<UrlRedirect />} />
+          <Route path="/info/i/:imageId" element={
+            <PrivateRoute>
+              <ImageInfo />
+            </PrivateRoute>
+          } />
+          <Route path="/settings" element={
+            <PrivateRoute>
+              <Settings />
+            </PrivateRoute>
+          } />
+          <Route path="/crop" element={
+            <PrivateRoute>
+              <Crop />
+            </PrivateRoute>
+          } />
+          <Route path="/wordcounter" element={
+            <PrivateRoute>
+              <WordCounter />
+            </PrivateRoute>
+          } />
+        </Routes>
+      </div>
     </>
   );
 };
