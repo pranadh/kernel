@@ -77,9 +77,6 @@ const UserProfile = () => {
         setBannerImage(data.bannerImage || null);
       } catch (error) {
         setError(error.response?.data?.message || "Profile not found");
-        setTimeout(() => {
-          window.location.href = 'https://exlt.tech';
-        }, 3000);
       } finally {
         setLoading(false);
       }
@@ -516,46 +513,48 @@ const handleBannerUpload = async (e) => {
 
               {/* Stats Row */}
               <div className="flex items-center justify-between">
-                <div className="flex gap-6">
-                  <button 
-                    onClick={() => {
-                      if (profile.followers?.length > 0) {
-                        fetchConnections('followers');
-                        setShowFollowers(true);
-                      }
-                    }}
-                    disabled={!profile.followers?.length}
-                    className={`text-gray-400 transition-colors ${
-                      profile.followers?.length > 0 
-                        ? 'hover:text-white cursor-pointer' 
-                        : 'opacity-50 cursor-not-allowed'
-                    }`}
-                  >
-                    <span className="font-bold text-white">
-                      {profile.followers?.length || 0}
-                    </span>
-                    {' '}followers
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (profile.following?.length > 0) {
-                        fetchConnections('following');
-                        setShowFollowing(true);
-                      }
-                    }}
-                    disabled={!profile.following?.length}
-                    className={`text-gray-400 transition-colors ${
-                      profile.following?.length > 0 
-                        ? 'hover:text-white cursor-pointer' 
-                        : 'opacity-50 cursor-not-allowed'
-                    }`}
-                  >
-                    <span className="font-bold text-white">
-                      {profile.following?.length || 0}
-                    </span>
-                    {' '}following
-                  </button>
-                </div>
+  <div className="flex gap-4">
+    <button 
+      onClick={() => {
+        if (profile.followers?.length > 0) {
+          fetchConnections('followers');
+          setShowFollowers(true);
+        }
+      }}
+      disabled={!profile.followers?.length}
+      className={`px-4 py-2 rounded-md transition-colors ${
+        profile.followers?.length > 0 
+          ? 'hover:bg-surface-2 cursor-pointer bg-surface-2/50' 
+          : 'opacity-50 cursor-not-allowed bg-surface-2/25'
+      }`}
+    >
+      <span className="font-bold text-white">
+        {profile.followers?.length || 0}
+      </span>
+      {' '}
+      <span className="text-gray-400">followers</span>
+    </button>
+    <button 
+      onClick={() => {
+        if (profile.following?.length > 0) {
+          fetchConnections('following');
+          setShowFollowing(true);
+        }
+      }}
+      disabled={!profile.following?.length}
+      className={`px-4 py-2 rounded-md transition-colors ${
+        profile.following?.length > 0 
+          ? 'hover:bg-surface-2 cursor-pointer bg-surface-2/50' 
+          : 'opacity-50 cursor-not-allowed bg-surface-2/25'
+      }`}
+    >
+      <span className="font-bold text-white">
+        {profile.following?.length || 0}
+      </span>
+      {' '}
+      <span className="text-gray-400">following</span>
+    </button>
+  </div>
 
                 {/* Follow Button */}
                 {currentUser && currentUser.handle !== profile.handle && (
