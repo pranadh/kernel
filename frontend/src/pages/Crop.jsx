@@ -3,18 +3,22 @@ import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { FiImage, FiCheck, FiX, FiArrowLeft } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 import axios from '../api';
 
 const Crop = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [crop, setCrop] = useState({
     unit: '%',
     width: 90,
-    aspect: undefined
+    height: 90,
+    x: 5,
+    y: 5
   });
   const [croppedImageUrl, setCroppedImageUrl] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
@@ -23,16 +27,22 @@ const Crop = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const { data } = await axios.get('/api/images/user/me');
+        if (!user?.handle) return;
+        const { data } = await axios.get(`/api/images/user/${user.handle}`);
         setImages(data);
       } catch (error) {
-        setError('Failed to fetch images');
+        setToast({
+          show: true,
+          message: error.response?.data?.message || 'Failed to fetch images',
+          type: 'error'
+        });
       } finally {
         setLoading(false);
       }
     };
+
     fetchImages();
-  }, []);
+  }, [user?.handle]);
 
   const getCroppedImg = (image, crop) => {
     const canvas = document.createElement('canvas');
@@ -71,6 +81,18 @@ const Crop = () => {
     const croppedBlob = await getCroppedImg(img, crop);
     const croppedUrl = URL.createObjectURL(croppedBlob);
     setCroppedImageUrl(croppedUrl);
+  };
+
+  const handleImageSelect = (image) => {
+    setSelectedImage(image);
+    setCrop({
+      unit: '%',
+      width: 90,
+      height: 90,
+      x: 5,
+      y: 5
+    });
+    setCroppedImageUrl(null);
   };
 
   const handleSaveCrop = async () => {
@@ -124,16 +146,26 @@ const Crop = () => {
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <button
-              onClick={() => navigate(-1)}
-              className="w-10 h-10 rounded-lg border border-white/5 
-                      bg-surface-2/50 hover:bg-surface-2 
-                      flex items-center justify-center transition-colors"
+                onClick={() => setSelectedImage(null)}
+                className="w-10 h-10 rounded-lg border border-white/5 
+                        bg-surface-2/50 hover:bg-surface-2 
+                        flex items-center justify-center transition-colors"
             >
-              <FiArrowLeft className="w-5 h-5 text-white/75" />
+                <FiArrowLeft className="w-5 h-5 text-white/75" />
             </button>
             <div className="flex items-center gap-3">
-              <FiImage className="w-8 h-8 text-red-500" />
-              <h1 className="text-3xl font-bold text-white">Crop Images</h1>
+                <FiImage className="w-8 h-8 text-red-500" />
+                <div>
+                <h1 className="text-3xl font-bold text-white">
+                    {selectedImage 
+                    ? `Cropping i.exlt.tech/${selectedImage.imageId}`
+                    : 'Crop Images'
+                    }
+                </h1>
+                {selectedImage && (
+                    <p className="text-gray-400 mt-1">Select an area to crop</p>
+                )}
+                </div>
             </div>
           </div>
 
@@ -175,7 +207,7 @@ const Crop = () => {
               {images.map(image => (
                 <div
                   key={image.imageId}
-                  onClick={() => setSelectedImage(image)}
+                  onClick={() => handleImageSelect(image)}
                   className="aspect-video bg-surface-2/50 rounded-lg overflow-hidden border border-white/5 
                             cursor-pointer hover:border-red-500/50 transition-colors group"
                 >
@@ -186,9 +218,12 @@ const Crop = () => {
                       className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 
-                                  group-hover:opacity-100 transition-opacity">
-                      <span className="text-white font-medium">Click to crop</span>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 
+              group-hover:opacity-100 transition-opacity p-4 text-center">
+                    <span className="text-white font-medium mb-2">Click to crop</span>
+                    <span className="text-red-500 text-lg font-medium break-all">
+                        i.exlt.tech/{image.imageId}
+                    </span>
                     </div>
                   </div>
                 </div>
