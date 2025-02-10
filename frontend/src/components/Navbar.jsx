@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaSignOutAlt, FaUserShield, FaCog } from 'react-icons/fa';
+import { TbCrop } from "react-icons/tb"; 
 import { VscVerifiedFilled } from "react-icons/vsc";
 import { FiSearch, FiFile, FiEye } from 'react-icons/fi';
 import { FaRegUserCircle } from "react-icons/fa";
@@ -135,6 +136,17 @@ const Navbar = () => {
         <SparkleEffect enabled={logoHovered}>
           <img src={logo} alt="Exalt" className="h-8" />
         </SparkleEffect>
+      </Link>
+
+      <div className="h-8 w-px bg-white/5 mx-8"></div>
+      <Link 
+        to="/crop" 
+        className="flex items-center gap-2 px-3 py-1.5 text-text-secondary hover:text-text-primary 
+                   bg-surface-2/50 rounded-md border border-white/5 hover:border-primary/50 
+                   transition-all duration-200"
+      >
+        <TbCrop className="w-4 h-4" />
+        <span className="text-sm font-medium">Crop</span>
       </Link>
 
       <div className="flex-1 max-w-lg mx-auto px-4 relative" ref={searchRef}>
