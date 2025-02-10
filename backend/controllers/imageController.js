@@ -156,7 +156,6 @@ export const getImage = async (req, res) => {
     }
 
     // Set proper headers
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Content-Type', image.mimeType);
     res.setHeader('Cache-Control', 'public, max-age=31536000');
     
