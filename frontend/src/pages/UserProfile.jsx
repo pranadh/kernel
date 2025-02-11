@@ -169,14 +169,7 @@ const UserProfile = () => {
       
       const { data } = await axios.post('/api/images/avatar', formData);
       setProfile(prev => ({ ...prev, avatar: data.url }));
-      setUser(prev => ({
-      ...prev,
-      avatar: data.url,
-      username: prev.username, // Ensure username is preserved
-      handle: prev.handle,     // Ensure handle is preserved
-      roles: prev.roles,       // Ensure roles are preserved
-      isVerified: prev.isVerified // Ensure verification status is preserved
-    }));
+      setUser(prev => ({ ...prev, avatar: data.url }));
     } catch (error) {
       setToast({
         show: true,

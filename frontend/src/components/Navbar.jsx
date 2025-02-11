@@ -262,7 +262,7 @@ const Navbar = () => {
                 <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary-hover/10 
                              flex items-center justify-center">
                   <span className="text-lg font-semibold text-text-primary">
-                    {user.username.charAt(0).toUpperCase()}
+                    {user?.username ? user.username.charAt(0).toUpperCase() : '?'}
                   </span>
                 </div>
               )}
@@ -283,7 +283,7 @@ const Navbar = () => {
                         <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary-hover/10 
                                     flex items-center justify-center">
                           <span className="text-lg font-semibold text-text-primary">
-                            {user.username.charAt(0).toUpperCase()}
+                            {user?.username ? user.username.charAt(0).toUpperCase() : '?'}
                           </span>
                         </div>
                       )}
