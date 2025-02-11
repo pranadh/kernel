@@ -1,12 +1,11 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
-import { sendEmail, getEmails, handleEmailWebhook } from '../controllers/emailController.js';
-import { webhookLogger } from '../middleware/webhookLogger.js';
+import { getEmails, handleEmailWebhook, handleStoredEmail } from '../controllers/emailController.js';
 
 const router = express.Router();
 
-router.post('/send', protect, sendEmail);
 router.get('/inbox', protect, getEmails);
-router.post('/webhook', webhookLogger, handleEmailWebhook);
+router.post('/webhook', handleEmailWebhook);
+router.post('/store', handleStoredEmail);
 
 export default router;

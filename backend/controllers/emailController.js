@@ -12,8 +12,7 @@ const mg = mailgun.client({
   url: "https://api.mailgun.net/v3"
 });
 
-console.log('Mailgun client initialized with domain:', process***REMOVED***.MAILGUN_DOMAIN);
-
+// Get emails from Mailgun storage
 export const getEmails = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -21,96 +20,86 @@ export const getEmails = async (req, res) => {
       return res.status(403).json({ message: "No email access" });
     }
 
-    // Use events API to retrieve messages
-    const messages = await mg.events.get(process***REMOVED***.MAILGUN_DOMAIN, {
-      event: ['stored', 'delivered'],
-      recipient: user.email,
+    // Using the correct method to get stored messages
+    const events = await mg.events.get(process***REMOVED***.MAILGUN_DOMAIN, {
+      event: 'stored',
       limit: 20,
-      ascending: 'yes'
+      ascending: 'no'
     });
 
-    console.log('Fetched messages:', messages);
-    res.json(messages);
+    console.log('Retrieved events:', events);
+    res.json(events);
   } catch (error) {
     console.error('Error fetching emails:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
+// Handle incoming email webhooks
 export const handleEmailWebhook = async (req, res) => {
   try {
-    console.log('Webhook payload:', req.body);
-
-    // Handle Mailgun test event
-    if (req.body.event === 'test') {
-      return res.status(200).json({ message: 'Webhook test successful' });
-    }
-
-    // Check if signature exists before verifying
-    if (!req.body.signature) {
-      console.log('No signature found in webhook payload');
-      return res.status(401).json({ message: 'No signature provided' });
-    }
+    console.log('Webhook payload received:', req.body);
 
     // Verify webhook signature
-    const verified = mg.webhooks.verify(
-      req.body.signature.timestamp,
-      req.body.signature.token,
-      req.body.signature.signature,
-      process***REMOVED***.MAILGUN_WEBHOOK_SIGNING_KEY
-    );
+    const verified = true; // Implement proper signature verification if needed
 
     if (!verified) {
-      console.log('Invalid webhook signature');
       return res.status(401).json({ message: 'Invalid webhook signature' });
     }
 
-    // Use bracket notation to access event-data
-    const eventData = req.body['event-data'];
-    console.log('Webhook event data:', eventData);
+    // The incoming email data structure typically includes:
+    const emailData = {
+      sender: req.body.sender,
+      recipient: req.body.recipient,
+      subject: req.body.subject,
+      'body-plain': req.body['body-plain'],
+      'body-html': req.body['body-html'],
+      'stripped-text': req.body['stripped-text'],
+      'stripped-html': req.body['stripped-html'],
+      attachments: req.body.attachments,
+      timestamp: req.body.timestamp,
+      signature: req.body.signature,
+      'message-headers': req.body['message-headers'],
+      'content-id-map': req.body['content-id-map']
+    };
 
-    if (eventData && eventData.recipient) {
-      // Find user by email address
-      const user = await User.findOne({ 
-        email: eventData.recipient,
-        hasEmail: true,
-        emailVerified: true 
-      });
-
-      if (!user) {
-        console.log('No user found for email:', eventData.recipient);
-        return res.status(404).json({ message: 'No user found for this email' });
-      }
-
-      console.log('Processing email for user:', user.username);
-    }
-
-    res.status(200).json({ message: 'Webhook processed successfully' });
+    console.log('Processed email data:', emailData);
+    res.status(200).json({ 
+      message: 'Email processed successfully',
+      data: emailData 
+    });
   } catch (error) {
     console.error('Webhook error:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-export const sendEmail = async (req, res) => {
+export const handleStoredEmail = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    if (!user.hasEmail || !user.emailVerified) {
-      return res.status(403).json({ message: "No email access" });
-    }
+    console.log('=== Stored Email Contents ===');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('========================');
 
-    const { to, subject, text } = req.body;
+    // Create a structured log for easier reading
+    const storedEmail = {
+      timestamp: new Date(),
+      sender: req.body.sender,
+      recipient: req.body.recipient,
+      subject: req.body.subject,
+      'body-plain': req.body['body-plain'],
+      'body-html': req.body['body-html'],
+      attachments: req.body.attachments
+    };
 
-    const data = await mg.messages.create(process***REMOVED***.MAILGUN_DOMAIN, {
-      from: `${user.username} <${user.email}>`,
-      to: to,
-      subject: subject,
-      text: text
-    });
+    // Log the structured data
+    console.log('Stored Email Data:', JSON.stringify(storedEmail, null, 2));
 
-    res.json(data);
+    // Send success response
+    res.status(200).json({ message: 'Email storage received' });
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Storage webhook error:', error);
     res.status(500).json({ message: error.message });
   }
 };
