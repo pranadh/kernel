@@ -29,6 +29,7 @@ import roleRoutes from "./routes/roleRoutes.js";
 import imageRoutes from './routes/imageRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
+import typingRoutes from './routes/typingRoutes.js';
 import shortUrlRoutes from './routes/shortUrlRoutes.js';
 import documentRoutes from "./routes/documentRoutes.js";
 import { apiLimiter } from './middleware/rateLimitMiddleware.js';
@@ -77,6 +78,7 @@ app.use("/api/roles", roleRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/urls", shortUrlRoutes);
 app.use("/api/images", imageRoutes);
+app.use('/api/typing-scores', typingRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/stats", statsRoutes);
 app.get('/api/health', (req, res) => {

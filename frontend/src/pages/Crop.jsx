@@ -140,7 +140,7 @@ const Crop = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#101113] pt-[70px]">
+    <div className="min-h-screen bg-[#101113]">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -206,31 +206,43 @@ const Crop = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {images.map(image => (
-                <div
-                  key={image.imageId}
-                  onClick={() => handleImageSelect(image)}
-                  className="aspect-video bg-surface-2/50 rounded-lg overflow-hidden border border-white/5 
-                            cursor-pointer hover:border-red-500/50 transition-colors group"
-                >
-                  <div className="relative h-full">
-                    <img
-                      src={`https://i.exlt.tech/${image.imageId}`}
-                      alt="Gallery"
-                      className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 
-              group-hover:opacity-100 transition-opacity p-4 text-center">
-                    <span className="text-white font-medium mb-2">Click to crop</span>
-                    <span className="text-red-500 text-lg font-medium break-all">
-                        i.exlt.tech/{image.imageId}
-                    </span>
+            <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5">
+              {images.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+                  {images.map(image => (
+                    <div
+                      key={image.imageId}
+                      onClick={() => handleImageSelect(image)}
+                      className="aspect-video bg-surface-2/50 rounded-lg overflow-hidden border border-white/5 
+                                cursor-pointer hover:border-red-500/50 transition-colors group"
+                    >
+                      <div className="relative h-full">
+                        <img
+                          src={`https://i.exlt.tech/${image.imageId}`}
+                          alt="Gallery"
+                          className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 
+                                    group-hover:opacity-100 transition-opacity p-4 text-center">
+                          <span className="text-white font-medium mb-2">Click to crop</span>
+                          <span className="text-red-500 text-lg font-medium break-all">
+                            i.exlt.tech/{image.imageId}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 px-4">
+                  <FiImage className="w-16 h-16 text-text-secondary mb-4" />
+                  <h3 className="text-xl font-medium text-white mb-2">No Images Available</h3>
+                  <p className="text-text-secondary text-center max-w-md">
+                    Upload some images to exlt.tech to use the crop tool
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

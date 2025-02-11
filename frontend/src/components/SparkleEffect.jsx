@@ -21,7 +21,7 @@ const Sparkle = ({ color = '#FFF', size = 4, style = {} }) => {
   );
 };
 
-const SparkleEffect = ({ children, enabled = false }) => {
+const SparkleEffect = ({ children, enabled = false, config }) => {
   const [sparkles, setSparkles] = useState([]);
 
   useEffect(() => {
@@ -30,11 +30,11 @@ const SparkleEffect = ({ children, enabled = false }) => {
     const generateSparkle = () => ({
       id: Math.random(),
       createdAt: Date.now(),
-      color: ['#FFF', '#FFD', '#FFE'][Math.floor(Math.random() * 3)],
-      size: Math.random() * 8 + 4, // Increased size range
+      color: config?.color || '#FFF', // Use configured color or fallback
+      size: Math.random() * 8 + 4,
       style: {
-        top: Math.random() * 100 - 10 + '%', // Expanded range above and below
-        left: Math.random() * 110 - 10 + '%', // Expanded range left and right
+        top: Math.random() * 100 - 10 + '%',
+        left: Math.random() * 110 - 10 + '%',
         zIndex: 2
       }
     });
@@ -54,7 +54,7 @@ const SparkleEffect = ({ children, enabled = false }) => {
 
     const interval = setInterval(addSparkles, 200); // Reduced interval
     return () => clearInterval(interval);
-  }, [enabled]);
+  }, [enabled, config]);
 
   return (
     <span className="inline-block relative">

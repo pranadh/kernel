@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TbRuler } from 'react-icons/tb';
+import { TbDeviceHeartMonitor } from 'react-icons/tb';
 import { FiUsers, FiLink, FiImage, FiFileText } from 'react-icons/fi';
 import { Line } from 'react-chartjs-2';
 import axios from '../api';
@@ -81,7 +81,7 @@ const PlatformStats = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-8">
-            <TbRuler className="w-8 h-8 text-primary" />
+            <TbDeviceHeartMonitor className="w-8 h-8 text-primary" />
             <div>
               <h1 className="text-3xl font-bold text-white">Platform Statistics</h1>
               <p className="text-text-secondary">Overview of Exalt's performance and usage</p>

@@ -17,6 +17,7 @@ import ImageInfo from './components/ImageInfo';
 import Crop from './pages/Crop';
 import PlatformStats from "./pages/PlatformStats";
 import WordCounter from './pages/WordCounter';
+import TypingTest from './pages/TypingTest';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -108,6 +109,7 @@ const App = () => {
             </PrivateRoute>
           } />
           <Route path="/stats" element={<PlatformStats />} />
+          <Route path="/typingtest" element={<TypingTest />} />
         </Routes>
       </div>
     </>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { TbCrop, TbRuler, TbTextResize, TbTools } from 'react-icons/tb';
-import { FiHash } from 'react-icons/fi';
+import { TbCrop, TbDeviceHeartMonitor, TbTextResize, TbTools, TbKeyboard } from 'react-icons/tb';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -22,8 +21,14 @@ const Sidebar = () => {
     {
       path: '/stats',
       name: 'Website Metrics',
-      icon: <TbRuler className="w-5 h-5" />,
+      icon: <TbDeviceHeartMonitor className="w-5 h-5" />,
       description: 'View platform statistics'
+    },
+    {
+      path: '/typingtest',
+      name: 'Typing Test',
+      icon: <TbKeyboard className="w-5 h-5" />,
+      description: 'Test your typing speed'
     }
   ];
 
