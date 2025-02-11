@@ -109,7 +109,11 @@ const App = () => {
             </PrivateRoute>
           } />
           <Route path="/stats" element={<PlatformStats />} />
-          <Route path="/typingtest" element={<TypingTest />} />
+          <Route path="/typingtest" element={
+            <PrivateRoute>
+              <TypingTest />
+            </PrivateRoute>
+          } />
         </Routes>
       </div>
     </>

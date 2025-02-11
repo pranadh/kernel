@@ -65,7 +65,7 @@ const DocumentList = () => {
 
   if (!documents?.length) {
     return (
-      <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg p-8 border border-white/5 mt-6">
+      <div className="w-full bg-surface-1/50 backdrop-blur-sm rounded-lg p-8 border border-white/5 -mt-8">
         <div className="flex flex-col items-center justify-center text-text-secondary space-y-4">
           <FiFile className="w-12 h-12 opacity-50" />
           <p className="text-lg font-medium">No documents found</p>
