@@ -14,6 +14,7 @@ import Navbar from './components/Navbar';
 import UrlRedirect from './components/UrlRedirect';
 import UrlInfo from './components/UrlInfo';
 import ImageInfo from './components/ImageInfo';
+import EmailInterface from './components/EmailInterface';
 import Crop from './pages/Crop';
 import PlatformStats from "./pages/PlatformStats";
 import WordCounter from './pages/WordCounter';
@@ -112,6 +113,11 @@ const App = () => {
           <Route path="/typingtest" element={
             <PrivateRoute>
               <TypingTest />
+            </PrivateRoute>
+          } />
+          <Route path="/email" element={
+            <PrivateRoute>
+              <EmailInterface />
             </PrivateRoute>
           } />
         </Routes>

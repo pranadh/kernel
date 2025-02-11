@@ -76,6 +76,19 @@ const userSchema = new mongoose.Schema({
       config: {} // Store effect-specific configuration
     }
   },
+  email: {
+    type: String,
+    sparse: true,
+    match: [/^\S+@exlt\.tech$/, 'Email must be from exlt.tech domain']
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  hasEmail: {
+    type: Boolean,
+    default: false
+  },
 }, {
   timestamps: false, // Disable automatic timestamps
 });
