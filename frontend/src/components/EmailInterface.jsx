@@ -1,80 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import axios from '../api';
 
 const EmailInterface = () => {
-  const { user } = useAuth();
   const [emails, setEmails] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (user?.hasEmail) {
-      fetchEmails();
-    }
-  }, [user]);
+    fetchEmails();
+  }, []);
 
   const fetchEmails = async () => {
     try {
       setLoading(true);
+      const response = await axios.get('/api/emails/inbox');
+      setEmails(response.data);
       setError(null);
-      const { data } = await axios.get('/api/emails/inbox');
-      setEmails(data.items || []);
-    } catch (error) {
-      console.error('Failed to fetch emails:', error);
-      setError('Failed to load emails');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch emails');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!user?.hasEmail) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8">
-        <div className="text-text-secondary">Email access not enabled</div>
-      </div>
-    );
-  }
+  if (loading) return <div>Loading emails...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="space-y-6 p-4">
-      <div className="bg-surface-1 rounded-lg p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Email Inbox</h2>
-          <button 
-            onClick={fetchEmails}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
-          >
-            Refresh
-          </button>
-        </div>
-        
-        {loading && <div className="text-center py-4">Loading emails...</div>}
-        {error && <div className="text-red-500 text-center py-4">{error}</div>}
-        
-        <div className="space-y-4">
-            {emails.length > 0 ? (
-                emails.map((email) => (
-                <div key={email.id} className="p-4 bg-surface-2 rounded-lg border border-white/5">
-                    <div className="flex justify-between mb-2">
-                    <div className="font-medium">From: {email.message?.headers?.from}</div>
-                    <div className="text-sm text-text-secondary">
-                        {new Date(email.timestamp * 1000).toLocaleString()}
-                    </div>
-                    </div>
-                    <div className="font-medium mb-2">
-                    Subject: {email.message?.headers?.subject || 'No Subject'}
-                    </div>
-                    <div className="text-text-secondary whitespace-pre-wrap">
-                    {email.message?.headers['body-plain'] || 'No content'}
-                    </div>
-                </div>
-                ))
-            ) : (
-                <div className="text-center text-text-secondary py-4">No emails found</div>
-            )}
-            </div>
+    <div className="space-y-4 p-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Inbox</h2>
+        <button 
+          onClick={fetchEmails}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Refresh
+        </button>
       </div>
+      
+      {emails.map((email) => (
+        <div key={email._id} className="border rounded-lg p-4 hover:bg-gray-50">
+          <div className="flex justify-between">
+            <div className="font-medium">{email.sender}</div>
+            <div className="text-sm text-gray-500">
+              {new Date(email.timestamp).toLocaleString()}
+            </div>
+          </div>
+          <div className="font-bold mt-2">{email.subject}</div>
+          <div className="mt-2 text-gray-600">
+            {email.strippedText || email.bodyPlain}
+          </div>
+        </div>
+      ))}
+      
+      {emails.length === 0 && (
+        <div className="text-center text-gray-500">No emails found</div>
+      )}
     </div>
   );
 };

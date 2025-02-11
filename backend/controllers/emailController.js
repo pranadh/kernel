@@ -1,6 +1,7 @@
 import FormData from "form-data";
 import Mailgun from "mailgun.js";
 import User from '../models/User.js';
+import Email from '../models/Email.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,7 +13,7 @@ const mg = mailgun.client({
   url: "https://api.mailgun.net/v3"
 });
 
-// Get emails from Mailgun storage
+// Get emails from database
 export const getEmails = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -20,15 +21,13 @@ export const getEmails = async (req, res) => {
       return res.status(403).json({ message: "No email access" });
     }
 
-    // Using the correct method to get stored messages
-    const events = await mg.events.get(process***REMOVED***.MAILGUN_DOMAIN, {
-      event: 'stored',
-      limit: 20,
-      ascending: 'no'
-    });
+    // Fetch emails from database
+    const emails = await Email.find({ recipient: user.email })
+      .sort({ timestamp: -1 })
+      .limit(20);
 
-    console.log('Retrieved events:', events);
-    res.json(events);
+    console.log('Retrieved emails:', emails);
+    res.json(emails);
   } catch (error) {
     console.error('Error fetching emails:', error);
     res.status(500).json({ message: error.message });
@@ -40,66 +39,26 @@ export const handleEmailWebhook = async (req, res) => {
   try {
     console.log('Webhook payload received:', req.body);
 
-    // Verify webhook signature
-    const verified = true; // Implement proper signature verification if needed
-
-    if (!verified) {
-      return res.status(401).json({ message: 'Invalid webhook signature' });
-    }
-
-    // The incoming email data structure typically includes:
-    const emailData = {
+    // Create email record
+    const email = await Email.create({
       sender: req.body.sender,
       recipient: req.body.recipient,
       subject: req.body.subject,
-      'body-plain': req.body['body-plain'],
-      'body-html': req.body['body-html'],
-      'stripped-text': req.body['stripped-text'],
-      'stripped-html': req.body['stripped-html'],
-      attachments: req.body.attachments,
-      timestamp: req.body.timestamp,
-      signature: req.body.signature,
-      'message-headers': req.body['message-headers'],
-      'content-id-map': req.body['content-id-map']
-    };
+      bodyPlain: req.body['body-plain'],
+      bodyHtml: req.body['body-html'],
+      strippedText: req.body['stripped-text'],
+      strippedHtml: req.body['stripped-html'],
+      timestamp: new Date(Number(req.body.timestamp) * 1000),
+      messageId: req.body['Message-Id']
+    });
 
-    console.log('Processed email data:', emailData);
+    console.log('Stored email:', email);
     res.status(200).json({ 
-      message: 'Email processed successfully',
-      data: emailData 
+      message: 'Email stored successfully',
+      data: email 
     });
   } catch (error) {
     console.error('Webhook error:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const handleStoredEmail = async (req, res) => {
-  try {
-    console.log('=== Stored Email Contents ===');
-    console.log('Headers:', req.headers);
-    console.log('Body:', req.body);
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('========================');
-
-    // Create a structured log for easier reading
-    const storedEmail = {
-      timestamp: new Date(),
-      sender: req.body.sender,
-      recipient: req.body.recipient,
-      subject: req.body.subject,
-      'body-plain': req.body['body-plain'],
-      'body-html': req.body['body-html'],
-      attachments: req.body.attachments
-    };
-
-    // Log the structured data
-    console.log('Stored Email Data:', JSON.stringify(storedEmail, null, 2));
-
-    // Send success response
-    res.status(200).json({ message: 'Email storage received' });
-  } catch (error) {
-    console.error('Storage webhook error:', error);
     res.status(500).json({ message: error.message });
   }
 };
