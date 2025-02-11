@@ -9,6 +9,7 @@ import ProfileHoverCard from '../components/ProfileHoverCard';
 import axios from '../api';
 import Toast from '../components/Toast';
 import UsernameDisplay from '../components/UsernameDisplay';
+import WpmHistoryChart from '../components/WpmHistoryChart';
 
 const WORD_LIST = [
     'the', 'be', 'to', 'of', 'and', 'that', 'have', 'with', 'you', 'this',
@@ -31,7 +32,8 @@ const TypingTest = () => {
         bestRun: { wpm: 0, accuracy: 0 },
         avgWpm: 0,
         avgAccuracy: 0,
-        testCount: 0
+        testCount: 0,
+        history: []
       });
     const [testState, setTestState] = useState({
         mode: '15', // time in seconds
@@ -53,6 +55,7 @@ const TypingTest = () => {
     const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(true);
     const [testHistory, setTestHistory] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
+    const [selectedFont, setSelectedFont] = useState('font-mono');
     const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
     const inputRef = useRef(null);
     const wordListRef = useRef(null);
@@ -380,10 +383,22 @@ const TypingTest = () => {
                                 <p className="text-text-secondary">Run a 15, 30 or 60 second typing test</p>
                             </div>
                         </div>
-                        <div className="flex gap-4">
+                        <div className="flex items-center gap-4">
+                            <select
+                                value={selectedFont}
+                                onChange={(e) => setSelectedFont(e.target.value)}
+                                className="bg-surface-2 text-text-secondary hover:text-white px-3 py-2 rounded 
+                                        border border-white/5 focus:outline-none focus:ring-1 focus:ring-primary
+                                        transition-colors cursor-pointer"
+                            >
+                                <option value="font-mono">Monospace</option>
+                                <option value="font-sans">Sans Serif</option>
+                                <option value="font-serif">Serif</option>
+                            </select>
                             <button
                                 onClick={resetTest}
                                 className="p-2 text-text-secondary hover:text-white transition-colors"
+                                title="Reset test (Tab)"
                             >
                                 <FiRefreshCcw className="w-5 h-5" />
                             </button>
@@ -398,7 +413,7 @@ const TypingTest = () => {
                         {/* Words Display */}
                         <div 
                             ref={wordListRef}
-                            className="h-[160px] text-2xl font-mono mb-8 flex flex-col gap-2 transition-all duration-200"
+                            className={`h-[160px] text-2xl ${selectedFont} mb-8 flex flex-col gap-2 transition-all duration-200`}
                         >
                             {getVisibleLines().map((lineWords, lineIdx) => (
                                 <div 
@@ -542,6 +557,9 @@ const TypingTest = () => {
                                             <div className="text-xl font-bold text-white">{userStats.testCount}</div>
                                         </div>
                                     </div>
+                                    {userStats.history?.length > 0 && (
+                                        <WpmHistoryChart testHistory={userStats.history} />
+                                    )}
                                 </>
                             ) : (
                                 <div className="text-center py-8 text-text-secondary">

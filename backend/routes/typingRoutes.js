@@ -38,13 +38,14 @@ router.get('/user-stats', protect, async (req, res) => {
     const userScores = await TypingScore.find({ 
       user: req.user._id,
       duration: Number(duration)
-    });
+    }).sort({ createdAt: -1 }).limit(10); // Get last 10 tests
 
     const stats = {
       bestRun: userScores.reduce((max, score) => score.wpm > max.wpm ? score : max, { wpm: 0, accuracy: 0 }),
       avgWpm: Math.round(userScores.reduce((sum, score) => sum + score.wpm, 0) / userScores.length) || 0,
       avgAccuracy: Math.round(userScores.reduce((sum, score) => sum + score.accuracy, 0) / userScores.length) || 0,
-      testCount: userScores.length
+      testCount: userScores.length,
+      history: userScores.reverse() // Send most recent tests in chronological order
     };
 
     res.json(stats);
