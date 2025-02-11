@@ -111,7 +111,10 @@ export const getCurrentUser = async (req, res) => {
       bannerImage: user.bannerImage,
       bannerColor: user.bannerColor,
       createdAt: user.createdAt,
-      effects: user.effects
+      effects: user.effects,
+      email: user.email,
+      hasEmail: user.hasEmail,
+      emailVerified: user.emailVerified
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
