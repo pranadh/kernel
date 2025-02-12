@@ -2,6 +2,7 @@ import FormData from "form-data";
 import Mailgun from "mailgun.js";
 import User from '../models/User.js';
 import Email from '../models/Email.js';
+import { clients } from '../server.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -106,6 +107,17 @@ export const handleEmailWebhook = async (req, res) => {
 
     // Create email record
     const email = await Email.create(emailData);
+
+    const user = await User.findOne({ email: emailData.recipient });
+    if (user) {
+      const ws = clients.get(user._id.toString());
+      if (ws) {
+        ws.send(JSON.stringify({ 
+          type: 'EMAIL_UPDATE',
+          email: email
+        }));
+      }
+    }
 
     console.log('Email stored successfully:', {
       id: email._id,

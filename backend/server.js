@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import { WebSocketServer } from 'ws';
+import { createServer } from 'http';
+import jwt from 'jsonwebtoken';
 
 // Load env first
 dotenv.config();
@@ -10,6 +13,35 @@ const PORT = process***REMOVED***.PORT || 5000;
 
 // Initialize express
 const app = express();
+
+// Create HTTP server
+const server = createServer(app);
+
+// Create WebSocket server
+const wss = new WebSocketServer({ server });
+
+// Store connected clients
+export const clients = new Map();
+
+// Handle WebSocket connections
+wss.on('connection', (ws, req) => {
+  const token = req.url.split('token=')[1];
+  if (!token) {
+    ws.close();
+    return;
+  }
+
+  try {
+    const decoded = jwt.verify(token, process***REMOVED***.JWT_SECRET);
+    clients.set(decoded.id, ws);
+
+    ws.on('close', () => {
+      clients.delete(decoded.id);
+    });
+  } catch (error) {
+    ws.close();
+  }
+});
 
 // Middleware
 app.use(express.json({ limit: '5mb' }));
@@ -97,7 +129,8 @@ try {
   
   setInterval(cleanupOrphanedImages, 24 * 60 * 60 * 1000);
   
-  app.listen(PORT, '0.0.0.0', () => {
+  // Use server.listen instead of app.listen
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
   });
 } catch (error) {

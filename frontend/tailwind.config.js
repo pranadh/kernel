@@ -30,7 +30,8 @@ export default {
       },
       spacing: {
         navbar: '70px',
-        container: '1200px'
+        container: '1200px',
+        108: '432px'
       },
       borderRadius: {
         sm: '8px',
