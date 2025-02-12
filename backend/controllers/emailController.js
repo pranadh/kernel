@@ -59,9 +59,24 @@ export const handleEmailWebhook = async (req, res) => {
   try {
     console.log('Processing webhook payload:', JSON.stringify(req.body, null, 2));
 
+    // Parse sender name and email
+    let senderName = '';
+    let senderEmail = '';
+    
+    const fromHeader = req.body.from || req.body.sender || '';
+    const fromMatch = fromHeader.match(/^(?:([^<]*?)\s*)?(?:<(.+)>)?$/);
+    
+    if (fromMatch) {
+      senderName = (fromMatch[1] || '').trim();
+      senderEmail = (fromMatch[2] || fromMatch[0]).trim();
+    } else {
+      senderEmail = fromHeader;
+    }
+
     // Extract data from form fields
     const emailData = {
-      sender: req.body.sender || req.body.from || req.body['from'],
+      sender: senderEmail,
+      senderName: senderName,
       recipient: req.body.recipient || req.body.to || req.body['to'],
       subject: req.body.subject || '(No Subject)',
       bodyPlain: req.body['body-plain'] || req.body.text,
@@ -110,22 +125,21 @@ export const handleEmailWebhook = async (req, res) => {
 
 export const starEmail = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { emailId } = req.params;
     const { starred } = req.body;
     
     const email = await Email.findByIdAndUpdate(
-      id,
+      emailId,
       { starred },
       { new: true }
     );
 
     if (!email) {
-      return res.status(404).json({ message: "Email not found" });
+      return res.status(404).json({ message: 'Email not found' });
     }
 
-    res.json(email);
-  } catch (error) {
-    console.error('Error starring email:', error);
-    res.status(500).json({ message: error.message });
+    res.json({ success: true, email });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update email' });
   }
 };

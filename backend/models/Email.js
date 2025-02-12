@@ -5,6 +5,10 @@ const emailSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  senderName: {
+    type: String,
+    default: ''
+  },
   recipient: {
     type: String,
     required: true

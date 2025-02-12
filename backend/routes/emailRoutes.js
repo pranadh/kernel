@@ -12,6 +12,7 @@ const upload = multer();
 router.get('/inbox', protect, getEmails);
 router.get('/sent', protect, getEmails);
 router.get('/starred', protect, getEmails);
+router.post('/:emailId/star', protect, starEmail);
 router.post('/webhook', 
   upload.any(), // Handle multipart form data
   webhookLogger,
