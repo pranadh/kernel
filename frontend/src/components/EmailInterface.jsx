@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiStar, FiInbox, FiSend, FiMail, FiTrash2 } from 'react-icons/fi';
+import { FiStar, FiInbox, FiSend, FiMail, FiPaperclip } from 'react-icons/fi';
 import { FaStar } from "react-icons/fa6";
 import axios from '../api';
 
