@@ -57,55 +57,55 @@ export const getEmails = async (req, res) => {
 // Handle incoming email webhooks
 export const handleEmailWebhook = async (req, res) => {
   try {
-    console.log('Webhook payload received:', req.body);
+    console.log('Processing webhook payload:', JSON.stringify(req.body, null, 2));
 
-    // Extract correct message data
-    const message = req.body.message || {};
-    const headers = message.headers || {};
-    const recipientEmail = headers.to || message.recipients?.[0];
-    const senderEmail = headers.from || req.body***REMOVED***elope?.sender;
-
-    // Handle attachments correctly from message object
-    let attachments = [];
-    if (message.attachments && Array.isArray(message.attachments)) {
-      attachments = message.attachments.map(attachment => ({
-        filename: attachment.filename,
-        contentType: attachment['content-type'],
-        size: attachment.size,
-        url: req.body.storage?.url || null // Store Mailgun storage URL
-      }));
-    }
-
-    // Create email record with proper data mapping
-    const email = await Email.create({
-      sender: senderEmail,
-      recipient: recipientEmail,
-      subject: headers.subject || '(No Subject)',
-      bodyPlain: req.body['body-plain'] || req.body['stripped-text'],
-      bodyHtml: req.body['body-html'] || req.body['stripped-html'],
+    // Extract data from raw email fields
+    const emailData = {
+      sender: req.body.sender || req.body.from,
+      recipient: req.body.recipient,
+      subject: req.body.subject,
+      bodyPlain: req.body['body-plain'],
+      bodyHtml: req.body['body-html'],
       strippedText: req.body['stripped-text'],
       strippedHtml: req.body['stripped-html'],
       timestamp: new Date(Number(req.body.timestamp) * 1000),
-      messageId: headers['message-id'],
-      attachments: attachments,
-      storage: req.body.storage // Store full storage info for reference
+      messageId: req.body['Message-Id'],
+      attachments: []
+    };
+
+    // Handle attachments if present
+    const attachmentCount = parseInt(req.body['attachment-count'] || 0);
+    if (attachmentCount > 0) {
+      // Create attachment array based on count
+      emailData.attachments = Array.from({ length: attachmentCount }, (_, i) => {
+        const index = i + 1;
+        return {
+          filename: req.body[`attachment-${index}`]?.name,
+          contentType: req.body[`attachment-${index}`]?.['content-type'],
+          size: req.body[`attachment-${index}`]?.size,
+          url: req.body[`attachment-${index}`]?.url
+        };
+      });
+    }
+
+    console.log('Parsed email data:', emailData);
+
+    // Create email record
+    const email = await Email.create(emailData);
+
+    console.log('Email stored successfully:', {
+      id: email._id,
+      attachments: email.attachments.length
     });
 
-    // Debug logging
-    console.log('Email stored:', {
-      emailId: email._id,
-      sender: email.sender,
-      recipient: email.recipient,
-      subject: email.subject,
-      attachmentCount: attachments.length,
-      attachments: attachments
-    });
-
-    res.status(200).json({ message: 'Email stored successfully', data: email });
+    res.status(200).json({ message: 'Email stored successfully' });
   } catch (error) {
     console.error('Webhook error:', error);
-    console.error('Error details:', error.stack);
-    res.status(500).json({ message: error.message });
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      message: 'Error processing webhook',
+      error: error.message 
+    });
   }
 };
 

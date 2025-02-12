@@ -19,7 +19,8 @@ const emailSchema = new mongoose.Schema({
   strippedHtml: String,
   timestamp: {
     type: Date,
-    required: true
+    required: true,
+    default: Date.now
   },
   starred: {
     type: Boolean,
@@ -31,13 +32,7 @@ const emailSchema = new mongoose.Schema({
     contentType: String,
     size: Number,
     url: String
-  }],
-  storage: {
-    key: String,
-    url: String,
-    region: String,
-    env: String
-  }
+  }]
 }, {
   timestamps: true
 });

@@ -13,16 +13,23 @@ router.get('/inbox', protect, getEmails);
 router.get('/sent', protect, getEmails);
 router.get('/starred', protect, getEmails);
 router.post('/webhook', 
+  express.json({
+    limit: '50mb' // Increase limit to handle larger payloads
+  }),
   webhookLogger,
-  upload.any(),
   async (req, res, next) => {
     try {
-      if (!req.body || !req.body.message) {
-        console.error('Invalid webhook payload:', req.body);
-        return res.status(400).json({ message: 'Invalid webhook payload' });
+      // Log the incoming webhook data
+      console.log('Webhook payload:', JSON.stringify(req.body, null, 2));
+
+      if (!req.body) {
+        console.error('Empty webhook payload');
+        return res.status(400).json({ message: 'Empty webhook payload' });
       }
+
       next();
     } catch (error) {
+      console.error('Webhook middleware error:', error);
       next(error);
     }
   },
