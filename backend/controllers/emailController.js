@@ -43,7 +43,7 @@ export const getEmails = async (req, res) => {
 
     const emails = await Email.find(query)
       .sort({ timestamp: -1 })
-      .limit(20)
+      .limit(200)
       .lean();
 
     console.log(`Found ${emails.length} emails for view: ${req.path}`);
