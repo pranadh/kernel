@@ -18,7 +18,24 @@ const app = express();
 const server = createServer(app);
 
 // Create WebSocket server
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ 
+  server,
+  path: '/ws', // Add specific path
+  verifyClient: (info, cb) => {
+    const token = new URL(info.req.url, 'https://exlt.tech').searchParams.get('token');
+    if (!token) {
+      cb(false, 401, 'Unauthorized');
+      return;
+    }
+    try {
+      const decoded = jwt.verify(token, process***REMOVED***.JWT_SECRET);
+      info.req.user = decoded;
+      cb(true);
+    } catch (err) {
+      cb(false, 401, 'Unauthorized');
+    }
+  }
+});
 
 // Store connected clients
 export const clients = new Map();
@@ -51,7 +68,9 @@ app.use(cors({
   origin: ['http://localhost:5173', 'https://exlt.tech'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowEIO3: true,
+  transports: ['websocket']
 }));
 
 // Routes imports

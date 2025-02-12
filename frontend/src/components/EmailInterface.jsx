@@ -272,44 +272,55 @@ const EmailInterface = () => {
   useEffect(() => {
     const connectWebSocket = () => {
       const token = localStorage.getItem('token');
-      const ws = new WebSocket(`wss://${window.location.hostname}?token=${token}`);
-
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(`${protocol}//${window.location.host}/ws?token=${token}`);
+  
+      let reconnectTimeout;
+      let isConnected = false;
+  
       ws.onopen = () => {
         console.log('WebSocket connected');
+        isConnected = true;
       };
-
+  
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'EMAIL_UPDATE') {
-          // Add new email to list if in inbox view
           if (activeView === 'inbox' && data.email.recipient === user.email) {
             setEmails(prev => [data.email, ...prev]);
           }
-          // Add to sent if in sent view
           if (activeView === 'sent' && data.email.sender === user.email) {
             setEmails(prev => [data.email, ...prev]);
           }
         }
       };
-
+  
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
+        if (!isConnected) {
+          // Only retry if never connected
+          reconnectTimeout = setTimeout(connectWebSocket, 5000);
+        }
       };
-
+  
       ws.onclose = () => {
-        console.log('WebSocket disconnected, retrying in 5s...');
-        setTimeout(connectWebSocket, 5000);
+        console.log('WebSocket disconnected');
+        isConnected = false;
+        if (!ws.wasClean) {
+          reconnectTimeout = setTimeout(connectWebSocket, 5000);
+        }
       };
-
-      return ws;
+  
+      return () => {
+        clearTimeout(reconnectTimeout);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      };
     };
-
-    const ws = connectWebSocket();
-
-    // Cleanup on unmount
-    return () => {
-      if (ws) ws.close();
-    };
+  
+    const cleanup = connectWebSocket();
+    return () => cleanup();
   }, [activeView, user.email]);
 
   // Remove polling implementation
