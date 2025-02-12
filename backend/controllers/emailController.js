@@ -59,55 +59,52 @@ export const handleEmailWebhook = async (req, res) => {
   try {
     console.log('Webhook payload received:', req.body);
 
-    // Debug log to see full attachment data
-    console.log('Attachment data:', {
-      attachmentCount: req.body['attachment-count'],
-      attachmentInfo: req.body['attachments'],
-      contentType: req.body['Content-Type'],
-      files: req.files
-    });
+    // Extract correct message data
+    const message = req.body.message || {};
+    const headers = message.headers || {};
+    const recipientEmail = headers.to || message.recipients?.[0];
+    const senderEmail = headers.from || req.body***REMOVED***elope?.sender;
 
-    // Handle attachments - Mailgun sends them as part of the multipart form data
+    // Handle attachments correctly from message object
     let attachments = [];
-    if (req.files && req.files.length > 0) {
-      attachments = req.files
-        .filter(file => !file.fieldname.startsWith('inline-image-')) // Filter out inline images
-        .map(file => ({
-          filename: file.originalname,
-          contentType: file.mimetype,
-          size: file.size,
-          url: file.location || null, // If using S3 or similar storage
-          data: file.buffer // Store the actual file data
-        }));
+    if (message.attachments && Array.isArray(message.attachments)) {
+      attachments = message.attachments.map(attachment => ({
+        filename: attachment.filename,
+        contentType: attachment['content-type'],
+        size: attachment.size,
+        url: req.body.storage?.url || null // Store Mailgun storage URL
+      }));
     }
 
-    // Create email record with attachments
+    // Create email record with proper data mapping
     const email = await Email.create({
-      sender: req.body.sender,
-      recipient: req.body.recipient,
-      subject: req.body.subject,
+      sender: senderEmail,
+      recipient: recipientEmail,
+      subject: headers.subject || '(No Subject)',
       bodyPlain: req.body['body-plain'] || req.body['stripped-text'],
       bodyHtml: req.body['body-html'] || req.body['stripped-html'],
       strippedText: req.body['stripped-text'],
       strippedHtml: req.body['stripped-html'],
       timestamp: new Date(Number(req.body.timestamp) * 1000),
-      messageId: req.body['Message-Id'],
-      attachments: attachments
+      messageId: headers['message-id'],
+      attachments: attachments,
+      storage: req.body.storage // Store full storage info for reference
     });
 
-    console.log('Email stored with attachments:', {
+    // Debug logging
+    console.log('Email stored:', {
       emailId: email._id,
+      sender: email.sender,
+      recipient: email.recipient,
+      subject: email.subject,
       attachmentCount: attachments.length,
-      attachments: attachments.map(a => ({
-        filename: a.filename,
-        size: a.size,
-        type: a.contentType
-      }))
+      attachments: attachments
     });
 
     res.status(200).json({ message: 'Email stored successfully', data: email });
   } catch (error) {
     console.error('Webhook error:', error);
+    console.error('Error details:', error.stack);
     res.status(500).json({ message: error.message });
   }
 };

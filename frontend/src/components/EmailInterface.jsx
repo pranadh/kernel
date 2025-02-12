@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiStar, FiInbox, FiSend, FiMail, FiTrash2 } from 'react-icons/fi';
+import { FaStar } from "react-icons/fa6";
 import axios from '../api';
 
 const Sidebar = ({ activeView, setActiveView }) => (
@@ -18,7 +19,7 @@ const Sidebar = ({ activeView, setActiveView }) => (
       {[
         { name: 'Inbox', icon: <FiInbox /> },
         { name: 'Sent', icon: <FiSend /> },
-        { name: 'Starred', icon: <FiStar /> }
+        { name: 'Starred', icon: <FaStar /> }
       ].map(view => (
         <button
           key={view.name}

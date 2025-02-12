@@ -30,9 +30,14 @@ const emailSchema = new mongoose.Schema({
     filename: String,
     contentType: String,
     size: Number,
+    url: String
+  }],
+  storage: {
+    key: String,
     url: String,
-    data: Buffer // To store the actual file data
-  }]
+    region: String,
+    env: String
+  }
 }, {
   timestamps: true
 });
