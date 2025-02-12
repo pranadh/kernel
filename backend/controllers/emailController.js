@@ -59,33 +59,32 @@ export const handleEmailWebhook = async (req, res) => {
   try {
     console.log('Processing webhook payload:', JSON.stringify(req.body, null, 2));
 
-    // Extract data from raw email fields
+    // Extract data from form fields
     const emailData = {
-      sender: req.body.sender || req.body.from,
-      recipient: req.body.recipient,
-      subject: req.body.subject,
-      bodyPlain: req.body['body-plain'],
-      bodyHtml: req.body['body-html'],
+      sender: req.body.sender || req.body.from || req.body['from'],
+      recipient: req.body.recipient || req.body.to || req.body['to'],
+      subject: req.body.subject || '(No Subject)',
+      bodyPlain: req.body['body-plain'] || req.body.text,
+      bodyHtml: req.body['body-html'] || req.body.html,
       strippedText: req.body['stripped-text'],
       strippedHtml: req.body['stripped-html'],
-      timestamp: new Date(Number(req.body.timestamp) * 1000),
-      messageId: req.body['Message-Id'],
+      timestamp: req.body.timestamp ? new Date(Number(req.body.timestamp) * 1000) : new Date(),
+      messageId: req.body['Message-Id'] || req.body['message-id'],
       attachments: []
     };
 
-    // Handle attachments if present
+    // Handle attachments from multipart form data
     const attachmentCount = parseInt(req.body['attachment-count'] || 0);
     if (attachmentCount > 0) {
-      // Create attachment array based on count
       emailData.attachments = Array.from({ length: attachmentCount }, (_, i) => {
-        const index = i + 1;
+        const attachment = req.body[`attachment-${i + 1}`];
         return {
-          filename: req.body[`attachment-${index}`]?.name,
-          contentType: req.body[`attachment-${index}`]?.['content-type'],
-          size: req.body[`attachment-${index}`]?.size,
-          url: req.body[`attachment-${index}`]?.url
+          filename: attachment?.name,
+          contentType: attachment?.['content-type'],
+          size: attachment?.size,
+          url: attachment?.url
         };
-      });
+      }).filter(att => att.filename); // Filter out incomplete attachments
     }
 
     console.log('Parsed email data:', emailData);

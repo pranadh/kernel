@@ -13,20 +13,35 @@ router.get('/inbox', protect, getEmails);
 router.get('/sent', protect, getEmails);
 router.get('/starred', protect, getEmails);
 router.post('/webhook', 
-  express.json({
-    limit: '50mb' // Increase limit to handle larger payloads
-  }),
+  upload.any(), // Handle multipart form data
   webhookLogger,
   async (req, res, next) => {
     try {
-      // Log the incoming webhook data
-      console.log('Webhook payload:', JSON.stringify(req.body, null, 2));
-
-      if (!req.body) {
-        console.error('Empty webhook payload');
-        return res.status(400).json({ message: 'Empty webhook payload' });
+      // Convert multipart form data to JSON structure
+      const formData = {};
+      if (req.body) {
+        Object.keys(req.body).forEach(key => {
+          formData[key] = req.body[key];
+        });
+      }
+      
+      // Handle file attachments if present
+      if (req.files && req.files.length > 0) {
+        formData['attachment-count'] = req.files.length;
+        req.files.forEach((file, index) => {
+          formData[`attachment-${index + 1}`] = {
+            name: file.originalname,
+            'content-type': file.mimetype,
+            size: file.size,
+            url: file.path // You'll need to store this somewhere and generate a URL
+          };
+        });
       }
 
+      // Attach the processed data to req.body
+      req.body = formData;
+
+      console.log('Processed webhook data:', JSON.stringify(formData, null, 2));
       next();
     } catch (error) {
       console.error('Webhook middleware error:', error);
@@ -35,6 +50,5 @@ router.post('/webhook',
   },
   handleEmailWebhook
 );
-router.post('/:id/star', protect, starEmail);
 
 export default router;
