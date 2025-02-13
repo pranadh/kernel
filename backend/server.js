@@ -81,6 +81,7 @@ import imageRoutes from './routes/imageRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import emailRoutes from './routes/emailRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 import typingRoutes from './routes/typingRoutes.js';
 import shortUrlRoutes from './routes/shortUrlRoutes.js';
 import documentRoutes from "./routes/documentRoutes.js";
@@ -134,6 +135,7 @@ app.use("/api/images", imageRoutes);
 app.use('/api/typing-scores', typingRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/stats", statsRoutes);
+app.use('/api/search', searchRoutes);
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
 });

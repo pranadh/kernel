@@ -296,7 +296,7 @@ const UrlManagement = () => {
 
                     <div className="flex flex-col gap-1 min-w-0">
                       <a href={url.originalUrl} target="_blank" rel="noopener noreferrer" 
-                         className="text-text-secondary hover:text-white truncate">
+                         className="text-white hover:text-white truncate">
                         {url.originalUrl}
                       </a>
                       <div className="flex items-center gap-1">

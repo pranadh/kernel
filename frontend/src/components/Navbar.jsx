@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaSignOutAlt, FaUserShield, FaCog, FaSearch } from 'react-icons/fa';
 import { VscVerifiedFilled } from "react-icons/vsc";
-import { FiFile, FiEye } from 'react-icons/fi';
+import { FiFile, FiEye, FiLink, FiImage } from 'react-icons/fi';
 import { FaRegUserCircle } from "react-icons/fa";
 import { debounce } from 'lodash';
 import UsernameDisplay from "./UsernameDisplay";
@@ -15,7 +15,12 @@ const Navbar = () => {
   const { user, setUser } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState({
+    users: [],
+    documents: [],
+    urls: [],
+    images: []
+  });
   const [showResults, setShowResults] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
@@ -30,9 +35,9 @@ const Navbar = () => {
 
   const hideOnPaths = ['/register', '/login'];
 
-  const searchDocuments = async (query) => {
+  const searchAll = async (query) => {
     if (!query.trim()) {
-      setSearchResults([]);
+      setSearchResults({ users: [], documents: [], urls: [], images: [] });
       setShowResults(false);
       return;
     }
@@ -41,18 +46,18 @@ const Navbar = () => {
       setIsSearching(true);
       setSearchError(null);
       setShowResults(true);
-      const { data } = await axios.get(`/api/documents/search?q=${query}`);
+      const { data } = await axios.get(`/api/search?q=${query}`);
       setSearchResults(data);
     } catch (error) {
       console.error('Search error:', error);
-      setSearchError('Failed to search documents');
-      setSearchResults([]);
+      setSearchError('Failed to search');
+      setSearchResults({ users: [], documents: [], urls: [], images: [] });
     } finally {
       setIsSearching(false);
     }
   };
 
-  const debouncedSearch = debounce(searchDocuments, 300);
+  const debouncedSearch = debounce(searchAll, 300);
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
@@ -123,6 +128,24 @@ const Navbar = () => {
 
   if (hideOnPaths.includes(location.pathname)) return null;
 
+  const ResultSection = ({ title, icon: Icon, items, renderItem }) => {
+    if (!items?.length) return null;
+  
+    return (
+      <div className="w-[300px] border-r last:border-r-0 border-white/5">
+        <div className="px-3 py-2 border-b border-white/5 flex items-center gap-2">
+          <Icon className="w-4 h-4 text-text-secondary" />
+          <span className="text-sm font-medium text-text-secondary">{title}</span>
+          <span className="text-xs text-text-muted ml-auto">{items.length}</span>
+        </div>
+        <div className="max-h-[300px] overflow-y-auto 
+                    scrollbar-thin hover:scrollbar-thumb-white/20">
+          {items.map(renderItem)}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 h-[70px] bg-surface-1 backdrop-blur-sm 
                     flex items-center justify-between px-8 z-[100] border-b border-white/5">
@@ -137,12 +160,12 @@ const Navbar = () => {
         </SparkleEffect>
       </Link>
 
-      <div className="flex-1 max-w-lg mx-auto px-4 relative" ref={searchRef}>
+      <div className="flex-1 max-w-xl mx-auto px-4 relative translate-x-8" ref={searchRef}>
         <div className="relative">
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
           <input
             type="text"
-            placeholder="Search documents..."
+            placeholder="Search Exalt"
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => setShowResults(true)}
@@ -153,8 +176,8 @@ const Navbar = () => {
           />
         </div>
 
-        {showResults && (
-          <div className="absolute top-full left-0 right-0 mt-2 z-[101]">
+        {showResults && searchQuery && (
+          <div className="absolute top-full left-1/2 -translate-x-1/2 w-[1200px] mt-2 z-[101]">
             <div className="bg-surface-2/95 backdrop-blur-sm rounded-lg border border-white/5 shadow-lg">
               {isSearching ? (
                 <div className="px-4 py-8 text-center text-text-secondary">
@@ -164,80 +187,168 @@ const Navbar = () => {
                 <div className="px-4 py-8 text-center text-status-error">
                   {searchError}
                 </div>
-              ) : searchResults.length > 0 ? (
-                <>
-                  <div className="px-4 py-2 border-b border-white/5">
-                    <span className="text-sm text-text-secondary">
-                      Found {searchResults.length} document{searchResults.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                  <div className="max-h-[calc(88px*5)] overflow-y-auto">
-                    {searchResults.map((doc) => (
+              ) : (searchResults.users.length > 0 || 
+                   searchResults.documents.length > 0 || 
+                   searchResults.urls.length > 0 || 
+                   searchResults.images.length > 0) ? (
+                <div className="flex divide-x divide-white/5">
+                  <ResultSection
+                    title="Users"
+                    icon={FaUser}
+                    items={searchResults.users}
+                    renderItem={(user) => (
                       <Link
-                        key={doc.documentId}
-                        to={`/d/${doc.documentId}`}
-                        onClick={() => {
-                          setShowResults(false);
-                          setSearchQuery('');
-                        }}
-                        className="flex items-center justify-between gap-3 p-3 hover:bg-white/5 
-                                 border-b border-white/5 last:border-0 transition-colors"
+                        key={user._id}
+                        to={`/u/${user.handle}`}
+                        onClick={() => { setShowResults(false); setSearchQuery(''); }}
+                        className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
                       >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/5 
-                                      bg-gradient-to-br from-primary/10 to-primary-hover/10 
-                                      flex items-center justify-center flex-shrink-0">
-                            <FiFile className="w-6 h-6 text-primary/75" />
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-text-primary font-medium truncate flex items-center gap-2">
-                              {doc.title || 'Untitled Document'}
-                            </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="w-5 h-5 rounded-full overflow-hidden border border-white/5 flex-shrink-0">
-                                {doc.author.avatar ? (
-                                  <img 
-                                    src={doc.author.avatar.startsWith('http') 
-                                      ? doc.author.avatar 
-                                      : `https://i.exlt.tech/avatar/${doc.author.avatar}`}
-                                    alt={doc.author.username}
-                                    className="w-full h-full object-cover"
-                                    loading="lazy"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary-hover/10 
-                                               flex items-center justify-center">
-                                    <span className="text-xs font-semibold text-text-primary">
-                                      {doc.author.username.charAt(0).toUpperCase()}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <span className="text-text-secondary text-sm truncate flex items-center gap-1">
-                                {doc.author.username}
-                                {doc.author.isVerified && (
-                                  <VscVerifiedFilled className="w-4 h-4 text-primary" />
-                                )}
+                        <div className="w-8 h-8 rounded-full overflow-hidden border border-white/5">
+                          {user.avatar ? (
+                            <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary-hover/10 
+                                        flex items-center justify-center">
+                              <span className="text-sm font-semibold text-text-primary">
+                                {user.username.charAt(0).toUpperCase()}
                               </span>
                             </div>
-                          </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 text-text-secondary pl-3 border-l border-white/5">
-                          <FiEye className="w-4 h-4" />
-                          <span className="text-sm whitespace-nowrap">
-                            {doc.viewCount || 0} views
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-text-primary truncate">
+                              {user.username}
+                            </span>
+                            {user.isVerified && (
+                              <VscVerifiedFilled className="w-4 h-4 text-primary flex-shrink-0" />
+                            )}
+                          </div>
+                          <span className="text-xs text-text-secondary block">
+                            @{user.handle}
                           </span>
                         </div>
                       </Link>
-                    ))}
-                  </div>
-                </>
-              ) : searchQuery ? (
-                <div className="px-4 py-8 text-center text-text-secondary">
-                  No documents found.
+                    )}
+                  />
+
+                  <ResultSection
+                    title="Documents"
+                    icon={FiFile}
+                    items={searchResults.documents}
+                    renderItem={(doc) => (
+                      <Link
+                        key={doc.documentId}
+                        to={`/d/${doc.documentId}`}
+                        onClick={() => { setShowResults(false); setSearchQuery(''); }}
+                        className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/5 
+                                    bg-gradient-to-br from-primary/10 to-primary-hover/10 
+                                    flex items-center justify-center">
+                          <FiFile className="w-4 h-4 text-primary/75" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-text-primary truncate">
+                            {doc.title || 'Untitled Document'}
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-text-secondary">
+                            <span>by {doc.author.username}</span>
+                            {doc.author.isVerified && (
+                              <VscVerifiedFilled className="w-4 h-4 text-primary" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-text-secondary">
+                          <FiEye className="w-3.5 h-3.5" />
+                          <span>{doc.viewCount || 0}</span>
+                        </div>
+                      </Link>
+                    )}
+                  />
+
+                  <ResultSection
+                    title="URLs"
+                    icon={FiLink}
+                    items={searchResults.urls}
+                    renderItem={(url) => (
+                      <Link
+                        key={url._id}
+                        to={`/s/${url.shortId}`}
+                        onClick={() => { setShowResults(false); setSearchQuery(''); }}
+                        className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/5 
+                                      bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 
+                                      flex items-center justify-center">
+                          <FiLink className="w-4 h-4 text-yellow-500/75" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-text-primary">
+                              {url.shortId}
+                            </span>
+                            <span className="text-xs text-text-secondary">
+                              by {url.author.username}
+                              {url.author.isVerified && (
+                                <VscVerifiedFilled className="w-3 h-3 text-primary ml-0.5 -mt-0.5 inline-block" />
+                              )}
+                            </span>
+                          </div>
+                          <div className="text-xs text-text-secondary truncate mt-0.5">
+                            {url.originalUrl}
+                          </div>
+                        </div>
+                        <div className="text-xs text-text-secondary">
+                          {url.clicks || 0} clicks
+                        </div>
+                      </Link>
+                    )}
+                  />
+
+                  <ResultSection
+                    title="Images"
+                    icon={FiImage}
+                    items={searchResults.images}
+                    renderItem={(image) => (
+                      <Link
+                        key={image._id}
+                        to={`/i/${image.imageId}`}
+                        onClick={() => { setShowResults(false); setSearchQuery(''); }}
+                        className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/5">
+                          <img 
+                            src={`https://i.exlt.tech/${image.imageId}`}
+                            alt={image.imageId}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-text-primary">
+                              {image.imageId}
+                            </span>
+                            <span className="text-xs text-text-secondary">
+                              by {image.author.username}
+                              {image.author.isVerified && (
+                                <VscVerifiedFilled className="w-3 h-3 text-primary ml-0.5 -mt-0.5 inline-block" />
+                              )}
+                            </span>
+                          </div>
+                          <div className="text-xs text-text-secondary">
+                            {(image.size / 1024).toFixed(1)}KB
+                          </div>
+                        </div>
+                      </Link>
+                    )}
+                  />
                 </div>
-              ) : null}
+              ) : (
+                <div className="px-4 py-8 text-center text-text-secondary">
+                  No results found
+                </div>
+              )}
             </div>
           </div>
         )}

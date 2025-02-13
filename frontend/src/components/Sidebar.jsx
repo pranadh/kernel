@@ -37,7 +37,7 @@ const Sidebar = () => {
       path: '/email',
       name: 'Email',
       icon: <FiMail className="w-5 h-5" />,
-      description: 'Send/receive emails',
+      description: 'Access your @exlt.tech email',
       requiresEmail: true // Add this flag
     }
   ];

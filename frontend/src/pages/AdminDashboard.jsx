@@ -81,7 +81,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen pt-[70px] bg-[#101113]">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between gap-4 mb-8">
+          <div className="flex items-center justify-between gap-4 mb-8 -mt-16">
             <div className="flex items-center gap-4">
               <FaUserShield className="text-4xl text-red-500" />
               <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>

@@ -165,7 +165,7 @@ const EmailList = ({ emails, selectedEmail, setSelectedEmail, onStarEmail, activ
         setSearchType={setSearchType}
         activeView={activeView}
       />
-      <div className="overflow-y-auto flex-1">
+      <div className="overflow-y-auto flex-1 scrollbar-thin">
         {filteredEmails.map(email => (
           <div
             key={email._id}
