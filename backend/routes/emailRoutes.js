@@ -56,6 +56,6 @@ router.post('/send',
   upload.array('attachments'),
   sendEmail
 );
-router.get('/emails/:emailId/attachments/:filename', protect, downloadAttachment);
+router.get('/:emailId/attachments/:filename', protect, downloadAttachment);
 
 export default router;

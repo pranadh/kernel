@@ -226,17 +226,27 @@ const formatFileSize = (bytes) => {
 
 const EmailContent = ({ email }) => {
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(null);
 
   const handleDownload = async (attachment) => {
     try {
       setDownloading(true);
+      setDownloadError(null);
+      
       const response = await axios.get(
         `/api/emails/${email._id}/attachments/${attachment.filename}`,
-        { responseType: 'blob' }
+        { 
+          responseType: 'blob',
+          headers: {
+            'Accept': attachment.contentType
+          }
+        }
       );
       
-      // Create blob URL and trigger download
-      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data], {
+        type: attachment.contentType
+      }));
+      
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = attachment.originalName || attachment.filename;
@@ -246,6 +256,7 @@ const EmailContent = ({ email }) => {
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Failed to download attachment:', error);
+      setDownloadError('Failed to download attachment');
     } finally {
       setDownloading(false);
     }

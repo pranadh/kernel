@@ -69,6 +69,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Disposition'],
   allowEIO3: true,
   transports: ['websocket']
 }));
@@ -141,6 +142,7 @@ app.get('/api/health', (req, res) => {
 });
 app.use('/avatar', express.static('uploads/avatars'));
 app.use('/banner', express.static('uploads/banners'));
+app.use('/uploads/attachments', express.static('uploads/attachments'));
 
 // Start server
 try {

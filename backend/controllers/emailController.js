@@ -19,14 +19,14 @@ const mg = mailgun.client({
 
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
-    const dir = 'uploads/attachments';
+    const dir = path.resolve(process.cwd(), 'uploads/attachments');
     await fs.mkdir(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    // Generate unique filename
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
+    const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    cb(null, `${uniqueSuffix}-${safeFilename}`);
   }
 });
 
@@ -264,7 +264,6 @@ export const downloadAttachment = async (req, res) => {
   try {
     const { emailId, filename } = req.params;
     
-    // Verify email exists and user has access
     const email = await Email.findById(emailId);
     if (!email || (email.recipient !== req.user.email && email.sender !== req.user.email)) {
       return res.status(404).json({ message: 'Attachment not found' });
@@ -275,9 +274,26 @@ export const downloadAttachment = async (req, res) => {
       return res.status(404).json({ message: 'Attachment not found' });
     }
 
-    const filePath = path.join('uploads/attachments', attachment.filename);
+    // Use absolute path
+    const filePath = path.resolve(process.cwd(), 'uploads/attachments', attachment.filename);
+    
+    // Check if file exists
+    try {
+      await fs.access(filePath);
+    } catch (err) {
+      return res.status(404).json({ message: 'Attachment file not found' });
+    }
+
+    // Set proper headers
+    res.set({
+      'Content-Type': attachment.contentType,
+      'Content-Disposition': `attachment; filename="${attachment.originalName}"`,
+      'Content-Length': attachment.size
+    });
+
     res.download(filePath, attachment.originalName);
   } catch (error) {
+    console.error('Download error:', error);
     res.status(500).json({ message: 'Failed to download attachment' });
   }
 };
