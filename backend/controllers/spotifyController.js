@@ -93,18 +93,30 @@ export const getCurrentTrack = async (req, res) => {
 };
 
 export const getQueuedTracks = async (req, res) => {
-  try {
-    await refreshTokenIfNeeded(spotifyApi);
-    const data = await makeSpotifyRequest('/me/player/queue');
-    const timeUntilRefresh = await getTimeUntilNextRefresh();
-
-    res.json({ 
-      queue: data?.queue || [],
-      refreshIn: Math.round(timeUntilRefresh),
-      nextRefresh: new Date(Date.now() + timeUntilRefresh * 1000).toISOString()
-    });
-  } catch (error) {
-    console.error('Queue error:', error);
+    try {
+      await refreshTokenIfNeeded(spotifyApi);
+      const data = await makeSpotifyRequest('/me/player/queue');
+      const timeUntilRefresh = await getTimeUntilNextRefresh();
+  
+      // Get queue information with user details
+      const token = await SpotifyToken.findOne().sort({ createdAt: -1 })
+        .populate('queuedTracks.userId', 'username avatar handle');
+  
+      const queueWithUsers = data?.queue?.map(track => {
+        const queueInfo = token.queuedTracks.find(qt => qt.trackId === track.id);
+        return {
+          ...track,
+          requestedBy: queueInfo?.userId || null
+        };
+      }) || [];
+  
+      res.json({ 
+        queue: queueWithUsers,
+        refreshIn: Math.round(timeUntilRefresh),
+        nextRefresh: new Date(Date.now() + timeUntilRefresh * 1000).toISOString()
+      });
+    } catch (error) {
+        console.error('Queue error:', error);
     
     if (error.response?.status === 404 || error.response?.status === 204) {
       return res.json({ queue: [] });
@@ -135,8 +147,17 @@ export const addToQueue = async (req, res) => {
 
     const trackInfo = await spotifyApi.getTrack(trackId);
     await spotifyApi.addToQueue(`spotify:track:${trackId}`);
-    await updateQueueTimestamp(); // Update queue timestamp after modifying queue
     
+    // Store queue information
+    const token = await SpotifyToken.findOne().sort({ createdAt: -1 });
+    token.queuedTracks.push({
+      trackId: trackInfo.body.id,
+      userId: req.user._id
+    });
+    await token.save();
+    
+    await updateQueueTimestamp();
+
     res.json({ 
       message: 'Track added to queue',
       track: trackInfo.body,

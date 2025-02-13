@@ -42,7 +42,22 @@ const Spotify = () => {
       const { data } = await axios.get('/api/spotify/queued');
       
       setQueuedTracks(data?.queue || []);
-      // Sync refresh timer with server
+      
+      // Update requestedSongs Map with server data
+      const newRequestedSongs = new Map();
+      data.queue?.forEach(track => {
+        if (track.requestedBy) {
+          newRequestedSongs.set(track.id, {
+            user: {
+              username: track.requestedBy.username,
+              avatar: track.requestedBy.avatar
+            },
+            track: track
+          });
+        }
+      });
+      setRequestedSongs(newRequestedSongs);
+      
       setRefreshTimer(Math.round(data.refreshIn));
     } catch (error) {
       console.error('Queue error:', error);

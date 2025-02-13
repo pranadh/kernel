@@ -20,7 +20,18 @@ const spotifyTokenSchema = new mongoose.Schema({
   lastQueueUpdate: {
     type: Date,
     default: Date.now
-  }
+  },
+  queuedTracks: [{
+    trackId: String,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, { timestamps: true });
 
 export default mongoose.model('SpotifyToken', spotifyTokenSchema);
