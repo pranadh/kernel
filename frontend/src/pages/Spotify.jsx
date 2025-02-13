@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FiMusic, FiPlus, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import { FiMusic, FiLoader, FiAlertCircle, FiCheck, FiClock } from 'react-icons/fi';
+import { SlSocialSpotify } from 'react-icons/sl';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api';
 
@@ -8,6 +9,9 @@ const Spotify = () => {
   const [authUrl, setAuthUrl] = useState(null);
   const [currentTrack, setCurrentTrack] = useState(null);
   const [queuedTracks, setQueuedTracks] = useState([]);
+  const [success, setSuccess] = useState(null);
+  const [refreshTimer, setRefreshTimer] = useState(20);
+  const [requestedSongs, setRequestedSongs] = useState(new Map());
   const [trackUrl, setTrackUrl] = useState('');
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState({
@@ -30,13 +34,23 @@ const Spotify = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!trackUrl.trim()) return;
-
+  
     try {
       setIsLoading(prev => ({ ...prev, submit: true }));
       setError(null);
-      await axios.post('/api/spotify/queue', { trackUrl });
+      const { data } = await axios.post('/api/spotify/queue', { trackUrl });
+      
+      if (data.track && data.track.id) {
+        setRequestedSongs(prev => new Map(prev).set(data.track.id, {
+          user: data.user || { username: 'Anonymous', avatar: null },
+          track: data.track
+        }));
+      }
+      
       setTrackUrl('');
-      fetchQueuedTracks();
+      await fetchQueuedTracks();
+      setSuccess('Track added to queue successfully!');
+      setTimeout(() => setSuccess(null), 5000);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to add track to queue');
     } finally {
@@ -62,9 +76,16 @@ const Spotify = () => {
     try {
       setIsLoading(prev => ({ ...prev, queue: true }));
       const { data } = await axios.get('/api/spotify/queued');
-      setQueuedTracks(data.queue || []);
+      
+      setQueuedTracks(data?.queue || []);
     } catch (error) {
       console.error('Queue error:', error);
+      if (error.response?.status === 401) {
+        setError('Spotify authentication required. Please try again.');
+      } else {
+        setError(error.response?.data?.message || 'Failed to fetch queue');
+      }
+      setQueuedTracks([]);
     } finally {
       setIsLoading(prev => ({ ...prev, queue: false }));
     }
@@ -73,11 +94,21 @@ const Spotify = () => {
   useEffect(() => {
     const fetchData = async () => {
       await Promise.all([fetchCurrentTrack(), fetchQueuedTracks()]);
+      setRefreshTimer(20);
     };
     
     fetchData();
     const interval = setInterval(fetchData, 20000);
-    return () => clearInterval(interval);
+
+    // Add timer countdown
+    const timer = setInterval(() => {
+      setRefreshTimer(prev => prev > 0 ? prev - 1 : 20);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(timer);
+    };
   }, []);
 
   return (
@@ -98,11 +129,17 @@ const Spotify = () => {
               </div>
             </div>
           )}
-          <div className="flex items-center gap-4 mb-8">
-            <FiMusic className="w-8 h-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold text-white">Community Queue</h1>
-              <p className="text-text-secondary">Add songs to the community playlist</p>
+          <div className="flex items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <FiMusic className="w-8 h-8 text-primary" />
+              <div>
+                <h1 className="text-3xl font-bold text-white">Community Queue</h1>
+                <p className="text-text-secondary">Add songs to the community playlist</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-text-secondary text-sm">
+              <FiClock className="w-4 h-4" />
+              <span>Refreshing in <span className="text-white">{refreshTimer}s</span></span>
             </div>
           </div>
 
@@ -111,6 +148,14 @@ const Spotify = () => {
                           flex items-center gap-3 text-status-error">
               <FiAlertCircle className="w-5 h-5 flex-shrink-0" />
               <p>{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg 
+                          flex items-center gap-3 text-green-500">
+              <FiCheck className="w-5 h-5 flex-shrink-0" />
+              <p>{success}</p>
             </div>
           )}
 
@@ -187,20 +232,48 @@ const Spotify = () => {
               ) : queuedTracks.length > 0 ? (
                 <div className="space-y-4">
                   {queuedTracks.map((track) => (
-                    <div key={track.id} className="flex items-center gap-4 p-4 bg-surface-2/50 rounded-lg">
-                      <img 
-                        src={track.album.images[2].url} 
-                        alt={track.name} 
-                        className="w-12 h-12 rounded" 
-                      />
-                      <div>
-                        <div className="text-white font-medium">{track.name}</div>
-                        <div className="text-text-secondary text-sm">
-                          {track.artists.map(a => a.name).join(', ')}
+                    <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
+                        <div className="flex items-center gap-4">
+                        <img 
+                            src={track.album.images[2].url} 
+                            alt={track.name} 
+                            className="w-12 h-12 rounded" 
+                        />
+                        <div>
+                            <div className="text-white font-medium">{track.name}</div>
+                            <div className="text-text-secondary text-sm">
+                            {track.artists.map(a => a.name).join(', ')}
+                            </div>
                         </div>
-                      </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                        {requestedSongs.has(track.id) ? (
+                            <div className="flex items-center gap-2">
+                            <div className="text-text-secondary text-sm text-right">
+                                Added by {requestedSongs.get(track.id).user.username}
+                            </div>
+                            {requestedSongs.get(track.id).user.avatar ? (
+                                <img 
+                                src={requestedSongs.get(track.id).user.avatar} 
+                                alt={requestedSongs.get(track.id).user.username}
+                                className="w-6 h-6 rounded-full"
+                                />
+                            ) : (
+                                <div className="w-6 h-6 rounded-full bg-surface-2 flex items-center justify-center">
+                                {requestedSongs.get(track.id).user.username[0].toUpperCase()}
+                                </div>
+                            )}
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 text-text-secondary text-sm">
+                            <span>Automatic from Spotify</span>
+                            <SlSocialSpotify className="w-4 h-4" />
+                            </div>
+                        )}
+                        </div>
                     </div>
-                  ))}
+                    ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-text-secondary">

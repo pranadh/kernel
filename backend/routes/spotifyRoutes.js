@@ -17,6 +17,6 @@ router.get('/callback', handleCallback);
 // Public routes
 router.get('/current', getCurrentTrack);
 router.get('/queued', getQueuedTracks);
-router.post('/queue', addToQueue);
+router.post('/queue', protect, addToQueue);
 
 export default router;
