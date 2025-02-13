@@ -65,7 +65,7 @@ const Spotify = () => {
     const interval = setInterval(() => {
       fetchCurrentTrack();
       fetchQueuedTracks();
-    }, 5000);
+    }, 20000);
     return () => clearInterval(interval);
   }, []);
 
