@@ -1,21 +1,22 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
 import { 
   getSpotifyAuth, 
   handleCallback, 
   addToQueue,
   getCurrentTrack,
-  getQueuedTracks,
-  searchTracks
+  getQueuedTracks
 } from '../controllers/spotifyController.js';
 
 const router = express.Router();
 
-router.get('/auth', protect, getSpotifyAuth);
+// Admin routes (protected)
+router.get('/auth', protect, admin, getSpotifyAuth);
 router.get('/callback', handleCallback);
-router.get('/search', protect, searchTracks);
-router.post('/queue', protect, addToQueue);
+
+// Public routes
 router.get('/current', getCurrentTrack);
 router.get('/queued', getQueuedTracks);
+router.post('/queue', addToQueue);
 
 export default router;
