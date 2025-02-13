@@ -129,19 +129,23 @@ const Navbar = () => {
   if (hideOnPaths.includes(location.pathname)) return null;
 
   const ResultSection = ({ title, icon: Icon, items, renderItem }) => {
-    if (!items?.length) return null;
-  
     return (
-      <div className="w-[300px] border-r last:border-r-0 border-white/5">
+      <div className="w-full h-full">
         <div className="px-3 py-2 border-b border-white/5 flex items-center gap-2">
           <Icon className="w-4 h-4 text-text-secondary" />
           <span className="text-sm font-medium text-text-secondary">{title}</span>
-          <span className="text-xs text-text-muted ml-auto">{items.length}</span>
+          <span className="text-xs text-text-muted ml-auto">{items?.length || 0}</span>
         </div>
-        <div className="max-h-[300px] overflow-y-auto 
-                    scrollbar-thin hover:scrollbar-thumb-white/20">
-          {items.map(renderItem)}
-        </div>
+        {items?.length > 0 ? (
+          <div className="max-h-[300px] overflow-y-auto 
+                      scrollbar-thin hover:scrollbar-thumb-white/20">
+            {items.map(renderItem)}
+          </div>
+        ) : (
+          <div className="py-4 text-center text-text-secondary text-sm">
+            No {title.toLowerCase()} found
+          </div>
+        )}
       </div>
     );
   };
@@ -191,7 +195,7 @@ const Navbar = () => {
                    searchResults.documents.length > 0 || 
                    searchResults.urls.length > 0 || 
                    searchResults.images.length > 0) ? (
-                <div className="flex divide-x divide-white/5">
+                <div className="grid grid-cols-4 divide-x divide-white/5">
                   <ResultSection
                     title="Users"
                     icon={FaUser}
@@ -274,7 +278,7 @@ const Navbar = () => {
                     renderItem={(url) => (
                       <Link
                         key={url._id}
-                        to={`/s/${url.shortId}`}
+                        to={`/info/s/${url.shortId}`}
                         onClick={() => { setShowResults(false); setSearchQuery(''); }}
                         className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
                       >
@@ -313,7 +317,7 @@ const Navbar = () => {
                     renderItem={(image) => (
                       <Link
                         key={image._id}
-                        to={`/i/${image.imageId}`}
+                        to={`/info/i/${image.imageId}`}
                         onClick={() => { setShowResults(false); setSearchQuery(''); }}
                         className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
                       >
