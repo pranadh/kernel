@@ -6,6 +6,7 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import jwt from 'jsonwebtoken';
 
+
 // Load env first
 dotenv.config();
 
@@ -83,6 +84,7 @@ import statsRoutes from './routes/statsRoutes.js';
 import emailRoutes from './routes/emailRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import typingRoutes from './routes/typingRoutes.js';
+import spotifyRoutes from './routes/spotifyRoutes.js';
 import shortUrlRoutes from './routes/shortUrlRoutes.js';
 import documentRoutes from "./routes/documentRoutes.js";
 import { apiLimiter } from './middleware/rateLimitMiddleware.js';
@@ -132,6 +134,7 @@ app.use("/api/emails", emailRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/urls", shortUrlRoutes);
 app.use("/api/images", imageRoutes);
+app.use('/api/spotify', spotifyRoutes);
 app.use('/api/typing-scores', typingRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/stats", statsRoutes);

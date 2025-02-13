@@ -19,6 +19,7 @@ import Crop from './pages/Crop';
 import PlatformStats from "./pages/PlatformStats";
 import WordCounter from './pages/WordCounter';
 import TypingTest from './pages/TypingTest';
+import Spotify from './pages/Spotify';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -118,6 +119,11 @@ const App = () => {
           <Route path="/email" element={
             <PrivateRoute>
               <EmailInterface />
+            </PrivateRoute>
+          } />
+          <Route path="/spotify" element={
+            <PrivateRoute>
+              <Spotify />
             </PrivateRoute>
           } />
         </Routes>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMail, FiLock } from 'react-icons/fi';
+import { FiMail, FiLock, FiMusic } from 'react-icons/fi';
 import { TbCrop, TbDeviceHeartMonitor, TbTextResize, TbTools, TbKeyboard } from 'react-icons/tb';
 import { useAuth } from '../context/AuthContext'; // Add this import
 
@@ -32,6 +32,12 @@ const Sidebar = () => {
       name: 'Typing Test',
       icon: <TbKeyboard className="w-5 h-5" />,
       description: 'Test your typing speed'
+    },
+    {
+      path: '/spotify',
+      name: 'Song Requests',
+      icon: <FiMusic className="w-5 h-5" />,
+      description: 'Play songs in my room'
     },
     {
       path: '/email',
