@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { protect } from '../middleware/authMiddleware.js';
 import { webhookLogger } from '../middleware/webhookLogger.js';
-import { getEmails, handleEmailWebhook, starEmail, sendEmail, downloadAttachment } from '../controllers/emailController.js';
+import { getEmails, handleEmailWebhook, starEmail, sendEmail } from '../controllers/emailController.js';
 
 const router = express.Router();
 
@@ -56,6 +56,5 @@ router.post('/send',
   upload.array('attachments'),
   sendEmail
 );
-router.get('/:emailId/attachments/:filename', protect, downloadAttachment);
 
 export default router;

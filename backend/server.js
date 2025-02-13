@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import express from 'express';
+import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { WebSocketServer } from 'ws';
@@ -69,7 +69,6 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Disposition'],
   allowEIO3: true,
   transports: ['websocket']
 }));
@@ -89,14 +88,12 @@ import { apiLimiter } from './middleware/rateLimitMiddleware.js';
 
 import { promises as fs } from 'fs';
 import { cleanupOrphanedImages } from './utils/imageCleanup.js';
-import { cleanupAttachments } from './controllers/emailController.js';
 
 const ensureUploadDirs = async () => {
   try {
     await fs.mkdir('uploads/images', { recursive: true });
     await fs.mkdir('uploads/avatars', { recursive: true });
     await fs.mkdir('uploads/banners', { recursive: true });
-    await fs.mkdir('uploads/attachments', { recursive: true }); // Add this line
   } catch (error) {
     console.error('Failed to create upload directories:', error);
     process.exit(1);
@@ -142,7 +139,6 @@ app.get('/api/health', (req, res) => {
 });
 app.use('/avatar', express.static('uploads/avatars'));
 app.use('/banner', express.static('uploads/banners'));
-app.use('/uploads/attachments', express.static('uploads/attachments'));
 
 // Start server
 try {
@@ -151,7 +147,6 @@ try {
   await ensureUploadDirs();
   
   setInterval(cleanupOrphanedImages, 24 * 60 * 60 * 1000);
-  setInterval(cleanupAttachments, 24 * 60 * 60 * 1000);
   
   // Use server.listen instead of app.listen
   server.listen(PORT, '0.0.0.0', () => {

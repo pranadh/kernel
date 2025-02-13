@@ -4,9 +4,6 @@ import User from '../models/User.js';
 import Email from '../models/Email.js';
 import { clients } from '../server.js';
 import dotenv from 'dotenv';
-import multer from 'multer';
-import path from 'path';
-import { promises as fs } from 'fs';
 
 dotenv.config();
 
@@ -16,21 +13,6 @@ const mg = mailgun.client({
   key: process***REMOVED***.MAILGUN_API_KEY,
   url: "https://api.mailgun.net"
 });
-
-const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const dir = path.resolve(process.cwd(), 'uploads/attachments');
-    await fs.mkdir(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
-    cb(null, `${uniqueSuffix}-${safeFilename}`);
-  }
-});
-
-const upload = multer({ storage });
 
 // Get emails from database
 export const getEmails = async (req, res) => {
@@ -113,24 +95,15 @@ export const handleEmailWebhook = async (req, res) => {
     // Handle attachments from multipart form data
     const attachmentCount = parseInt(req.body['attachment-count'] || 0);
     if (attachmentCount > 0) {
-      for (let i = 0; i < attachmentCount; i++) {
+      emailData.attachments = Array.from({ length: attachmentCount }, (_, i) => {
         const attachment = req.body[`attachment-${i + 1}`];
-        if (attachment) {
-          const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}-${attachment.name}`;
-          const filePath = path.join('uploads/attachments', filename);
-          
-          // Save attachment file
-          await fs.writeFile(filePath, attachment.data);
-          
-          emailData.attachments.push({
-            filename: filename,
-            originalName: attachment.name,
-            contentType: attachment['content-type'],
-            size: attachment.size,
-            path: filePath
-          });
-        }
-      }
+        return {
+          filename: attachment?.name,
+          contentType: attachment?.['content-type'],
+          size: attachment?.size,
+          url: attachment?.url
+        };
+      }).filter(att => att.filename); // Filter out incomplete attachments
     }
 
     console.log('Parsed email data:', emailData);
@@ -257,62 +230,5 @@ export const sendEmail = async (req, res) => {
       error: error.message,
       details: error.details || error.response?.data
     });
-  }
-};
-
-export const downloadAttachment = async (req, res) => {
-  try {
-    const { emailId, filename } = req.params;
-    
-    const email = await Email.findById(emailId);
-    if (!email || (email.recipient !== req.user.email && email.sender !== req.user.email)) {
-      return res.status(404).json({ message: 'Attachment not found' });
-    }
-
-    const attachment = email.attachments.find(a => a.filename === filename);
-    if (!attachment) {
-      return res.status(404).json({ message: 'Attachment not found' });
-    }
-
-    // Use absolute path
-    const filePath = path.resolve(process.cwd(), 'uploads/attachments', attachment.filename);
-    
-    // Check if file exists
-    try {
-      await fs.access(filePath);
-    } catch (err) {
-      return res.status(404).json({ message: 'Attachment file not found' });
-    }
-
-    // Set proper headers
-    res.set({
-      'Content-Type': attachment.contentType,
-      'Content-Disposition': `attachment; filename="${attachment.originalName}"`,
-      'Content-Length': attachment.size
-    });
-
-    res.download(filePath, attachment.originalName);
-  } catch (error) {
-    console.error('Download error:', error);
-    res.status(500).json({ message: 'Failed to download attachment' });
-  }
-};
-
-export const cleanupAttachments = async () => {
-  try {
-    const attachmentDir = 'uploads/attachments';
-    const files = await fs.readdir(attachmentDir);
-    
-    // Get list of valid attachments from database
-    const validAttachments = await Email.distinct('attachments.filename');
-    
-    // Remove orphaned files
-    for (const file of files) {
-      if (!validAttachments.includes(file)) {
-        await fs.unlink(path.join(attachmentDir, file));
-      }
-    }
-  } catch (error) {
-    console.error('Attachment cleanup error:', error);
   }
 };
