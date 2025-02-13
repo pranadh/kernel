@@ -10,11 +10,11 @@ import {
 
 const router = express.Router();
 
-// Admin routes (protected)
+// Admin routes
 router.get('/auth', protect, admin, getSpotifyAuth);
 router.get('/callback', handleCallback);
 
-// Public routes
+// Public endpoints
 router.get('/current', getCurrentTrack);
 router.get('/queued', getQueuedTracks);
 router.post('/queue', protect, addToQueue);

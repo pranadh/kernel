@@ -12,6 +12,14 @@ const spotifyTokenSchema = new mongoose.Schema({
   expiresAt: {
     type: Date,
     required: true
+  },
+  lastRefresh: {
+    type: Date,
+    default: Date.now
+  },
+  lastQueueUpdate: {
+    type: Date,
+    default: Date.now
   }
 }, { timestamps: true });
 

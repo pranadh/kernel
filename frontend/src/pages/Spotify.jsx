@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiMusic, FiLoader, FiAlertCircle, FiCheck, FiClock } from 'react-icons/fi';
 import { SlSocialSpotify } from 'react-icons/sl';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +6,6 @@ import axios from '../api';
 
 const Spotify = () => {
   const { user } = useAuth();
-  const [authUrl, setAuthUrl] = useState(null);
   const [currentTrack, setCurrentTrack] = useState(null);
   const [queuedTracks, setQueuedTracks] = useState([]);
   const [success, setSuccess] = useState(null);
@@ -20,11 +19,48 @@ const Spotify = () => {
     queue: false
   });
 
+  const fetchCurrentTrack = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, current: true }));
+      const { data } = await axios.get('/api/spotify/current');
+      if (data?.item) {
+        setCurrentTrack(data.item);
+      } else {
+        setCurrentTrack(null);
+      }
+    } catch (error) {
+      console.error('Current track error:', error);
+      setCurrentTrack(null);
+    } finally {
+      setIsLoading(prev => ({ ...prev, current: false }));
+    }
+  };
+
+  const fetchQueuedTracks = useCallback(async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, queue: true }));
+      const { data } = await axios.get('/api/spotify/queued');
+      
+      setQueuedTracks(data?.queue || []);
+      // Sync refresh timer with server
+      setRefreshTimer(Math.round(data.refreshIn));
+    } catch (error) {
+      console.error('Queue error:', error);
+      if (error.response?.status === 401) {
+        setError('Spotify authentication required. Please try again.');
+      } else {
+        setError(error.response?.data?.message || 'Failed to fetch queue');
+      }
+      setQueuedTracks([]);
+    } finally {
+      setIsLoading(prev => ({ ...prev, queue: false }));
+    }
+  }, []);
+
   const handleSpotifyAuth = async () => {
     try {
       setError(null);
       const { data } = await axios.get('/api/spotify/auth');
-      // Redirect to Spotify auth URL
       window.location.href = data.url;
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to authenticate with Spotify');
@@ -41,16 +77,19 @@ const Spotify = () => {
       const { data } = await axios.post('/api/spotify/queue', { trackUrl });
       
       if (data.track && data.track.id) {
+        // Store user info with requested song
         setRequestedSongs(prev => new Map(prev).set(data.track.id, {
           user: data.user || { username: 'Anonymous', avatar: null },
           track: data.track
         }));
+        
+        setTrackUrl('');
+        setSuccess('Track added to queue successfully!');
+        setTimeout(() => setSuccess(null), 5000);
+        
+        // Immediately fetch updated queue
+        await fetchQueuedTracks();
       }
-      
-      setTrackUrl('');
-      await fetchQueuedTracks();
-      setSuccess('Track added to queue successfully!');
-      setTimeout(() => setSuccess(null), 5000);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to add track to queue');
     } finally {
@@ -58,58 +97,32 @@ const Spotify = () => {
     }
   };
 
-  const fetchCurrentTrack = async () => {
-    try {
-      setIsLoading(prev => ({ ...prev, current: true }));
-      const { data } = await axios.get('/api/spotify/current');
-      if (data?.item) {
-        setCurrentTrack(data.item);
-      }
-    } catch (error) {
-      console.error('Current track error:', error);
-    } finally {
-      setIsLoading(prev => ({ ...prev, current: false }));
-    }
-  };
-
-  const fetchQueuedTracks = async () => {
-    try {
-      setIsLoading(prev => ({ ...prev, queue: true }));
-      const { data } = await axios.get('/api/spotify/queued');
-      
-      setQueuedTracks(data?.queue || []);
-    } catch (error) {
-      console.error('Queue error:', error);
-      if (error.response?.status === 401) {
-        setError('Spotify authentication required. Please try again.');
-      } else {
-        setError(error.response?.data?.message || 'Failed to fetch queue');
-      }
-      setQueuedTracks([]);
-    } finally {
-      setIsLoading(prev => ({ ...prev, queue: false }));
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       await Promise.all([fetchCurrentTrack(), fetchQueuedTracks()]);
-      setRefreshTimer(20);
     };
-    
+
+    // Initial fetch
     fetchData();
+
+    // Set up refresh interval aligned with server timing
     const interval = setInterval(fetchData, 20000);
 
-    // Add timer countdown
+    // Client-side countdown that resets when server sends new refresh time
     const timer = setInterval(() => {
-      setRefreshTimer(prev => prev > 0 ? prev - 1 : 20);
+      setRefreshTimer(prev => {
+        if (prev <= 1) {
+          return 20;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => {
       clearInterval(interval);
       clearInterval(timer);
     };
-  }, []);
+  }, [fetchQueuedTracks]);
 
   return (
     <div className="min-h-screen bg-[#101113]">

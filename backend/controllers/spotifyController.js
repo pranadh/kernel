@@ -1,7 +1,11 @@
 import SpotifyWebApi from 'spotify-web-api-node';
 import SpotifyToken from '../models/SpotifyToken.js';
-import { refreshTokenIfNeeded } from '../utils/spotifyUtils.js';
 import axios from 'axios';
+import { 
+    refreshTokenIfNeeded, 
+    getTimeUntilNextRefresh, 
+    updateQueueTimestamp 
+  } from '../utils/spotifyUtils.js';
 
 const spotifyApi = new SpotifyWebApi({
   clientId: process***REMOVED***.SPOTIFY_CLIENT_ID,
@@ -90,25 +94,25 @@ export const getCurrentTrack = async (req, res) => {
 
 export const getQueuedTracks = async (req, res) => {
   try {
+    await refreshTokenIfNeeded(spotifyApi);
     const data = await makeSpotifyRequest('/me/player/queue');
-    
-    // Spotify returns null for queue if nothing is playing
-    if (!data?.queue) {
-      return res.json({ queue: [] });
-    }
-    
-    res.json({ queue: data.queue });
+    const timeUntilRefresh = await getTimeUntilNextRefresh();
+
+    res.json({ 
+      queue: data?.queue || [],
+      refreshIn: Math.round(timeUntilRefresh),
+      nextRefresh: new Date(Date.now() + timeUntilRefresh * 1000).toISOString()
+    });
   } catch (error) {
     console.error('Queue error:', error);
     
-    // Handle specific error cases
     if (error.response?.status === 404 || error.response?.status === 204) {
       return res.json({ queue: [] });
     }
     
     if (error.response?.status === 401) {
       return res.status(401).json({ 
-        message: 'Spotify authentication required. Please try again.' 
+        message: 'Spotify authentication required' 
       });
     }
     
@@ -129,13 +133,10 @@ export const addToQueue = async (req, res) => {
       return res.status(400).json({ message: 'Invalid Spotify track URL' });
     }
 
-    // Get track info before adding to queue
     const trackInfo = await spotifyApi.getTrack(trackId);
-        
-    // Add to queue
     await spotifyApi.addToQueue(`spotify:track:${trackId}`);
+    await updateQueueTimestamp(); // Update queue timestamp after modifying queue
     
-    // Return success with track and user info (with null checks)
     res.json({ 
       message: 'Track added to queue',
       track: trackInfo.body,
@@ -144,12 +145,7 @@ export const addToQueue = async (req, res) => {
         username: req.user.username,
         avatar: req.user.avatar,
         handle: req.user.handle
-      } : {
-        id: 'anonymous',
-        username: 'Anonymous',
-        avatar: null,
-        handle: null
-      }
+      } : null
     });
   } catch (error) {
     console.error('Add to queue error:', error);
