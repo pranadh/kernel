@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaUser, FaSignOutAlt, FaUserShield, FaCog } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaUserShield, FaCog, FaSearch } from 'react-icons/fa';
 import { VscVerifiedFilled } from "react-icons/vsc";
-import { FiSearch, FiFile, FiEye } from 'react-icons/fi';
+import { FiFile, FiEye } from 'react-icons/fi';
 import { FaRegUserCircle } from "react-icons/fa";
 import { debounce } from 'lodash';
 import UsernameDisplay from "./UsernameDisplay";
@@ -139,7 +139,7 @@ const Navbar = () => {
 
       <div className="flex-1 max-w-lg mx-auto px-4 relative" ref={searchRef}>
         <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
           <input
             type="text"
             placeholder="Search documents..."

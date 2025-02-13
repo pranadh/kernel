@@ -4,6 +4,9 @@ import User from '../models/User.js';
 import Email from '../models/Email.js';
 import { clients } from '../server.js';
 import dotenv from 'dotenv';
+import multer from 'multer';
+import path from 'path';
+import { promises as fs } from 'fs';
 
 dotenv.config();
 
@@ -11,8 +14,23 @@ const mailgun = new Mailgun(FormData);
 const mg = mailgun.client({
   username: "api",
   key: process***REMOVED***.MAILGUN_API_KEY,
-  url: "https://api.mailgun.net/v3"
+  url: "https://api.mailgun.net"
 });
+
+const storage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    const dir = 'uploads/attachments';
+    await fs.mkdir(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
+});
+
+const upload = multer({ storage });
 
 // Get emails from database
 export const getEmails = async (req, res) => {
@@ -28,7 +46,10 @@ export const getEmails = async (req, res) => {
     switch (req.path) {
       case '/starred':
         query.starred = true;
-        query.recipient = user.email;
+        query.$or = [
+          { recipient: user.email },
+          { sender: user.email }
+        ];
         break;
       case '/sent':
         query.sender = user.email;
@@ -92,15 +113,24 @@ export const handleEmailWebhook = async (req, res) => {
     // Handle attachments from multipart form data
     const attachmentCount = parseInt(req.body['attachment-count'] || 0);
     if (attachmentCount > 0) {
-      emailData.attachments = Array.from({ length: attachmentCount }, (_, i) => {
+      for (let i = 0; i < attachmentCount; i++) {
         const attachment = req.body[`attachment-${i + 1}`];
-        return {
-          filename: attachment?.name,
-          contentType: attachment?.['content-type'],
-          size: attachment?.size,
-          url: attachment?.url
-        };
-      }).filter(att => att.filename); // Filter out incomplete attachments
+        if (attachment) {
+          const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}-${attachment.name}`;
+          const filePath = path.join('uploads/attachments', filename);
+          
+          // Save attachment file
+          await fs.writeFile(filePath, attachment.data);
+          
+          emailData.attachments.push({
+            filename: filename,
+            originalName: attachment.name,
+            contentType: attachment['content-type'],
+            size: attachment.size,
+            path: filePath
+          });
+        }
+      }
     }
 
     console.log('Parsed email data:', emailData);
@@ -153,5 +183,120 @@ export const starEmail = async (req, res) => {
     res.json({ success: true, email });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update email' });
+  }
+};
+
+export const sendEmail = async (req, res) => {
+  try {
+    const { to, subject, html, text } = req.body;
+    const attachments = req.files || [];
+
+    if (!to || !subject || (!html && !text)) {
+      return res.status(400).json({
+        message: 'Missing required fields: to, subject, and either html or text'
+      });
+    }
+
+    // Format the "From" field using username and email
+    const fromField = `${req.user.username} <${req.user.email}>`;
+
+    // Create message data object
+    const messageData = {
+      from: fromField,
+      to: to,
+      subject: subject,
+      html: html || undefined,
+      text: text || undefined
+    };
+
+    // Handle attachments properly
+    if (attachments.length > 0) {
+      messageData.attachment = attachments.map(file => ({
+        data: file.buffer,
+        filename: file.originalname,
+        contentType: file.mimetype
+      }));
+    }
+
+    // Send via Mailgun
+    const response = await mg.messages.create(
+      process***REMOVED***.MAILGUN_DOMAIN,
+      messageData
+    );
+
+    // Store sent email in database with proper sender info
+    const emailData = {
+      sender: req.user.email,
+      senderName: req.user.name || '',
+      recipient: to,
+      subject: subject,
+      bodyHtml: html,
+      bodyPlain: text,
+      timestamp: new Date(),
+      messageId: response.id,
+      attachments: attachments.map(file => ({
+        filename: file.originalname,
+        contentType: file.mimetype,
+        size: file.size
+      }))
+    };
+
+    const email = await Email.create(emailData);
+
+    // Send success response
+    res.json({
+      success: true,
+      messageId: response.id,
+      email: email
+    });
+
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({
+      message: 'Failed to send email',
+      error: error.message,
+      details: error.details || error.response?.data
+    });
+  }
+};
+
+export const downloadAttachment = async (req, res) => {
+  try {
+    const { emailId, filename } = req.params;
+    
+    // Verify email exists and user has access
+    const email = await Email.findById(emailId);
+    if (!email || (email.recipient !== req.user.email && email.sender !== req.user.email)) {
+      return res.status(404).json({ message: 'Attachment not found' });
+    }
+
+    const attachment = email.attachments.find(a => a.filename === filename);
+    if (!attachment) {
+      return res.status(404).json({ message: 'Attachment not found' });
+    }
+
+    const filePath = path.join('uploads/attachments', attachment.filename);
+    res.download(filePath, attachment.originalName);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to download attachment' });
+  }
+};
+
+export const cleanupAttachments = async () => {
+  try {
+    const attachmentDir = 'uploads/attachments';
+    const files = await fs.readdir(attachmentDir);
+    
+    // Get list of valid attachments from database
+    const validAttachments = await Email.distinct('attachments.filename');
+    
+    // Remove orphaned files
+    for (const file of files) {
+      if (!validAttachments.includes(file)) {
+        await fs.unlink(path.join(attachmentDir, file));
+      }
+    }
+  } catch (error) {
+    console.error('Attachment cleanup error:', error);
   }
 };

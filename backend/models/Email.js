@@ -32,10 +32,11 @@ const emailSchema = new mongoose.Schema({
   },
   messageId: String,
   attachments: [{
-    filename: String,
+    filename: String, // Stored filename
+    originalName: String, // Original filename
     contentType: String,
     size: Number,
-    url: String
+    path: String // Server path
   }]
 }, {
   timestamps: true

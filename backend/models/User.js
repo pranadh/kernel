@@ -81,10 +81,6 @@ const userSchema = new mongoose.Schema({
     sparse: true,
     match: [/^\S+@exlt\.tech$/, 'Email must be from exlt.tech domain']
   },
-  emailVerified: {
-    type: Boolean,
-    default: false
-  },
   hasEmail: {
     type: Boolean,
     default: false

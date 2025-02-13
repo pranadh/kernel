@@ -4,14 +4,15 @@ import { FaSearch } from 'react-icons/fa';
 import { ImAttachment } from "react-icons/im"; 
 import { FaStar } from "react-icons/fa6";
 import { useAuth } from '../context/AuthContext';
+import { ComposeEmail } from './ComposeEmail';
 import ErrorRedirect from './ErrorRedirect';
 import axios from '../api';
 
-const Sidebar = ({ activeView, setActiveView }) => (
+const Sidebar = ({ activeView, setActiveView, onCompose, emails }) => (
   <div className="w-64 bg-surface-1 border-r border-white/5 p-4 overflow-y-auto">
     <button 
       className="w-full bg-primary hover:bg-primary-hover text-white rounded-lg px-4 py-2 mb-6 transition-colors"
-      onClick={() => console.log('New message')}
+      onClick={onCompose}
     >
       <div className="flex items-center justify-center gap-2">
         <FiMail className="w-5 h-5" />
@@ -21,9 +22,9 @@ const Sidebar = ({ activeView, setActiveView }) => (
     
     <nav className="space-y-2">
       {[
-        { name: 'Inbox', icon: <FiInbox /> },
-        { name: 'Sent', icon: <FiSend /> },
-        { name: 'Starred', icon: <FaStar /> }
+        { name: 'Inbox', icon: <FiInbox />, count: emails.inbox },
+        { name: 'Sent', icon: <FiSend />, count: emails.sent },
+        { name: 'Starred', icon: <FaStar />, count: emails.starred }
       ].map(view => (
         <button
           key={view.name}
@@ -34,8 +35,15 @@ const Sidebar = ({ activeView, setActiveView }) => (
               : 'text-text-secondary hover:text-text-primary hover:bg-surface-2'
           }`}
         >
-          {view.icon}
-          {view.name}
+          <div className="flex items-center gap-3 flex-1">
+            {view.icon}
+            <span>{view.name}</span>
+          </div>
+          {view.count > 0 && (
+            <div className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-xs font-medium min-w-[20px] text-center">
+              {view.count}
+            </div>
+          )}
         </button>
       ))}
     </nav>
@@ -74,7 +82,7 @@ const formatEmailDate = (timestamp) => {
   });
 };
 
-const SearchBar = ({ searchQuery, setSearchQuery, searchType, setSearchType }) => (
+const SearchBar = ({ searchQuery, setSearchQuery, searchType, setSearchType, activeView }) => (
   <div className="p-4 border-b border-white/5">
     <div className="flex gap-2">
       <div className="relative flex-1">
@@ -90,12 +98,12 @@ const SearchBar = ({ searchQuery, setSearchQuery, searchType, setSearchType }) =
                      focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
           />
           <button
-            onClick={() => setSearchType(prev => prev === 'sender' ? 'subject' : prev === 'subject' ? 'content' : 'sender')}
+            onClick={() => setSearchType(prev => prev === (activeView === 'sent' ? 'recipient' : 'sender') ? 'subject' : prev === 'subject' ? 'content' : (activeView === 'sent' ? 'recipient' : 'sender'))}
             className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 text-xs 
                      bg-surface-2 text-text-secondary rounded-md hover:bg-surface-1 
                      transition-colors z-10"
           >
-            {searchType === 'sender' ? 'Sender' : searchType === 'subject' ? 'Subject' : 'Content'}
+            {searchType === (activeView === 'sent' ? 'recipient' : 'sender') ? (activeView === 'sent' ? 'Recipient' : 'Sender') : searchType === 'subject' ? 'Subject' : 'Content'}
           </button>
         </div>
       </div>
@@ -103,14 +111,40 @@ const SearchBar = ({ searchQuery, setSearchQuery, searchType, setSearchType }) =
   </div>
 );
 
-const EmailList = ({ emails, selectedEmail, setSelectedEmail, onStarEmail }) => {
+const EmailList = ({ emails, selectedEmail, setSelectedEmail, onStarEmail, activeView }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchType, setSearchType] = useState('sender');
+  const [searchType, setSearchType] = useState(activeView === 'sent' ? 'recipient' : 'sender');
+  const { user } = useAuth();
+
+  useEffect(() => {
+    setSearchType(activeView === 'sent' ? 'recipient' : 'sender');
+  }, [activeView]);
+
+  const getDisplayName = (email) => {
+    if (activeView === 'sent') {
+      return `To: ${email.recipient}`;
+    }
+    
+    if (activeView === 'starred') {
+      // If the current user is the sender (it's a sent email)
+      if (email.sender === user.email) {
+        return `To: ${email.recipient}`;
+      }
+      // If it's a received email
+      return email.senderName || email.sender;
+    }
+    
+    return email.senderName || email.sender;
+  };
 
   const filteredEmails = emails.filter(email => {
     const query = searchQuery.toLowerCase();
     switch (searchType) {
+      case 'recipient':
       case 'sender':
+        if (activeView === 'sent') {
+          return email.recipient.toLowerCase().includes(query);
+        }
         return (email.senderName || email.sender).toLowerCase().includes(query);
       case 'subject':
         return email.subject.toLowerCase().includes(query);
@@ -129,6 +163,7 @@ const EmailList = ({ emails, selectedEmail, setSelectedEmail, onStarEmail }) => 
         setSearchQuery={setSearchQuery}
         searchType={searchType}
         setSearchType={setSearchType}
+        activeView={activeView}
       />
       <div className="overflow-y-auto flex-1">
         {filteredEmails.map(email => (
@@ -143,7 +178,7 @@ const EmailList = ({ emails, selectedEmail, setSelectedEmail, onStarEmail }) => 
             <div className="flex justify-between items-start gap-4">
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-white truncate">
-                  {email.senderName || email.sender}
+                  {getDisplayName(email)}
                 </div>
                 <div className="text-sm text-gray-400 truncate mt-1">
                   {email.subject}
@@ -181,7 +216,41 @@ const EmailList = ({ emails, selectedEmail, setSelectedEmail, onStarEmail }) => 
   );
 };
 
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
 const EmailContent = ({ email }) => {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async (attachment) => {
+    try {
+      setDownloading(true);
+      const response = await axios.get(
+        `/api/emails/${email._id}/attachments/${attachment.filename}`,
+        { responseType: 'blob' }
+      );
+      
+      // Create blob URL and trigger download
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = attachment.originalName || attachment.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Failed to download attachment:', error);
+    } finally {
+      setDownloading(false);
+    }
+  };
+  
   if (!email) return (
     <div className="flex-1 flex items-center justify-center text-gray-400 overflow-y-auto">
       <div className="text-center">
@@ -194,7 +263,7 @@ const EmailContent = ({ email }) => {
   return (
     <div className="flex-1 overflow-y-auto bg-surface-1/30">
       <div className="p-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w mx-auto">
           <h1 className="text-2xl font-bold text-white mb-4">{email.subject}</h1>
           <div className="flex items-center justify-between mb-6 bg-surface-2/50 p-4 rounded-lg border border-white/5">
             <div>
@@ -224,29 +293,42 @@ const EmailContent = ({ email }) => {
                     [&_body]:!text-gray-200
                     [&_.elementToProof]:!text-gray-200
                     [&_div[style]]:!text-gray-200
-                    [&_*[style*='color']]:!text-gray-200"
-            dangerouslySetInnerHTML={{ __html: email.bodyHtml || email.bodyPlain }}
+                    [&_*[style*='color']]:!text-gray-200
+                    [&_table]:!bg-surface-2/50
+                    [&_td]:!bg-surface-2/50
+                    [&_tr]:!bg-surface-2/50
+                    [&_th]:!bg-surface-2/50
+                    [&_*[style*='background']]:!bg-surface-2/50
+                    [&_*[style*='background-color']]:!bg-surface-2/50"
+            dangerouslySetInnerHTML={{ 
+              __html: email.bodyHtml?.replace(/background-color:\s*#ffffff/g, 'background-color: rgba(23, 23, 35, 0.9)') 
+                || email.bodyPlain 
+            }}
           />
-
           {/* Attachments section */}
           {email.attachments && email.attachments.length > 0 && (
             <div className="mt-6 bg-surface-2/50 p-4 rounded-lg border border-white/5">
-              <h3 className="text-lg font-medium text-white mb-3">Attachments</h3>
+              <h3 className="text-lg font-medium text-white mb-3">
+                Attachments ({email.attachments.length})
+              </h3>
               <div className="space-y-2">
                 {email.attachments.map((attachment, index) => (
-                  <a
+                  <button
                     key={index}
-                    href={attachment.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 p-2 bg-surface-2 rounded hover:bg-surface-1 transition-colors"
+                    onClick={() => handleDownload(attachment)}
+                    disabled={downloading}
+                    className="w-full flex items-center gap-3 p-3 bg-surface-2 rounded-lg hover:bg-surface-1 transition-colors disabled:opacity-50"
                   >
-                    <FiPaperclip className="w-4 h-4" />
-                    <span className="text-sm text-white">{attachment.name}</span>
-                    <span className="text-xs text-gray-400">
-                      ({Math.round(attachment.size / 1024)}KB)
-                    </span>
-                  </a>
+                    <FiPaperclip className="w-5 h-5 flex-shrink-0" />
+                    <div className="flex-1 text-left">
+                      <p className="text-sm text-white truncate">
+                        {attachment.filename}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {attachment.contentType} • {formatFileSize(attachment.size)}
+                      </p>
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -264,10 +346,22 @@ const EmailInterface = () => {
   const [error, setError] = useState(null);
   const [activeView, setActiveView] = useState('inbox');
   const [selectedEmail, setSelectedEmail] = useState(null);
+  const [showCompose, setShowCompose] = useState(false);
+  const [emailCounts, setEmailCounts] = useState({
+    inbox: 0,
+    sent: 0,
+    starred: 0
+  });
 
   if (!user?.hasEmail) {
     return <ErrorRedirect message="No active email found" />;
   }
+
+  const handleEmailSent = (email) => {
+    if (activeView === 'sent') {
+      setEmails(prev => [email, ...prev]);
+    }
+  };
 
   useEffect(() => {
     const connectWebSocket = () => {
@@ -286,6 +380,14 @@ const EmailInterface = () => {
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'EMAIL_UPDATE') {
+          // Update counts when receiving new email
+          setEmailCounts(prev => ({
+            ...prev,
+            inbox: data.email.recipient === user.email ? prev.inbox + 1 : prev.inbox,
+            sent: data.email.sender === user.email ? prev.sent + 1 : prev.sent
+          }));
+      
+          // Update email list if in relevant view
           if (activeView === 'inbox' && data.email.recipient === user.email) {
             setEmails(prev => [data.email, ...prev]);
           }
@@ -334,23 +436,37 @@ const EmailInterface = () => {
       if (!isBackgroundRefresh) {
         setLoading(true);
       }
-
-      const response = await axios.get(`/api/emails/${activeView}`);
+  
+      // Fetch all counts in parallel for efficiency
+      const [inboxEmails, sentEmails, starredEmails] = await Promise.all([
+        axios.get('/api/emails/inbox'),
+        axios.get('/api/emails/sent'),
+        axios.get('/api/emails/starred')
+      ]);
       
-      // If this is a background refresh, merge new emails with existing ones
+      // Set counts based on the length of each response
+      setEmailCounts({
+        inbox: inboxEmails.data.length,
+        sent: sentEmails.data.length,
+        starred: starredEmails.data.length
+      });
+  
+      // Set emails based on active view
+      const activeEmails = {
+        inbox: inboxEmails.data,
+        sent: sentEmails.data,
+        starred: starredEmails.data
+      }[activeView] || [];
+  
       if (isBackgroundRefresh) {
-        const newEmails = response.data;
         const existingIds = new Set(emails.map(e => e._id));
-        
-        // Only add emails that don't already exist
-        const uniqueNewEmails = newEmails.filter(email => !existingIds.has(email._id));
+        const uniqueNewEmails = activeEmails.filter(email => !existingIds.has(email._id));
         
         if (uniqueNewEmails.length > 0) {
           setEmails(prev => [...uniqueNewEmails, ...prev]);
         }
       } else {
-        // For manual refreshes, replace the entire list
-        setEmails(response.data);
+        setEmails(activeEmails);
         setSelectedEmail(null);
       }
       
@@ -378,7 +494,12 @@ const EmailInterface = () => {
           : e
       ));
   
-      // Update the API endpoint to match the backend route
+      // Update starred count
+      setEmailCounts(prev => ({
+        ...prev,
+        starred: prev.starred + (newStarredState ? 1 : -1)
+      }));
+  
       const response = await axios.post(`/api/emails/${emailId}/star`, {
         starred: newStarredState
       });
@@ -395,6 +516,11 @@ const EmailInterface = () => {
           ? { ...e, starred: !newStarredState }
           : e
       ));
+      // Revert starred count
+      setEmailCounts(prev => ({
+        ...prev,
+        starred: prev.starred + (newStarredState ? -1 : 1)
+      }));
     }
   };
 
@@ -412,14 +538,26 @@ const EmailInterface = () => {
 
   return (
     <div className="h-[calc(100vh-70px)] flex overflow-hidden">
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
+      <Sidebar 
+        activeView={activeView} 
+        setActiveView={setActiveView}
+        onCompose={() => setShowCompose(true)}
+        emails={emailCounts}
+      />
       <EmailList 
         emails={emails} 
         selectedEmail={selectedEmail} 
         setSelectedEmail={setSelectedEmail}
         onStarEmail={handleStarEmail}
+        activeView={activeView} // Add this prop
       />
       <EmailContent email={selectedEmail} />
+      {showCompose && (
+        <ComposeEmail 
+          onClose={() => setShowCompose(false)}
+          onEmailSent={handleEmailSent}
+        />
+      )}
     </div>
   );
 };

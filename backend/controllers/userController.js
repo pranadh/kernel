@@ -113,8 +113,7 @@ export const getCurrentUser = async (req, res) => {
       createdAt: user.createdAt,
       effects: user.effects,
       email: user.email,
-      hasEmail: user.hasEmail,
-      emailVerified: user.emailVerified
+      hasEmail: user.hasEmail
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
