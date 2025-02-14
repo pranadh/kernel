@@ -21,6 +21,17 @@ const spotifyTokenSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  lastRecentlyPlayedUpdate: {
+    type: Date,
+    default: Date.now
+  },
+  recentlyPlayed: [{
+    track: Object,
+    played_at: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   queuedTracks: [{
     trackId: String,
     userId: {

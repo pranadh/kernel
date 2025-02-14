@@ -1,8 +1,9 @@
 import React from 'react';
 import { RiVipCrownLine } from "react-icons/ri";
 import { VscVerifiedFilled } from "react-icons/vsc";
-import { LuHammer, LuBrain } from "react-icons/lu";
-import { GrBug } from "react-icons/gr";
+import { PiHammerBold } from "react-icons/pi";
+import { LuBrain } from "react-icons/lu";
+import { ImHeadphones } from "react-icons/im";
 
 const UserBadges = ({ roles, isVerified, splitBadges = false, disableHover = false, disableTooltip = false, iconSize = 20 }) => {
   const getBadgeInfo = (role) => {
@@ -14,16 +15,16 @@ const UserBadges = ({ roles, isVerified, splitBadges = false, disableHover = fal
         description: 'Site Administrator with full privileges'
       },
       staff: { 
-        icon: <LuHammer size={iconSize} />, 
+        icon: <PiHammerBold size={iconSize} />, 
         color: 'text-violet-700', 
         title: 'Staff',
         description: 'Moderator helping maintain the community'
       },
-      bug_hunter: { 
-        icon: <GrBug size={iconSize} />, 
-        color: 'text-green-500', 
-        title: 'Bug Hunter',
-        description: 'Found and reported critical bugs'
+      dj: { 
+        icon: <ImHeadphones size={iconSize} />, 
+        color: 'text-purple-500', 
+        title: 'DJ',
+        description: 'Ability to control music playback'
       },
       contributor: { 
         icon: <LuBrain size={iconSize} />, 

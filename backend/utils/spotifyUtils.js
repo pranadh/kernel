@@ -44,6 +44,21 @@ export const updateQueueTimestamp = async () => {
   }
 };
 
+export const updateRecentlyPlayedTimestamp = async () => {
+  try {
+    const timestamp = new Date();
+    await SpotifyToken.findOneAndUpdate(
+      {},
+      { $set: { lastRecentlyPlayedUpdate: timestamp } },
+      { sort: { createdAt: -1 } }
+    );
+    return timestamp;
+  } catch (error) {
+    console.error('Error updating recently played timestamp:', error);
+    throw error;
+  }
+};
+
 export const getTimeUntilNextRefresh = async () => {
   try {
     const tokens = await SpotifyToken.findOne().sort({ createdAt: -1 });

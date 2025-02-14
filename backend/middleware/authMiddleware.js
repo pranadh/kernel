@@ -10,6 +10,15 @@ export const admin = async (req, res, next) => {
   }
 };
 
+export const controlAccess = (role) => (req, res, next) => {
+  if (!req.user || !req.user.roles.includes(role)) {
+    return res.status(403).json({ 
+      message: `This action requires ${role} privileges` 
+    });
+  }
+  next();
+};
+
 export const protect = async (req, res, next) => {
   let token;
   if (req.headers.authorization?.startsWith('Bearer')) {

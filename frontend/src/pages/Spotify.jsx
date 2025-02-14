@@ -1,13 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FiMusic, FiLoader, FiAlertCircle, FiCheck, FiClock } from 'react-icons/fi';
+import { 
+  FiMusic, FiLoader, FiAlertCircle, FiCheck, FiClock, 
+  FiVolume2, FiPlayCircle, FiPauseCircle, FiSpeaker, 
+  FiSliders, FiSkipBack, FiSkipForward, FiInfo 
+} from 'react-icons/fi';
+import { PiVinylRecord, PiQueue, PiClockCounterClockwise } from "react-icons/pi";
 import { SlSocialSpotify } from 'react-icons/sl';
+import { AiOutlineSound } from 'react-icons/ai';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api';
 
 const Spotify = () => {
   const { user } = useAuth();
+  const [controlsDisabled, setControlsDisabled] = useState(false);
+  const [spotifyProfile, setSpotifyProfile] = useState(null);
   const [currentTrack, setCurrentTrack] = useState(null);
+  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [queuedTracks, setQueuedTracks] = useState([]);
+  const [clientProgress, setClientProgress] = useState(0);
   const [success, setSuccess] = useState(null);
   const [refreshTimer, setRefreshTimer] = useState(20);
   const [requestedSongs, setRequestedSongs] = useState(new Map());
@@ -16,8 +26,23 @@ const Spotify = () => {
   const [isLoading, setIsLoading] = useState({
     submit: false,
     current: false,
-    queue: false
+    queue: false,
+    playback: false,
+    volume: false,
+    recent: false
   });
+  const [playbackState, setPlaybackState] = useState({
+    device: null,
+    progress_ms: 0,
+    volume_percent: 0,
+    is_playing: false
+  });
+
+  const formatTime = (ms) => {
+    const seconds = Math.floor((ms / 1000) % 60);
+    const minutes = Math.floor((ms / 1000 / 60) % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   const fetchCurrentTrack = async () => {
     try {
@@ -25,8 +50,20 @@ const Spotify = () => {
       const { data } = await axios.get('/api/spotify/current');
       if (data?.item) {
         setCurrentTrack(data.item);
+        setPlaybackState({
+          device: data.device,
+          progress_ms: data.progress_ms,
+          volume_percent: data.volume_percent,
+          is_playing: data.is_playing
+        });
       } else {
         setCurrentTrack(null);
+        setPlaybackState({
+          device: null,
+          progress_ms: 0,
+          volume_percent: 0,
+          is_playing: false
+        });
       }
     } catch (error) {
       console.error('Current track error:', error);
@@ -38,14 +75,18 @@ const Spotify = () => {
 
   const fetchQueuedTracks = useCallback(async () => {
     try {
-      setIsLoading(prev => ({ ...prev, queue: true }));
-      const { data } = await axios.get('/api/spotify/queued');
+      setIsLoading(prev => ({ ...prev, queue: true, recent: true }));
+      const [queueData, recentData] = await Promise.all([
+        axios.get('/api/spotify/queued'),
+        axios.get('/api/spotify/recent')
+      ]);
       
-      setQueuedTracks(data?.queue || []);
+      setQueuedTracks(queueData.data?.queue || []);
+      setRecentlyPlayed(recentData.data.tracks);
       
       // Update requestedSongs Map with server data
       const newRequestedSongs = new Map();
-      data.queue?.forEach(track => {
+      queueData.data.queue?.forEach(track => {
         if (track.requestedBy) {
           newRequestedSongs.set(track.id, {
             user: {
@@ -58,7 +99,7 @@ const Spotify = () => {
       });
       setRequestedSongs(newRequestedSongs);
       
-      setRefreshTimer(Math.round(data.refreshIn));
+      setRefreshTimer(Math.round(queueData.data.refreshIn));
     } catch (error) {
       console.error('Queue error:', error);
       if (error.response?.status === 401) {
@@ -68,9 +109,116 @@ const Spotify = () => {
       }
       setQueuedTracks([]);
     } finally {
-      setIsLoading(prev => ({ ...prev, queue: false }));
+      setIsLoading(prev => ({ ...prev, queue: false, recent: false }));
     }
   }, []);
+
+  const fetchRecentlyPlayed = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, recent: true }));
+      const { data } = await axios.get('/api/spotify/recent');
+      setRecentlyPlayed(data.tracks);
+    } catch (error) {
+      console.error('Recently played error:', error);
+    } finally {
+      setIsLoading(prev => ({ ...prev, recent: false }));
+    }
+  };
+
+  const SpotifyProfile = ({ profile }) => {
+    return (
+      <div className="mt-6 p-4 bg-surface-2/50 rounded-lg flex items-center gap-4 border border-primary/50">
+        {profile.image ? (
+          <img 
+            src={profile.image} 
+            alt={profile.name}
+            className="w-12 h-12 rounded-md" 
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-surface-2 flex items-center justify-center">
+            <SlSocialSpotify className="w-6 h-6 text-text-secondary" />
+          </div>
+        )}
+        <div>
+          <div className="text-white font-medium">{profile.name}</div>
+          <div className="text-text-secondary text-sm flex items-center gap-2">
+            <span>Current Host</span>
+            <span>•</span>
+            <span>{profile.followers} followers</span>
+            <a 
+              href={profile.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              View Profile
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const fetchSpotifyProfile = async () => {
+    try {
+      const { data } = await axios.get('/api/spotify/profile');
+      setSpotifyProfile(data.profile);
+    } catch (error) {
+      console.error('Failed to fetch Spotify profile:', error);
+    }
+  };
+
+  const handleVolumeChange = async (newVolume) => {
+    try {
+      setIsLoading(prev => ({ ...prev, volume: true }));
+      await axios.put('/api/spotify/volume', { volume: newVolume });
+      setPlaybackState(prev => ({ ...prev, volume_percent: newVolume }));
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to adjust volume');
+    } finally {
+      setIsLoading(prev => ({ ...prev, volume: false }));
+    }
+  };
+  
+  const handlePlaybackControl = async (action) => {
+    try {
+      setIsLoading(prev => ({ ...prev, playback: true }));
+      setControlsDisabled(true);
+      
+      await axios.post('/api/spotify/playback', { action });
+      
+      if (action === 'play' || action === 'pause') {
+        setPlaybackState(prev => ({ ...prev, is_playing: action === 'play' }));
+        setTimeout(() => setControlsDisabled(false), 500);
+        return;
+      }
+      
+      if (action === 'next' || action === 'previous') {
+        try {
+          // Wait for Spotify to update
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Fetch all updated data
+          await Promise.all([
+            fetchCurrentTrack(),
+            fetchQueuedTracks(),
+            fetchRecentlyPlayed()
+          ]);
+          
+          setControlsDisabled(false);
+        } catch (error) {
+          console.error('Track change update error:', error);
+          setControlsDisabled(false);
+        }
+      }
+    } catch (error) {
+      console.error('Playback control error:', error);
+      setError(error.response?.data?.message || 'Failed to control playback');
+      setControlsDisabled(false);
+    } finally {
+      setIsLoading(prev => ({ ...prev, playback: false }));
+    }
+  };
 
   const handleSpotifyAuth = async () => {
     try {
@@ -114,7 +262,26 @@ const Spotify = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      await Promise.all([fetchCurrentTrack(), fetchQueuedTracks()]);
+      try {
+        const [currentData, queueData, recentData, profileData] = await Promise.all([
+          fetchCurrentTrack(),
+          fetchQueuedTracks(),
+          axios.get('/api/spotify/recent'),
+          axios.get('/api/spotify/profile')
+        ]);
+        
+        if (recentData?.data) {
+          setRecentlyPlayed(recentData.data.tracks);
+        }
+  
+        // Add proper profile data handling
+        if (profileData?.data) {
+          setSpotifyProfile(profileData.data.profile);
+        }
+        
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     };
 
     // Initial fetch
@@ -139,35 +306,195 @@ const Spotify = () => {
     };
   }, [fetchQueuedTracks]);
 
+  // Keep track of song progress
+  useEffect(() => {
+    let progressTimer;
+    
+    if (currentTrack && playbackState.is_playing) {
+      // Initialize client progress with server value 
+      setClientProgress(playbackState.progress_ms);
+      
+      progressTimer = setInterval(() => {
+        setClientProgress(prev => {
+          // When song completes, trigger immediate refresh
+          if (prev >= currentTrack.duration_ms) {
+            clearInterval(progressTimer);
+            // Fetch new track data immediately
+            Promise.all([fetchCurrentTrack(), fetchQueuedTracks()]);
+            return currentTrack.duration_ms;
+          }
+          return prev + 1000;
+        });
+      }, 1000);
+    }
+  
+    return () => {
+      if (progressTimer) {
+        clearInterval(progressTimer); 
+      }
+    };
+  }, [currentTrack, playbackState.progress_ms, playbackState.is_playing]);
+
+  const NowPlaying = ({ currentTrack, playbackState, clientProgress, user, handlers }) => {
+    const isDJ = user?.roles?.includes('dj');
+    
+    return (
+      <div className="flex gap-8">
+        {/* Left side - Album Art */}
+        <div className="flex-shrink-0 w-[28rem]">
+          <img 
+            src={currentTrack.album.images[0].url} 
+            alt={currentTrack.name}
+            className="w-full h-[28rem] rounded-lg shadow-lg object-cover" 
+          />
+        </div>
+  
+        {/* Right side - Track Info and Controls */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Track Info */}
+          <div>
+            <div className="text-2xl font-bold text-white truncate">
+              {currentTrack.name}
+            </div>
+            <div className="text-text-secondary text-lg">
+              {currentTrack.artists.map(a => a.name).join(', ')}
+            </div>
+          </div>
+  
+          {/* Device Info */}
+          <div className="flex items-center gap-2 mt-4">
+            <FiSpeaker className="w-6 h-6 text-text-secondary" />
+            <span className="text-sm text-text-secondary">
+              {playbackState.device?.name === "EXLT" ? "Room Speaker" : playbackState.device?.name || 'No device'}
+            </span>
+          </div>
+  
+          {/* Controls and Progress Section - Pushed to bottom */}
+          <div className="mt-auto space-y-6">
+            {/* Warning for non-DJs */}
+            {!isDJ && (
+              <div className="flex items-center gap-2 text-sm text-status-error/75">
+                <FiInfo className="w-4 h-4" />
+                <span>Playback controls require DJ privileges</span>
+              </div>
+            )}
+  
+            {/* Volume and Playback Controls */}
+            <div className="flex items-center justify-between">
+              {/* Volume Control */}
+              <div className="flex items-center gap-2">
+                <FiVolume2 className="w-6 h-6 text-text-secondary" />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={playbackState.volume_percent}
+                  onChange={(e) => handlers.handleVolumeChange(parseInt(e.target.value))}
+                  className="w-48 h-3 bg-surface-2/50 rounded-full appearance-none 
+                           [&::-webkit-slider-thumb]:appearance-none 
+                           [&::-webkit-slider-thumb]:h-3 
+                           [&::-webkit-slider-thumb]:w-3
+                           [&::-webkit-slider-thumb]:rounded-full
+                           [&::-webkit-slider-thumb]:bg-primary
+                           [&::-webkit-slider-thumb]:border-2
+                           [&::-webkit-slider-thumb]:border-surface-1
+                           hover:cursor-pointer
+                           disabled:opacity-50
+                           disabled:cursor-not-allowed"
+                  disabled={!isDJ || handlers.isLoading.volume}
+                />
+                <span className="text-sm text-text-secondary min-w-[40px]">
+                  {playbackState.volume_percent}%
+                </span>
+              </div>
+  
+              {/* Playback Controls */}
+              <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlers.handlePlaybackControl('previous')}
+                disabled={!isDJ || handlers.isLoading.playback || handlers.controlsDisabled}
+                className="p-2 hover:bg-surface-2/50 rounded-full transition-colors
+                        disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiSkipBack className="w-6 h-6 text-text-secondary" />
+              </button>
+  
+                <button
+                  onClick={() => handlers.handlePlaybackControl(playbackState.is_playing ? 'pause' : 'play')}
+                  disabled={!isDJ || handlers.isLoading.playback || handlers.controlsDisabled}
+                  className="p-2 hover:bg-surface-2/50 rounded-full transition-colors
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {handlers.isLoading.playback ? (
+                    <FiLoader className="w-7 h-7 text-primary animate-spin" />
+                  ) : playbackState.is_playing ? (
+                    <FiPauseCircle className="w-7 h-7 text-text-secondary" />
+                  ) : (
+                    <FiPlayCircle className="w-7 h-7 text-text-secondary" />
+                  )}
+                </button>
+  
+                <button
+                  onClick={() => handlers.handlePlaybackControl('next')}
+                  disabled={!isDJ || handlers.isLoading.playback || handlers.controlsDisabled}
+                  className="p-2 hover:bg-surface-2/50 rounded-full transition-colors
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FiSkipForward className="w-6 h-6 text-text-secondary" />
+                </button>
+              </div>
+            </div>
+  
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="w-full bg-surface-2/50 rounded-full h-1.5 relative">
+                <div 
+                  className="bg-primary h-1.5 rounded-full transition-all duration-500 relative"
+                  style={{ width: `${(clientProgress / currentTrack.duration_ms) * 100}%` }}
+                >
+                  <div 
+                    className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 
+                              bg-primary rounded-full border-2 border-primary "
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between text-sm text-text-secondary">
+                <span>{handlers.formatTime(clientProgress)}</span>
+                <span>{handlers.formatTime(currentTrack.duration_ms)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#101113]">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {user?.roles?.includes('admin') && (
-            <div className="mb-6 p-4 bg-surface-2/50 backdrop-blur-sm rounded-lg border border-white/5">
-              <div className="flex items-center justify-between">
-                <span className="text-text-secondary">Admin Controls</span>
+      <div className="max-w-[2160px] mx-auto px-8 py-8">
+        <div className="max-w mx-auto">
+          <div className="flex items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <PiVinylRecord className="w-10 h-10 text-primary" />
+              <div>
+                <h1 className="text-3xl font-bold text-white">Song Requests</h1>
+                <p className="text-text-secondary">Play songs on my speaker in my room</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              {user?.roles?.includes('admin') && (
                 <button
                   onClick={handleSpotifyAuth}
-                  className="px-4 py-2 bg-primary hover:bg-primary-hover rounded-md text-white 
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-md text-white 
                            transition-colors text-sm"
                 >
                   Connect Spotify Account
                 </button>
+              )}
+              <div className="flex items-center gap-2 text-text-secondary text-sm">
+                <FiClock className="w-4 h-4" />
+                <span>Refreshing in <span className="text-white">{refreshTimer}s</span></span>
               </div>
-            </div>
-          )}
-          <div className="flex items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <FiMusic className="w-8 h-8 text-primary" />
-              <div>
-                <h1 className="text-3xl font-bold text-white">Community Queue</h1>
-                <p className="text-text-secondary">Add songs to the community playlist</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-text-secondary text-sm">
-              <FiClock className="w-4 h-4" />
-              <span>Refreshing in <span className="text-white">{refreshTimer}s</span></span>
             </div>
           </div>
 
@@ -187,79 +514,90 @@ const Spotify = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-8">
-            {/* Add Track Section */}
-            <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="trackUrl" className="block text-sm font-medium text-text-secondary mb-2">
-                    Spotify Track URL
-                  </label>
-                  <input
-                    type="text"
-                    id="trackUrl"
-                    placeholder="https://open.spotify.com/track/..."
-                    value={trackUrl}
-                    onChange={(e) => setTrackUrl(e.target.value)}
-                    className="w-full bg-surface-2/50 text-text-primary px-4 py-2 rounded-md 
-                             border border-white/5 placeholder:text-text-secondary/50
-                             focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isLoading.submit || !trackUrl.trim()}
-                  className="w-full px-4 py-2 bg-primary hover:bg-primary-hover disabled:opacity-50 
-                           disabled:cursor-not-allowed rounded-md text-white transition-colors flex 
-                           items-center justify-center gap-2"
-                >
-                  {isLoading.submit ? (
-                    <FiLoader className="w-5 h-5 animate-spin" />
-                  ) : (
-                    'Add to Queue'
-                  )}
-                </button>
-              </form>
-            </div>
+          <div className="grid grid-cols-[3fr_2fr] gap-8">
+            {/* Left Column - Track Input and Now Playing */}
+            <div className="space-y-8">
+              {/* Add Track Section */}
+              <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="trackUrl" className="block text-sm font-medium text-text-secondary mb-2">
+                      Request a Song
+                    </label>
+                    <input
+                      type="text"
+                      id="trackUrl"
+                      placeholder="https://open.spotify.com/track/..."
+                      value={trackUrl}
+                      onChange={(e) => setTrackUrl(e.target.value)}
+                      className="w-full bg-surface-2/50 text-text-primary px-4 py-2 rounded-md 
+                              border border-white/5 placeholder:text-text-secondary/50
+                              focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading.submit || !trackUrl.trim()}
+                    className="w-full px-4 py-2 bg-primary hover:bg-primary-hover disabled:opacity-50 
+                            disabled:cursor-not-allowed rounded-md text-white transition-colors flex 
+                            items-center justify-center gap-2"
+                  >
+                    {isLoading.submit ? (
+                      <FiLoader className="w-5 h-5 animate-spin" />
+                    ) : (
+                      'Add to Queue'
+                    )}
+                  </button>
+                </form>
+              </div>
 
             {/* Now Playing Section */}
             <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Now Playing</h2>
+              <div className="flex items-center gap-2 mb-6">
+                <AiOutlineSound className="w-6 h-6 text-primary" />
+                <h2 className="text-xl font-bold text-white">Now Playing</h2>
+              </div>
               {isLoading.current ? (
                 <div className="flex items-center justify-center py-8">
                   <FiLoader className="w-6 h-6 text-primary animate-spin" />
                 </div>
               ) : currentTrack ? (
-                <div className="flex items-center gap-4 p-4 bg-primary/10 rounded-lg">
-                  <img 
-                    src={currentTrack.album.images[1].url} 
-                    alt={currentTrack.name}
-                    className="w-16 h-16 rounded" 
-                  />
-                  <div>
-                    <div className="text-white font-medium">{currentTrack.name}</div>
-                    <div className="text-text-secondary">
-                      {currentTrack.artists.map(a => a.name).join(', ')}
-                    </div>
-                  </div>
-                </div>
+                <NowPlaying 
+                  currentTrack={currentTrack}
+                  playbackState={playbackState}
+                  clientProgress={clientProgress}
+                  user={user}
+                  handlers={{
+                    formatTime,
+                    handleVolumeChange,
+                    handlePlaybackControl,
+                    isLoading,
+                    controlsDisabled
+                  }}
+                />
               ) : (
                 <div className="text-center py-8 text-text-secondary">
                   No track currently playing
                 </div>
               )}
+              {spotifyProfile && <SpotifyProfile profile={spotifyProfile} />}
             </div>
+          </div>
 
-            {/* Queue Section */}
-            <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Coming Up Next</h2>
-              {isLoading.queue ? (
-                <div className="flex items-center justify-center py-8">
-                  <FiLoader className="w-6 h-6 text-primary animate-spin" />
+            {/* Right Column - Queue */}
+            <div>
+              <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6 sticky top-8">
+                <div className="flex items-center gap-2 mb-6">
+                  <PiQueue className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-bold text-white">Coming Up Next</h2>
                 </div>
-              ) : queuedTracks.length > 0 ? (
-                <div className="space-y-4">
-                  {queuedTracks.map((track) => (
+                {isLoading.queue ? (
+                  <div className="flex items-center justify-center py-8">
+                    <FiLoader className="w-6 h-6 text-primary animate-spin" />
+                  </div>
+                ) : queuedTracks.length > 0 ? (
+                  <div className="space-y-4 max-h-[calc(35vh-3rem)] overflow-y-auto">
+                    {queuedTracks.map((track) => (
                     <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
                         <div className="flex items-center gap-4">
                         <img 
@@ -273,7 +611,7 @@ const Spotify = () => {
                             {track.artists.map(a => a.name).join(', ')}
                             </div>
                         </div>
-                        </div>
+                      </div>
                         
                         <div className="flex items-center gap-3">
                         {requestedSongs.has(track.id) ? (
@@ -302,14 +640,54 @@ const Spotify = () => {
                         </div>
                     </div>
                     ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-text-secondary">
+                      Queue is empty
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-8 text-text-secondary">
-                  Queue is empty
+                {/* Recently Played Section */}
+                <div className="mt-8 bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
+                  <div className="flex items-center gap-2 mb-6">
+                    <PiClockCounterClockwise className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl font-bold text-white">Recently Played</h2>
+                  </div>
+                  {isLoading.recent ? (
+                    <div className="flex items-center justify-center py-8">
+                      <FiLoader className="w-6 h-6 text-primary animate-spin" />
+                    </div>
+                  ) : recentlyPlayed.length > 0 ? (
+                    <div className="space-y-4 max-h-[calc(35vh-3rem)] overflow-y-auto">
+                      {recentlyPlayed.map((track) => (
+                        <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <img 
+                              src={track.album.images[2].url} 
+                              alt={track.name} 
+                              className="w-12 h-12 rounded" 
+                            />
+                            <div>
+                              <div className="text-white font-medium">{track.name}</div>
+                              <div className="text-text-secondary text-sm">
+                                {track.artists.map(a => a.name).join(', ')}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-text-secondary text-xs">
+                            {new Date(track.played_at).toLocaleString()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-text-secondary">
+                      No recently played tracks
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
         </div>
       </div>
     </div>

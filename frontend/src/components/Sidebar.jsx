@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FiMail, FiLock, FiMusic } from 'react-icons/fi';
 import { TbCrop, TbDeviceHeartMonitor, TbTextResize, TbTools, TbKeyboard } from 'react-icons/tb';
+import { PiVinylRecord } from "react-icons/pi";
 import { useAuth } from '../context/AuthContext'; // Add this import
 
 const Sidebar = () => {
@@ -36,7 +37,7 @@ const Sidebar = () => {
     {
       path: '/spotify',
       name: 'Song Requests',
-      icon: <FiMusic className="w-5 h-5" />,
+      icon: <PiVinylRecord className="w-5 h-5" />,
       description: 'Play songs in my room'
     },
     {

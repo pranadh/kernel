@@ -32,7 +32,7 @@ const UserManagement = ({
     "": "All Roles",
     "admin": "Admin",
     "staff": "Staff",
-    "bug_hunter": "Bug Hunter",
+    "dj": "DJ",
     "contributor": "Contributor"
   };
 

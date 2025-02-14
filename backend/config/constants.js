@@ -2,7 +2,7 @@ export const ROLES = {
     USER: 'user',
     ADMIN: 'admin',
     STAFF: 'staff',
-    BUG_HUNTER: 'bug_hunter',
+    DJ: 'dj',
     CONTRIBUTOR: 'contributor'
 };
 

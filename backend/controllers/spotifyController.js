@@ -4,7 +4,8 @@ import axios from 'axios';
 import { 
     refreshTokenIfNeeded, 
     getTimeUntilNextRefresh, 
-    updateQueueTimestamp 
+    updateQueueTimestamp,
+    updateRecentlyPlayedTimestamp
   } from '../utils/spotifyUtils.js';
 
 const spotifyApi = new SpotifyWebApi({
@@ -18,7 +19,8 @@ export const getSpotifyAuth = async (req, res) => {
     const scopes = [
         'user-modify-playback-state', 
         'user-read-playback-state',
-        'user-read-currently-playing'
+        'user-read-currently-playing',
+        'user-read-recently-played'
       ];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes);
   res.json({ url: authorizeURL });
@@ -84,8 +86,18 @@ export const handleCallback = async (req, res) => {
 export const getCurrentTrack = async (req, res) => {
   try {
     await refreshTokenIfNeeded(spotifyApi);
-    const data = await spotifyApi.getMyCurrentPlayingTrack();
-    res.json(data.body);
+    const [playbackState, currentTrack] = await Promise.all([
+      spotifyApi.getMyCurrentPlaybackState(),
+      spotifyApi.getMyCurrentPlayingTrack()
+    ]);
+    
+    res.json({
+      item: currentTrack.body?.item || null,
+      device: playbackState.body?.device || null,
+      progress_ms: playbackState.body?.progress_ms || 0,
+      volume_percent: playbackState.body?.device?.volume_percent || 0,
+      is_playing: playbackState.body?.is_playing || false
+    });
   } catch (error) {
     console.error('Get current track error:', error);
     res.status(500).json({ message: error.message });
@@ -187,5 +199,138 @@ const extractTrackId = (url) => {
     return null;
   } catch (error) {
     return null;
+  }
+};
+
+// Adjust device volume
+export const adjustVolume = async (req, res) => {
+  try {
+    await refreshTokenIfNeeded(spotifyApi);
+    const { volume } = req.body;
+    await spotifyApi.setVolume(volume);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// Play, pause, next, previous controls
+export const controlPlayback = async (req, res) => {
+  try {
+    await refreshTokenIfNeeded(spotifyApi);
+    const { action } = req.body;
+    
+    switch (action) {
+      case 'play':
+        await spotifyApi.play();
+        break;
+      case 'pause':
+        await spotifyApi.pause();
+        break;
+      case 'next':
+      case 'previous':
+        // First perform the action
+        await (action === 'next' ? spotifyApi.skipToNext() : spotifyApi.skipToPrevious());
+        
+        // Wait for Spotify to update
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Get current track to add to recently played
+        const currentTrack = await spotifyApi.getMyCurrentPlayingTrack();
+        if (currentTrack.body?.item) {
+          // Update timestamps and add to recently played
+          await Promise.all([
+            updateQueueTimestamp(),
+            updateRecentlyPlayedTimestamp(),
+            SpotifyToken.findOneAndUpdate(
+              {},
+              {
+                $push: {
+                  recentlyPlayed: {
+                    track: currentTrack.body.item,
+                    played_at: new Date()
+                  }
+                }
+              },
+              { sort: { createdAt: -1 } }
+            )
+          ]);
+        }
+        break;
+      default:
+        throw new Error('Invalid action');
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Playback control error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getRecentlyPlayed = async (req, res) => {
+  try {
+    await refreshTokenIfNeeded(spotifyApi);
+    
+    // Get recently played from both Spotify API and our database
+    const [spotifyData, localData] = await Promise.all([
+      spotifyApi.getMyRecentlyPlayedTracks({ limit: 10 }),
+      SpotifyToken.findOne().sort({ createdAt: -1 })
+    ]);
+
+    // Combine and sort both sources
+    const spotifyTracks = spotifyData.body.items.map(item => ({
+      ...item.track,
+      played_at: new Date(item.played_at).toISOString()
+    }));
+
+    const localTracks = localData?.recentlyPlayed?.map(item => ({
+      ...item.track,
+      played_at: item.played_at.toISOString()
+    })) || [];
+
+    // Combine both sources, remove duplicates, and sort by played_at
+    const allTracks = [...spotifyTracks, ...localTracks]
+      .reduce((acc, current) => {
+        const x = acc.find(item => item.id === current.id);
+        if (!x) {
+          return acc.concat([current]);
+        } else {
+          return acc.map(item => 
+            item.id === current.id
+              ? (new Date(item.played_at) > new Date(current.played_at) ? item : current)
+              : item
+          );
+        }
+      }, [])
+      .sort((a, b) => new Date(b.played_at) - new Date(a.played_at))
+      .slice(0, 10);
+
+    res.json({ tracks: allTracks });
+  } catch (error) {
+    console.error('Get recently played error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getSpotifyProfile = async (req, res) => {
+  try {
+    await refreshTokenIfNeeded(spotifyApi);
+    const data = await spotifyApi.getMe();
+    res.json({
+      profile: {
+        id: data.body.id,
+        name: data.body.display_name,
+        image: data.body.images?.[0]?.url,
+        uri: data.body.uri,
+        followers: data.body.followers.total,
+        product: data.body.product,
+        url: data.body.external_urls.spotify
+      }
+    });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ message: error.message });
   }
 };
