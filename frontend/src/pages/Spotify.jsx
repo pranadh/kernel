@@ -263,48 +263,77 @@ const Spotify = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [currentData, queueData, recentData, profileData] = await Promise.all([
-          fetchCurrentTrack(),
-          fetchQueuedTracks(),
-          axios.get('/api/spotify/recent'),
-          axios.get('/api/spotify/profile')
+        setIsLoading(prev => ({ 
+          ...prev, 
+          current: true,
+          queue: true,
+          recent: true
+        }));
+  
+        // First fetch profile and wait for it
+        const profileResponse = await axios.get('/api/spotify/profile');
+        setSpotifyProfile(profileResponse.data.profile);
+  
+        // Then fetch the rest in parallel
+        const [currentResponse, queueResponse, recentResponse] = await Promise.all([
+          axios.get('/api/spotify/current'),
+          axios.get('/api/spotify/queued'),
+          axios.get('/api/spotify/recent')
         ]);
-        
-        if (recentData?.data) {
-          setRecentlyPlayed(recentData.data.tracks);
+  
+        // Update states in order
+        if (currentResponse.data?.item) {
+          setCurrentTrack(currentResponse.data.item);
+          setPlaybackState({
+            device: currentResponse.data.device,
+            progress_ms: currentResponse.data.progress_ms,
+            volume_percent: currentResponse.data.volume_percent,
+            is_playing: currentResponse.data.is_playing
+          });
         }
   
-        // Add proper profile data handling
-        if (profileData?.data) {
-          setSpotifyProfile(profileData.data.profile);
+        if (queueResponse.data?.queue) {
+          setQueuedTracks(queueResponse.data.queue);
+          
+          // Update requestedSongs Map
+          const newRequestedSongs = new Map();
+          queueResponse.data.queue.forEach(track => {
+            if (track.requestedBy) {
+              newRequestedSongs.set(track.id, {
+                user: {
+                  username: track.requestedBy.username,
+                  avatar: track.requestedBy.avatar
+                },
+                track: track
+              });
+            }
+          });
+          setRequestedSongs(newRequestedSongs);
         }
-        
+  
+        if (recentResponse.data?.tracks) {
+          setRecentlyPlayed(recentResponse.data.tracks);
+        }
+  
       } catch (error) {
         console.error('Error fetching data:', error);
+        setError(error.response?.data?.message || 'Failed to fetch data');
+      } finally {
+        setIsLoading(prev => ({ 
+          ...prev, 
+          current: false,
+          queue: false,
+          recent: false
+        }));
       }
     };
-
-    // Initial fetch
+  
     fetchData();
-
-    // Set up refresh interval aligned with server timing
+  
     const interval = setInterval(fetchData, 20000);
-
-    // Client-side countdown that resets when server sends new refresh time
-    const timer = setInterval(() => {
-      setRefreshTimer(prev => {
-        if (prev <= 1) {
-          return 20;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-      clearInterval(timer);
-    };
-  }, [fetchQueuedTracks]);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Keep track of song progress
   useEffect(() => {
@@ -577,7 +606,7 @@ const Spotify = () => {
                 />
               ) : (
                 <div className="text-center py-8 text-text-secondary">
-                  No track currently playing
+                  Host has gone offline
                 </div>
               )}
               {spotifyProfile && <SpotifyProfile profile={spotifyProfile} />}
@@ -597,49 +626,68 @@ const Spotify = () => {
                   </div>
                 ) : queuedTracks.length > 0 ? (
                   <div className="space-y-4 max-h-[calc(35vh-3rem)] overflow-y-auto">
-                    {queuedTracks.map((track) => (
-                    <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
-                        <div className="flex items-center gap-4">
-                        <img 
-                            src={track.album.images[2].url} 
-                            alt={track.name} 
-                            className="w-12 h-12 rounded" 
-                        />
-                        <div>
-                            <div className="text-white font-medium">{track.name}</div>
-                            <div className="text-text-secondary text-sm">
-                            {track.artists.map(a => a.name).join(', ')}
+                    {queuedTracks.map((track) => {
+                      // Skip invalid tracks and add validation
+                      if (!track?.id || !track?.album?.images?.length || !track?.name || !track?.artists) {
+                        console.warn('Invalid track data:', track);
+                        return null;
+                      }
+
+                      // Get the smallest album image or use fallback
+                      const imageUrl = track.album.images.reduce((smallest, current) => {
+                        if (!smallest || current.height < smallest.height) {
+                          return current;
+                        }
+                        return smallest;
+                      }, null)?.url || 'https://via.placeholder.com/64';
+
+                      return (
+                        <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <img 
+                              src={imageUrl}
+                              alt={track.name}
+                              className="w-12 h-12 rounded" 
+                              onError={(e) => {
+                                e.target.src = 'https://via.placeholder.com/64';
+                              }}
+                            />
+                            <div>
+                              <div className="text-white font-medium">{track.name}</div>
+                              <div className="text-text-secondary text-sm">
+                                {track.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}
+                              </div>
                             </div>
-                        </div>
-                      </div>
-                        
-                        <div className="flex items-center gap-3">
-                        {requestedSongs.has(track.id) ? (
-                            <div className="flex items-center gap-2">
-                            <div className="text-text-secondary text-sm text-right">
-                                Added by {requestedSongs.get(track.id).user.username}
-                            </div>
-                            {requestedSongs.get(track.id).user.avatar ? (
-                                <img 
-                                src={requestedSongs.get(track.id).user.avatar} 
-                                alt={requestedSongs.get(track.id).user.username}
-                                className="w-6 h-6 rounded-full"
-                                />
-                            ) : (
-                                <div className="w-6 h-6 rounded-full bg-surface-2 flex items-center justify-center">
-                                {requestedSongs.get(track.id).user.username[0].toUpperCase()}
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            {requestedSongs.has(track.id) ? (
+                              <div className="flex items-center gap-2">
+                                <div className="text-text-secondary text-sm text-right">
+                                  Added by {requestedSongs.get(track.id).user.username}
                                 </div>
+                                {requestedSongs.get(track.id).user.avatar ? (
+                                  <img 
+                                    src={requestedSongs.get(track.id).user.avatar}
+                                    alt={requestedSongs.get(track.id).user.username}
+                                    className="w-6 h-6 rounded-full"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-surface-2 flex items-center justify-center">
+                                    {requestedSongs.get(track.id).user.username[0].toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 text-text-secondary text-sm">
+                                <span>Automatic from Spotify</span>
+                                <SlSocialSpotify className="w-4 h-4" />
+                              </div>
                             )}
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2 text-text-secondary text-sm">
-                            <span>Automatic from Spotify</span>
-                            <SlSocialSpotify className="w-4 h-4" />
-                            </div>
-                        )}
+                          </div>
                         </div>
-                    </div>
-                    ))}
+                      );
+                    })}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-text-secondary">
@@ -659,26 +707,65 @@ const Spotify = () => {
                     </div>
                   ) : recentlyPlayed.length > 0 ? (
                     <div className="space-y-4 max-h-[calc(35vh-3rem)] overflow-y-auto">
-                      {recentlyPlayed.map((track) => (
-                        <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <img 
-                              src={track.album.images[2].url} 
-                              alt={track.name} 
-                              className="w-12 h-12 rounded" 
-                            />
-                            <div>
-                              <div className="text-white font-medium">{track.name}</div>
-                              <div className="text-text-secondary text-sm">
-                                {track.artists.map(a => a.name).join(', ')}
+                      {recentlyPlayed.map((track) => {
+                        // Skip invalid tracks and add more thorough validation
+                        if (!track?.id || !track?.album?.images?.length || !track?.name || !track?.artists) {
+                          console.warn('Invalid track data:', track);
+                          return null;
+                        }
+
+                        // Get the smallest image URL or use fallback
+                        const imageUrl = track.album.images.reduce((smallest, current) => {
+                          if (!smallest || current.height < smallest.height) {
+                            return current;
+                          }
+                          return smallest;
+                        }, null)?.url || 'https://via.placeholder.com/64';
+
+                        return (
+                          <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
+                            <div className="flex items-center gap-4">
+                              <img 
+                                src={imageUrl}
+                                alt={track.name}
+                                className="w-12 h-12 rounded" 
+                                onError={(e) => {
+                                  e.target.src = 'https://via.placeholder.com/64';
+                                }}
+                              />
+                              <div>
+                                <div className="text-white font-medium">{track.name}</div>
+                                <div className="text-text-secondary text-sm">
+                                  {track.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              {track.requestedBy ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="text-text-secondary text-sm text-right">
+                                    Added by {track.requestedBy.username}
+                                  </div>
+                                  {track.requestedBy.avatar ? (
+                                    <img 
+                                      src={track.requestedBy.avatar}
+                                      alt={track.requestedBy.username}
+                                      className="w-6 h-6 rounded-full"
+                                    />
+                                  ) : (
+                                    <div className="w-6 h-6 rounded-full bg-surface-2 flex items-center justify-center">
+                                      {track.requestedBy.username[0].toUpperCase()}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : null}
+                              <div className="text-text-secondary text-xs">
+                                {new Date(track.played_at).toLocaleString()}
                               </div>
                             </div>
                           </div>
-                          <div className="text-text-secondary text-xs">
-                            {new Date(track.played_at).toLocaleString()}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-8 text-text-secondary">

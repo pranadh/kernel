@@ -273,36 +273,60 @@ export const getRecentlyPlayed = async (req, res) => {
   try {
     await refreshTokenIfNeeded(spotifyApi);
     
-    // Get recently played from both Spotify API and our database
+    // Get recently played tracks and populate user data
     const [spotifyData, localData] = await Promise.all([
       spotifyApi.getMyRecentlyPlayedTracks({ limit: 10 }),
-      SpotifyToken.findOne().sort({ createdAt: -1 })
+      SpotifyToken.findOne()
+        .sort({ createdAt: -1 })
+        .populate('queuedTracks.userId', 'username avatar')
     ]);
 
-    // Combine and sort both sources
-    const spotifyTracks = spotifyData.body.items.map(item => ({
-      ...item.track,
-      played_at: new Date(item.played_at).toISOString()
-    }));
+    // Transform and validate Spotify tracks
+    const spotifyTracks = spotifyData.body.items
+      .filter(item => item?.track && item.track.id && item.track.album)
+      .map(item => {
+        const queueInfo = localData?.queuedTracks?.find(qt => qt.trackId === item.track.id);
+        return {
+          id: item.track.id,
+          name: item.track.name,
+          artists: item.track.artists || [],
+          album: {
+            images: item.track.album.images || []
+          },
+          played_at: new Date(item.played_at).toISOString(),
+          requestedBy: queueInfo?.userId || null
+        };
+      });
 
-    const localTracks = localData?.recentlyPlayed?.map(item => ({
-      ...item.track,
-      played_at: item.played_at.toISOString()
-    })) || [];
+    // Transform and validate local tracks
+    const localTracks = (localData?.recentlyPlayed || [])
+      .filter(item => item?.track && item.track.id && item.track.album)
+      .map(item => {
+        const queueInfo = localData?.queuedTracks?.find(qt => qt.trackId === item.track.id);
+        return {
+          id: item.track.id,
+          name: item.track.name,
+          artists: item.track.artists || [],
+          album: {
+            images: item.track.album.images || []
+          },
+          played_at: item.played_at.toISOString(),
+          requestedBy: queueInfo?.userId || null
+        };
+      });
 
-    // Combine both sources, remove duplicates, and sort by played_at
+    // Combine, deduplicate, and sort tracks
     const allTracks = [...spotifyTracks, ...localTracks]
       .reduce((acc, current) => {
         const x = acc.find(item => item.id === current.id);
         if (!x) {
           return acc.concat([current]);
-        } else {
-          return acc.map(item => 
-            item.id === current.id
-              ? (new Date(item.played_at) > new Date(current.played_at) ? item : current)
-              : item
-          );
         }
+        return acc.map(item => 
+          item.id === current.id
+            ? (new Date(item.played_at) > new Date(current.played_at) ? item : current)
+            : item
+        );
       }, [])
       .sort((a, b) => new Date(b.played_at) - new Date(a.played_at))
       .slice(0, 10);
