@@ -99,7 +99,8 @@ const Spotify = () => {
       });
       setRequestedSongs(newRequestedSongs);
       
-      setRefreshTimer(Math.round(queueData.data.refreshIn));
+      // Reset timer to 20 seconds after each fetch
+      setRefreshTimer(20);
     } catch (error) {
       console.error('Queue error:', error);
       if (error.response?.status === 401) {
@@ -123,6 +124,39 @@ const Spotify = () => {
     } finally {
       setIsLoading(prev => ({ ...prev, recent: false }));
     }
+  };
+
+  const getMediaDetails = (item) => {
+    if (!item?.id || !item?.name) return null;
+  
+    // Handle podcast episodes
+    if (item.type === 'episode') {
+      return {
+        id: item.id,
+        name: item.name,
+        artists: [{ name: item.show?.name || 'Podcast' }],
+        album: {
+          images: item.images || []
+        },
+        duration_ms: item.duration_ms,
+        type: 'episode'
+      };
+    }
+  
+    // Handle regular tracks
+    if (item.type === 'track') {
+      if (!item.album?.images?.length || !item.artists) return null;
+      return {
+        id: item.id,
+        name: item.name,
+        artists: item.artists,
+        album: item.album,
+        duration_ms: item.duration_ms,
+        type: 'track'
+      };
+    }
+  
+    return null;
   };
 
   const SpotifyProfile = ({ profile }) => {
@@ -335,6 +369,23 @@ const Spotify = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Timer tracker
+  useEffect(() => {
+    let countdown;
+  
+    if (refreshTimer > 0) {
+      countdown = setInterval(() => {
+        setRefreshTimer(prev => Math.max(0, prev - 1));
+      }, 1000);
+    }
+  
+    return () => {
+      if (countdown) {
+        clearInterval(countdown);
+      }
+    };
+  }, [refreshTimer]);
+
   // Keep track of song progress
   useEffect(() => {
     let progressTimer;
@@ -511,7 +562,7 @@ const Spotify = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              {user?.roles?.includes('admin') && (
+              {user?.roles?.includes('dj') && (
                 <button
                   onClick={handleSpotifyAuth}
                   className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-md text-white 
@@ -626,15 +677,16 @@ const Spotify = () => {
                   </div>
                 ) : queuedTracks.length > 0 ? (
                   <div className="space-y-4 max-h-[calc(35vh-3rem)] overflow-y-auto">
-                    {queuedTracks.map((track) => {
-                      // Skip invalid tracks and add validation
-                      if (!track?.id || !track?.album?.images?.length || !track?.name || !track?.artists) {
-                        console.warn('Invalid track data:', track);
+                    {queuedTracks.map((item) => {
+                      const mediaDetails = getMediaDetails(item);
+                      
+                      if (!mediaDetails) {
+                        console.warn('Invalid media data:', item);
                         return null;
                       }
 
-                      // Get the smallest album image or use fallback
-                      const imageUrl = track.album.images.reduce((smallest, current) => {
+                      // Get the smallest image URL or use fallback
+                      const imageUrl = mediaDetails.album.images.reduce((smallest, current) => {
                         if (!smallest || current.height < smallest.height) {
                           return current;
                         }
@@ -642,39 +694,44 @@ const Spotify = () => {
                       }, null)?.url || 'https://via.placeholder.com/64';
 
                       return (
-                        <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
+                        <div key={mediaDetails.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
                           <div className="flex items-center gap-4">
                             <img 
                               src={imageUrl}
-                              alt={track.name}
+                              alt={mediaDetails.name}
                               className="w-12 h-12 rounded" 
                               onError={(e) => {
                                 e.target.src = 'https://via.placeholder.com/64';
                               }}
                             />
                             <div>
-                              <div className="text-white font-medium">{track.name}</div>
+                              <div className="text-white font-medium">{mediaDetails.name}</div>
                               <div className="text-text-secondary text-sm">
-                                {track.artists?.map(a => a.name).join(', ') || 'Unknown Artist'}
+                                {mediaDetails.artists.map(a => a.name).join(', ')}
+                                {mediaDetails.type === 'episode' && (
+                                  <span className="ml-2 text-xs px-2 py-0.5 bg-surface-2 rounded-full">
+                                    Episode
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
                           
                           <div className="flex items-center gap-3">
-                            {requestedSongs.has(track.id) ? (
+                            {requestedSongs.has(mediaDetails.id) ? (
                               <div className="flex items-center gap-2">
                                 <div className="text-text-secondary text-sm text-right">
-                                  Added by {requestedSongs.get(track.id).user.username}
+                                  Added by {requestedSongs.get(mediaDetails.id).user.username}
                                 </div>
-                                {requestedSongs.get(track.id).user.avatar ? (
+                                {requestedSongs.get(mediaDetails.id).user.avatar ? (
                                   <img 
-                                    src={requestedSongs.get(track.id).user.avatar}
-                                    alt={requestedSongs.get(track.id).user.username}
+                                    src={requestedSongs.get(mediaDetails.id).user.avatar}
+                                    alt={requestedSongs.get(mediaDetails.id).user.username}
                                     className="w-6 h-6 rounded-full"
                                   />
                                 ) : (
                                   <div className="w-6 h-6 rounded-full bg-surface-2 flex items-center justify-center">
-                                    {requestedSongs.get(track.id).user.username[0].toUpperCase()}
+                                    {requestedSongs.get(mediaDetails.id).user.username[0].toUpperCase()}
                                   </div>
                                 )}
                               </div>
