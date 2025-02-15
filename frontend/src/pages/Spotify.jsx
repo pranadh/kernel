@@ -857,7 +857,7 @@ const Spotify = () => {
               </div>
 
             {/* Now Playing Section */}
-            <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
+            <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6 ring-2 shadow-lg shadow-primary">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <AiOutlineSound className="w-6 h-6 text-primary" />
@@ -1061,8 +1061,22 @@ const Spotify = () => {
                                   )}
                                 </div>
                               )}
-                              <div className="text-text-secondary text-xs">
-                                {new Date(track.played_at).toLocaleString()}
+                              {/* Date and Re-queue button container */}
+                              <div className="flex items-center gap-3">
+                                <div className="text-text-secondary text-xs">
+                                  {new Date(track.played_at).toLocaleString()}
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setTrackUrl(`https://open.spotify.com/track/${track.id}`);
+                                    handleSubmit({ preventDefault: () => {} });
+                                  }}
+                                  className="px-3 py-1 text-xs bg-primary/10 hover:bg-primary/20 
+                                            text-primary rounded-full transition-colors flex items-center gap-1"
+                                >
+                                  <PiQueue className="w-3 h-3" />
+                                  <span>Re-queue</span>
+                                </button>
                               </div>
                             </div>
                           </div>
