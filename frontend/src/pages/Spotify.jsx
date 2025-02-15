@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { 
-  FiMusic, FiLoader, FiAlertCircle, FiCheck, FiClock, 
-  FiVolume2, FiPlayCircle, FiPauseCircle, FiSpeaker, 
-  FiSliders, FiSkipBack, FiSkipForward, FiInfo 
+  FiLoader, FiAlertCircle, FiCheck, FiClock, FiSearch,
+  FiVolume2, FiPlayCircle, FiPauseCircle, FiSpeaker, FiX,
+  FiSkipBack, FiSkipForward, FiInfo, FiUsers, FiExternalLink 
 } from 'react-icons/fi';
 import { PiVinylRecord, PiQueue, PiClockCounterClockwise } from "react-icons/pi";
 import { SlSocialSpotify } from 'react-icons/sl';
 import { AiOutlineSound } from 'react-icons/ai';
 import { useAuth } from '../context/AuthContext';
+import { VscVerifiedFilled } from "react-icons/vsc";
 import axios from '../api';
 
 const Spotify = () => {
@@ -23,6 +24,10 @@ const Spotify = () => {
   const [requestedSongs, setRequestedSongs] = useState(new Map());
   const [trackUrl, setTrackUrl] = useState('');
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const [isLoading, setIsLoading] = useState({
     submit: false,
     current: false,
@@ -47,15 +52,57 @@ const Spotify = () => {
   const fetchCurrentTrack = async () => {
     try {
       setIsLoading(prev => ({ ...prev, current: true }));
-      const { data } = await axios.get('/api/spotify/current');
-      if (data?.item) {
-        setCurrentTrack(data.item);
+      
+      // Add delay before fetching to ensure queue is updated
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const [{ data: currentData }, { data: queueData }, { data: recentData }] = await Promise.all([
+        axios.get('/api/spotify/current'),
+        axios.get('/api/spotify/queued'),
+        axios.get('/api/spotify/recent')
+      ]);
+    
+      if (currentData?.item) {
+        setCurrentTrack(currentData.item);
         setPlaybackState({
-          device: data.device,
-          progress_ms: data.progress_ms,
-          volume_percent: data.volume_percent,
-          is_playing: data.is_playing
+          device: currentData.device,
+          progress_ms: currentData.progress_ms,
+          volume_percent: currentData.volume_percent,
+          is_playing: currentData.is_playing
         });
+    
+        // Create new Map combining queue and recent data
+        const newRequestedSongs = new Map();
+        
+        // Add current track's requester if exists - This is key
+        if (currentData.requestedBy) {
+          newRequestedSongs.set(currentData.item.id, {
+            user: currentData.requestedBy,
+            track: currentData.item
+          });
+        }
+        
+        // Add queue data as fallback
+        queueData?.queue?.forEach(track => {
+          if (track.requestedBy && !newRequestedSongs.has(track.id)) {
+            newRequestedSongs.set(track.id, {
+              user: track.requestedBy,
+              track: track
+            });
+          }
+        });
+  
+        // Add recently played data as final fallback
+        recentData?.tracks?.forEach(track => {
+          if (track.requestedBy && !newRequestedSongs.has(track.id)) {
+            newRequestedSongs.set(track.id, {
+              user: track.requestedBy,
+              track: track
+            });
+          }
+        });
+  
+        setRequestedSongs(newRequestedSongs);
       } else {
         setCurrentTrack(null);
         setPlaybackState({
@@ -91,7 +138,8 @@ const Spotify = () => {
           newRequestedSongs.set(track.id, {
             user: {
               username: track.requestedBy.username,
-              avatar: track.requestedBy.avatar
+              avatar: track.requestedBy.avatar,
+              isVerified: track.requestedBy.isVerified
             },
             track: track
           });
@@ -159,48 +207,56 @@ const Spotify = () => {
     return null;
   };
 
-  const SpotifyProfile = ({ profile }) => {
+  const UserWithVerified = ({ user }) => (
+    <div className="flex items-center gap-1">
+      <span>{user.username}</span>
+      {user.isVerified && (
+        <VscVerifiedFilled className="w-4 h-4 text-primary flex-shrink-0" />
+      )}
+    </div>
+  );
+
+  const SpotifyProfile = memo(({ profile }) => {
     return (
-      <div className="mt-6 p-4 bg-surface-2/50 rounded-lg flex items-center gap-4 border border-primary/50">
+      <div className="mt-6 p-4 bg-surface-2/50 backdrop-blur-sm rounded-lg flex items-center gap-4 border border-primary/50">
         {profile.image ? (
           <img 
             src={profile.image} 
             alt={profile.name}
-            className="w-12 h-12 rounded-md" 
+            className="w-12 h-12 rounded-md object-cover" 
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-surface-2 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-md bg-surface-2 flex items-center justify-center">
             <SlSocialSpotify className="w-6 h-6 text-text-secondary" />
           </div>
         )}
-        <div>
-          <div className="text-white font-medium">{profile.name}</div>
+        <div className="flex-1">
+          <div className="text-white font-medium flex items-center gap-2">
+            {profile.name}
+            <div className="px-2 py-0.5 bg-primary/10 rounded text-xs text-primary">
+              Host
+            </div>
+          </div>
           <div className="text-text-secondary text-sm flex items-center gap-2">
-            <span>Current Host</span>
+            <div className="flex items-center gap-1">
+              <FiUsers className="w-4 h-4" />
+              <span>{profile.followers.toLocaleString()} followers</span>
+            </div>
             <span>•</span>
-            <span>{profile.followers} followers</span>
             <a 
               href={profile.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline"
+              className="text-primary hover:underline flex items-center gap-1"
             >
-              View Profile
+              <FiExternalLink className="w-4 h-4" />
+              <span>View Profile</span>
             </a>
           </div>
         </div>
       </div>
     );
-  };
-
-  const fetchSpotifyProfile = async () => {
-    try {
-      const { data } = await axios.get('/api/spotify/profile');
-      setSpotifyProfile(data.profile);
-    } catch (error) {
-      console.error('Failed to fetch Spotify profile:', error);
-    }
-  };
+  });
 
   const handleVolumeChange = async (newVolume) => {
     try {
@@ -230,7 +286,7 @@ const Spotify = () => {
       if (action === 'next' || action === 'previous') {
         try {
           // Wait for Spotify to update
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Increase delay
           
           // Fetch all updated data
           await Promise.all([
@@ -264,6 +320,34 @@ const Spotify = () => {
     }
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setShowSearchResults(false);
+      return;
+    }
+  
+    try {
+      setIsSearching(true);
+      setError(null);
+      const { data } = await axios.get(`/api/spotify/search?query=${encodeURIComponent(searchQuery)}`);
+      setSearchResults(data.tracks || []);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Search error:', error);
+      setError('Failed to search tracks');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  // Add this new function to handle closing search results
+  const handleCloseSearch = () => {
+    setShowSearchResults(false);
+    setSearchResults([]);
+    setSearchQuery('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!trackUrl.trim()) return;
@@ -274,18 +358,14 @@ const Spotify = () => {
       const { data } = await axios.post('/api/spotify/queue', { trackUrl });
       
       if (data.track && data.track.id) {
-        // Store user info with requested song
-        setRequestedSongs(prev => new Map(prev).set(data.track.id, {
-          user: data.user || { username: 'Anonymous', avatar: null },
-          track: data.track
-        }));
-        
         setTrackUrl('');
+        
+        // First fetch updated queue
+        await fetchQueuedTracks();
+        
+        // Then show success message
         setSuccess('Track added to queue successfully!');
         setTimeout(() => setSuccess(null), 5000);
-        
-        // Immediately fetch updated queue
-        await fetchQueuedTracks();
       }
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to add track to queue');
@@ -304,18 +384,47 @@ const Spotify = () => {
           recent: true
         }));
   
-        // First fetch profile and wait for it
-        const profileResponse = await axios.get('/api/spotify/profile');
-        setSpotifyProfile(profileResponse.data.profile);
-  
-        // Then fetch the rest in parallel
-        const [currentResponse, queueResponse, recentResponse] = await Promise.all([
+        const [currentResponse, queueResponse, recentResponse, profileResponse] = await Promise.all([
           axios.get('/api/spotify/current'),
           axios.get('/api/spotify/queued'),
-          axios.get('/api/spotify/recent')
+          axios.get('/api/spotify/recent'),
+          axios.get('/api/spotify/profile')
         ]);
   
-        // Update states in order
+        // Create new Map combining all requester data
+        const newRequestedSongs = new Map();
+        
+        // Add queue data first since it's most current
+        queueResponse.data?.queue?.forEach(track => {
+          if (track.requestedBy) {
+            newRequestedSongs.set(track.id, {
+              user: {
+                username: track.requestedBy.username,
+                avatar: track.requestedBy.avatar,
+                isVerified: track.requestedBy.isVerified
+              },
+              track: track
+            });
+          }
+        });
+  
+        // Add recently played data only if not already in map
+        recentResponse.data?.tracks?.forEach(track => {
+          if (track.requestedBy && !newRequestedSongs.has(track.id)) {
+            newRequestedSongs.set(track.id, {
+              user: {
+                username: track.requestedBy.username,
+                avatar: track.requestedBy.avatar,
+                isVerified: track.requestedBy.isVerified
+              },
+              track: track
+            });
+          }
+        });
+  
+        // Set all states after collecting data
+        setRequestedSongs(newRequestedSongs);
+        
         if (currentResponse.data?.item) {
           setCurrentTrack(currentResponse.data.item);
           setPlaybackState({
@@ -326,28 +435,10 @@ const Spotify = () => {
           });
         }
   
-        if (queueResponse.data?.queue) {
-          setQueuedTracks(queueResponse.data.queue);
-          
-          // Update requestedSongs Map
-          const newRequestedSongs = new Map();
-          queueResponse.data.queue.forEach(track => {
-            if (track.requestedBy) {
-              newRequestedSongs.set(track.id, {
-                user: {
-                  username: track.requestedBy.username,
-                  avatar: track.requestedBy.avatar
-                },
-                track: track
-              });
-            }
-          });
-          setRequestedSongs(newRequestedSongs);
-        }
-  
-        if (recentResponse.data?.tracks) {
-          setRecentlyPlayed(recentResponse.data.tracks);
-        }
+        setQueuedTracks(queueResponse.data?.queue || []);
+        setRecentlyPlayed(recentResponse.data?.tracks || []);
+        setSpotifyProfile(profileResponse.data.profile);
+        setRefreshTimer(20);
   
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -363,9 +454,7 @@ const Spotify = () => {
     };
   
     fetchData();
-  
     const interval = setInterval(fetchData, 20000);
-    
     return () => clearInterval(interval);
   }, []);
 
@@ -373,12 +462,17 @@ const Spotify = () => {
   useEffect(() => {
     let countdown;
   
+    // Only start countdown if timer is greater than 0
     if (refreshTimer > 0) {
       countdown = setInterval(() => {
-        setRefreshTimer(prev => Math.max(0, prev - 1));
+        setRefreshTimer(prev => {
+          const newValue = prev - 1;
+          return newValue >= 0 ? newValue : 0;
+        });
       }, 1000);
     }
   
+    // Cleanup function
     return () => {
       if (countdown) {
         clearInterval(countdown);
@@ -415,7 +509,7 @@ const Spotify = () => {
     };
   }, [currentTrack, playbackState.progress_ms, playbackState.is_playing]);
 
-  const NowPlaying = ({ currentTrack, playbackState, clientProgress, user, handlers }) => {
+  const NowPlaying = ({ currentTrack, playbackState, clientProgress, user, handlers, requestedBy }) => {
     const isDJ = user?.roles?.includes('dj');
     
     return (
@@ -441,12 +535,42 @@ const Spotify = () => {
             </div>
           </div>
   
-          {/* Device Info */}
-          <div className="flex items-center gap-2 mt-4">
-            <FiSpeaker className="w-6 h-6 text-text-secondary" />
-            <span className="text-sm text-text-secondary">
-              {playbackState.device?.name === "EXLT" ? "Room Speaker" : playbackState.device?.name || 'No device'}
-            </span>
+          {/* Device Info and Requester */}
+          <div className="flex flex-col gap-6 mt-4">
+            <div className="flex items-center gap-2">
+              <FiSpeaker className="w-6 h-6 text-white" />
+              <span className="text-sm text-white">
+                {playbackState.device?.name === "EXLT" ? "Room Speaker" : playbackState.device?.name || 'No device'}
+              </span>
+            </div>
+
+            {/* Updated requester info to match search results style */}
+            <div className="inline-flex items-center gap-2 p-3 bg-surface-2/50 rounded-md">
+              {requestedBy ? (
+                <div className="flex items-center gap-1">
+                  <div className="text-sm text-text-secondary">Queued by</div>
+                  <div className="text-sm text-white font-medium flex items-center gap-1">
+                    <UserWithVerified user={requestedBy} />
+                  </div>
+                  {requestedBy.avatar ? (
+                    <img 
+                      src={requestedBy.avatar}
+                      alt={requestedBy.username}
+                      className="w-6 h-6 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-surface-2 flex items-center justify-center text-text-secondary">
+                      {requestedBy.username[0].toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-text-secondary text-sm">
+                  <span>Automatic from Spotify</span>
+                  <SlSocialSpotify className="w-4 h-4" />
+                </div>
+              )}
+            </div>
           </div>
   
           {/* Controls and Progress Section - Pushed to bottom */}
@@ -601,7 +725,7 @@ const Spotify = () => {
               <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="trackUrl" className="block text-sm font-medium text-text-secondary mb-2">
+                    <label htmlFor="trackUrl" className="block text-md font-medium text-white mb-2">
                       Request a Song
                     </label>
                     <input
@@ -629,38 +753,155 @@ const Spotify = () => {
                     )}
                   </button>
                 </form>
+
+                {/* Search Section */}
+                <div className="mt-8 pt-5 border-t border-white/5">
+                  <form onSubmit={handleSearch} className="space-y-4">
+                    <div>
+                      <label htmlFor="search" className="block text-md font-medium text-white mb-2">
+                        Search Songs
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          id="search"
+                          placeholder="Search songs..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full bg-surface-2/50 text-text-primary pl-4 pr-10 py-2 rounded-md 
+                                  border border-white/5 placeholder:text-text-secondary/50
+                                  focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                        />
+                        {searchQuery && (
+                          <button
+                            type="button"
+                            onClick={handleCloseSearch}
+                            className="absolute right-9 top-1/2 -translate-y-1/2 p-1.5 
+                                    text-text-secondary hover:text-white transition-colors"
+                          >
+                            <FiX className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={isSearching || !searchQuery.trim()}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 
+                                  text-text-secondary hover:text-white transition-colors
+                                  disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSearching ? (
+                            <FiLoader className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <FiSearch className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+
+                  {/* Search Results with Close Button */}
+                  {showSearchResults && searchResults.length > 0 && (
+                    <div className="relative mt-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-medium text-text-secondary">
+                          Search Results
+                        </div>
+                        <button
+                          onClick={handleCloseSearch}
+                          className="text-text-secondary hover:text-white transition-colors text-sm 
+                                  flex items-center gap-1"
+                        >
+                          <span>Close</span>
+                          <FiX className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {searchResults.map((track) => (
+                          <div 
+                            key={track.id} 
+                            className="flex items-center justify-between gap-4 p-3 bg-surface-2/50 
+                                    hover:bg-surface-2 rounded-md transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={track.album.images[track.album.images.length - 1]?.url || 'https://via.placeholder.com/40'}
+                                alt={track.name}
+                                className="w-10 h-10 rounded object-cover"
+                                loading="lazy"
+                              />
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium text-white truncate">
+                                  {track.name}
+                                </div>
+                                <div className="text-xs text-text-secondary truncate">
+                                  {track.artists.map(a => a.name).join(', ')}
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setTrackUrl(`https://open.spotify.com/track/${track.id}`);
+                                handleCloseSearch();
+                              }}
+                              className="px-3 py-1 text-xs bg-primary/10 hover:bg-primary/20 
+                                      text-primary rounded-full transition-colors"
+                            >
+                              Add to Queue
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
             {/* Now Playing Section */}
             <div className="bg-surface-1/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <AiOutlineSound className="w-6 h-6 text-primary" />
-                <h2 className="text-xl font-bold text-white">Now Playing</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <AiOutlineSound className="w-6 h-6 text-primary" />
+                  <h2 className="text-xl font-bold text-white">Now Playing</h2>
+                </div>
+                {user?.roles?.includes('dj') && !spotifyProfile && (
+                  <button
+                    onClick={handleSpotifyAuth}
+                    className="px-3 py-1.5 bg-primary hover:bg-primary-hover rounded text-sm text-white 
+                            transition-colors flex items-center gap-2"
+                  >
+                    <SlSocialSpotify className="w-4 h-4" />
+                    Connect Spotify
+                  </button>
+                )}
               </div>
+              
               {isLoading.current ? (
                 <div className="flex items-center justify-center py-8">
                   <FiLoader className="w-6 h-6 text-primary animate-spin" />
                 </div>
               ) : currentTrack ? (
-                <NowPlaying 
-                  currentTrack={currentTrack}
-                  playbackState={playbackState}
-                  clientProgress={clientProgress}
-                  user={user}
-                  handlers={{
-                    formatTime,
-                    handleVolumeChange,
-                    handlePlaybackControl,
-                    isLoading,
-                    controlsDisabled
-                  }}
-                />
+                <>
+                  <NowPlaying 
+                    currentTrack={currentTrack}
+                    playbackState={playbackState}
+                    clientProgress={clientProgress}
+                    user={user}
+                    handlers={{
+                      formatTime,
+                      handleVolumeChange,
+                      handlePlaybackControl,
+                      isLoading,
+                      controlsDisabled
+                    }}
+                    requestedBy={currentTrack ? requestedSongs.get(currentTrack.id)?.user || null : null}
+                  />
+                  {spotifyProfile && <SpotifyProfile profile={spotifyProfile} />}
+                </>
               ) : (
                 <div className="text-center py-8 text-text-secondary">
-                  Host has gone offline
+                  {spotifyProfile ? 'No track playing' : 'Host has gone offline'}
                 </div>
               )}
-              {spotifyProfile && <SpotifyProfile profile={spotifyProfile} />}
             </div>
           </div>
 
@@ -720,8 +961,8 @@ const Spotify = () => {
                           <div className="flex items-center gap-3">
                             {requestedSongs.has(mediaDetails.id) ? (
                               <div className="flex items-center gap-2">
-                                <div className="text-text-secondary text-sm text-right">
-                                  Added by {requestedSongs.get(mediaDetails.id).user.username}
+                                <div className="text-white text-sm flex items-center gap-1">
+                                  Queued by <UserWithVerified user={requestedSongs.get(mediaDetails.id).user} />
                                 </div>
                                 {requestedSongs.get(mediaDetails.id).user.avatar ? (
                                   <img 
@@ -781,6 +1022,7 @@ const Spotify = () => {
 
                         return (
                           <div key={track.id} className="flex items-center justify-between gap-4 p-4 bg-surface-2/50 rounded-lg">
+                            {/* Left side with track info */}
                             <div className="flex items-center gap-4">
                               <img 
                                 src={imageUrl}
@@ -797,11 +1039,14 @@ const Spotify = () => {
                                 </div>
                               </div>
                             </div>
+
+                            {/* Right side with requester info and date */}
                             <div className="flex items-center gap-4">
-                              {track.requestedBy ? (
+                              {/* Only show requester info if track was queued by a user */}
+                              {track.requestedBy && (
                                 <div className="flex items-center gap-2">
-                                  <div className="text-text-secondary text-sm text-right">
-                                    Added by {track.requestedBy.username}
+                                  <div className="text-white text-sm text-right flex items-center gap-1">
+                                    Queued by <UserWithVerified user={track.requestedBy} />
                                   </div>
                                   {track.requestedBy.avatar ? (
                                     <img 
@@ -815,7 +1060,7 @@ const Spotify = () => {
                                     </div>
                                   )}
                                 </div>
-                              ) : null}
+                              )}
                               <div className="text-text-secondary text-xs">
                                 {new Date(track.played_at).toLocaleString()}
                               </div>

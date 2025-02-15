@@ -86,17 +86,38 @@ export const handleCallback = async (req, res) => {
 export const getCurrentTrack = async (req, res) => {
   try {
     await refreshTokenIfNeeded(spotifyApi);
-    const [playbackState, currentTrack] = await Promise.all([
+    const [playbackState, currentTrack, tokens] = await Promise.all([
       spotifyApi.getMyCurrentPlaybackState(),
-      spotifyApi.getMyCurrentPlayingTrack()
+      spotifyApi.getMyCurrentPlayingTrack(),
+      SpotifyToken.findOne()
+        .sort({ createdAt: -1 })
+        .populate({
+          path: 'queuedTracks.userId',
+          select: 'username avatar isVerified handle effects'
+        })
     ]);
+
+    // Find requester info for current track
+    const queueInfo = tokens?.queuedTracks?.find(qt => 
+      qt.trackId === currentTrack.body?.item?.id
+    );
+    
+    // Add delay to ensure all data is synced
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     res.json({
       item: currentTrack.body?.item || null,
       device: playbackState.body?.device || null,
       progress_ms: playbackState.body?.progress_ms || 0,
       volume_percent: playbackState.body?.device?.volume_percent || 0,
-      is_playing: playbackState.body?.is_playing || false
+      is_playing: playbackState.body?.is_playing || false,
+      requestedBy: queueInfo?.userId ? {
+        username: queueInfo.userId.username,
+        avatar: queueInfo.userId.avatar,
+        isVerified: queueInfo.userId.isVerified,
+        handle: queueInfo.userId.handle,
+        effects: queueInfo.userId.effects
+      } : null
     });
   } catch (error) {
     console.error('Get current track error:', error);
@@ -105,29 +126,33 @@ export const getCurrentTrack = async (req, res) => {
 };
 
 export const getQueuedTracks = async (req, res) => {
-    try {
-      await refreshTokenIfNeeded(spotifyApi);
-      const data = await makeSpotifyRequest('/me/player/queue');
-      const timeUntilRefresh = await getTimeUntilNextRefresh();
-  
-      // Get queue information with user details
-      const token = await SpotifyToken.findOne().sort({ createdAt: -1 })
-        .populate('queuedTracks.userId', 'username avatar handle');
-  
-      const queueWithUsers = data?.queue?.map(track => {
-        const queueInfo = token.queuedTracks.find(qt => qt.trackId === track.id);
-        return {
-          ...track,
-          requestedBy: queueInfo?.userId || null
-        };
-      }) || [];
-  
-      res.json({ 
-        queue: queueWithUsers,
-        refreshIn: Math.round(timeUntilRefresh),
-        nextRefresh: new Date(Date.now() + timeUntilRefresh * 1000).toISOString()
-      });
-    } catch (error) {
+  try {
+    await refreshTokenIfNeeded(spotifyApi);
+    const data = await makeSpotifyRequest('/me/player/queue');
+    const timeUntilRefresh = await getTimeUntilNextRefresh();
+
+    // Get queue AND history information with user details
+    const token = await SpotifyToken.findOne()
+      .sort({ createdAt: -1 })
+      .populate('queuedTracks.userId', 'username handle effects avatar isVerified');
+
+    const queueWithUsers = data?.queue?.map(track => {
+      // Check both current queue and history
+      const queueInfo = token.queuedTracks.find(qt => qt.trackId === track.id);
+      const historyInfo = token.recentlyPlayed.find(rp => rp.track.id === track.id);
+      
+      return {
+        ...track,
+        requestedBy: queueInfo?.userId || (historyInfo?.requestedBy) || null
+      };
+    }) || [];
+
+    res.json({ 
+      queue: queueWithUsers,
+      refreshIn: Math.round(timeUntilRefresh),
+      nextRefresh: new Date(Date.now() + timeUntilRefresh * 1000).toISOString()
+    });
+  } catch (error) {
         console.error('Queue error:', error);
     
     if (error.response?.status === 404 || error.response?.status === 204) {
@@ -236,10 +261,17 @@ export const controlPlayback = async (req, res) => {
         // Wait for Spotify to update
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Get current track to add to recently played
-        const currentTrack = await spotifyApi.getMyCurrentPlayingTrack();
+        // Get current track and queue info to add to recently played
+        const [currentTrack, queueData] = await Promise.all([
+          spotifyApi.getMyCurrentPlayingTrack(),
+          SpotifyToken.findOne().sort({ createdAt: -1 })
+        ]);
+
         if (currentTrack.body?.item) {
-          // Update timestamps and add to recently played
+          // Find if track was requested by someone
+          const queueInfo = queueData.queuedTracks.find(qt => qt.trackId === currentTrack.body.item.id);
+          
+          // Update timestamps and add to recently played with requester info
           await Promise.all([
             updateQueueTimestamp(),
             updateRecentlyPlayedTimestamp(),
@@ -249,7 +281,8 @@ export const controlPlayback = async (req, res) => {
                 $push: {
                   recentlyPlayed: {
                     track: currentTrack.body.item,
-                    played_at: new Date()
+                    played_at: new Date(),
+                    requestedBy: queueInfo?.userId || null
                   }
                 }
               },
@@ -278,7 +311,7 @@ export const getRecentlyPlayed = async (req, res) => {
       spotifyApi.getMyRecentlyPlayedTracks({ limit: 10 }),
       SpotifyToken.findOne()
         .sort({ createdAt: -1 })
-        .populate('queuedTracks.userId', 'username avatar')
+        .populate('queuedTracks.userId', 'username handle effects avatar isVerified')
     ]);
 
     // Transform and validate Spotify tracks
@@ -356,5 +389,30 @@ export const getSpotifyProfile = async (req, res) => {
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const searchTracks = async (req, res) => {
+  try {
+    await refreshTokenIfNeeded(spotifyApi);
+    const { query } = req.query;
+    
+    if (!query?.trim()) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const data = await spotifyApi.searchTracks(query, { limit: 10 });
+    res.json({ 
+      tracks: data.body.tracks.items.map(track => ({
+        id: track.id,
+        name: track.name,
+        artists: track.artists,
+        album: track.album,
+        duration_ms: track.duration_ms
+      }))
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Failed to search tracks' });
   }
 };

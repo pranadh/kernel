@@ -9,7 +9,8 @@ import {
   adjustVolume,
   controlPlayback,
   getRecentlyPlayed,
-  getSpotifyProfile
+  getSpotifyProfile,
+  searchTracks
 } from '../controllers/spotifyController.js';
 
 const router = express.Router();
@@ -25,6 +26,7 @@ router.get('/queued', getQueuedTracks);
 router.post('/queue', protect, addToQueue);
 router.put('/volume', protect, controlAccess('dj'), adjustVolume);
 router.post('/playback', protect, controlAccess('dj'), controlPlayback);
+router.get('/search', searchTracks);
 router.get('/recent', getRecentlyPlayed);
 
 export default router;
