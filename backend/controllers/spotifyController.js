@@ -308,7 +308,7 @@ export const getRecentlyPlayed = async (req, res) => {
     
     // Get recently played tracks and populate user data
     const [spotifyData, localData] = await Promise.all([
-      spotifyApi.getMyRecentlyPlayedTracks({ limit: 10 }),
+      spotifyApi.getMyRecentlyPlayedTracks({ limit: 20 }),
       SpotifyToken.findOne()
         .sort({ createdAt: -1 })
         .populate('queuedTracks.userId', 'username handle effects avatar isVerified')
@@ -401,7 +401,7 @@ export const searchTracks = async (req, res) => {
       return res.status(400).json({ message: 'Search query is required' });
     }
 
-    const data = await spotifyApi.searchTracks(query, { limit: 10 });
+    const data = await spotifyApi.searchTracks(query, { limit: 20 });
     res.json({ 
       tracks: data.body.tracks.items.map(track => ({
         id: track.id,
