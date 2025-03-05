@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaUsers, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaUsers, FaSearch, FaCheck, FaTimes, FaEnvelope } from 'react-icons/fa';
 import { FiChevronDown } from 'react-icons/fi';
 import UserBadges from '../UserBadges';
 import RoleManager from '../RoleManager';
 import UsernameDisplay from '../UsernameDisplay';
+import axios from '../../api';
 
 const UserManagement = ({ 
   users,
@@ -15,10 +16,15 @@ const UserManagement = ({
   isVerifiedFilter,
   setIsVerifiedFilter,
   handleVerification,
-  handleRoleUpdate
+  handleRoleUpdate,
+  setUsers
 }) => {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showVerifiedDropdown, setShowVerifiedDropdown] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.handle.toLowerCase().includes(searchQuery.toLowerCase());
@@ -41,6 +47,124 @@ const UserManagement = ({
     "true": "Verified",
     "false": "Not Verified"
   };
+
+  const handleEmailUpdate = async (userId) => {
+    try {
+      // Validate email format before sending request
+      if (!email.endsWith('@exlt.tech')) {
+        setEmailError('Email must end with @exlt.tech');
+        return;
+      }
+
+      const response = await axios.put(`/api/users/${userId}/email`, { 
+        email: email.toLowerCase().trim() 
+      });
+      
+      // Update users list with the response data
+      const updatedUsers = users.map(user => 
+        user._id === userId 
+          ? { 
+              ...user, 
+              email: response.data.user.email, 
+              hasEmail: response.data.user.hasEmail 
+            }
+          : user
+      );
+      
+      setUsers(updatedUsers);
+      setShowEmailModal(false);
+      setEmail('');
+      setEmailError('');
+
+    } catch (error) {
+      console.error('Email update error:', error);
+      setEmailError(
+        error.response?.data?.message || 
+        'Failed to update email. Please try again.'
+      );
+    }
+  };
+
+  const EmailButton = ({ user }) => (
+    <button
+      onClick={() => {
+        setSelectedUser(user);
+        setEmail(user.email || '');
+        setShowEmailModal(true);
+      }}
+      className={`p-1.5 rounded transition-colors ${
+        user.hasEmail 
+          ? 'bg-blue-500/20 text-blue-500 hover:bg-blue-500/30' 
+          : 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'
+      }`}
+    >
+      <FaEnvelope />
+    </button>
+  );
+
+  const EmailModal = () => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-surface-1 rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 className="text-xl font-semibold text-white mb-4">
+          Update Email for @{selectedUser?.handle}
+        </h3>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">
+              Email Address
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(''); // Clear error on input change
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleEmailUpdate(selectedUser._id);
+                  }
+                }}
+                placeholder="username@exlt.tech"
+                className={`w-full bg-surface-2/50 border ${
+                  emailError ? 'border-red-500' : 'border-white/5'
+                } rounded-md px-4 py-2 text-text-primary placeholder:text-text-secondary/50`}
+              />
+              {!email.includes('@') && email.length > 0 && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-secondary">
+                  @exlt.tech
+                </span>
+              )}
+            </div>
+            {emailError && (
+              <p className="mt-1 text-sm text-red-500">{emailError}</p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => {
+                setShowEmailModal(false);
+                setEmail('');
+                setEmailError('');
+              }}
+              className="px-4 py-2 text-text-secondary hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleEmailUpdate(selectedUser._id)}
+              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-md"
+            >
+              Update Email
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -174,6 +298,7 @@ const UserManagement = ({
               </Link>
 
               <div className="flex items-center gap-4">
+                <EmailButton user={user} /> 
                 <button
                   onClick={() => handleVerification(user._id, user.isVerified)}
                   className={`p-1.5 rounded transition-colors ${
@@ -200,6 +325,7 @@ const UserManagement = ({
           </div>
         ))}
       </div>
+      {showEmailModal && selectedUser && <EmailModal />}
     </>
   );
 };

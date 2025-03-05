@@ -121,6 +121,7 @@ const AdminDashboard = () => {
             {activeSection === 'users' && (
               <UserManagement 
                 users={users}
+                setUsers={setUsers}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 selectedRole={selectedRole}
