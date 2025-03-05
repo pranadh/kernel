@@ -15,7 +15,8 @@ import {
   updateProfile,
   getUserDocuments,
   updateUserEffects,
-  updateUsername
+  updateUsername,
+  updateUserEmail
 } from "../controllers/userController.js";
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -44,5 +45,6 @@ router.patch("/:id/verify", protect, admin, verifyUser);
 router.post("/:id/roles", protect, admin, addRole);
 router.delete("/:id/roles", protect, admin, removeRole);
 router.put("/:id/roles", protect, admin, updateUserRoles);
+router.put("/:id/email", protect, admin, updateUserEmail);
 
 export default router;

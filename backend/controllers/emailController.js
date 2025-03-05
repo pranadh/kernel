@@ -63,20 +63,32 @@ export const handleEmailWebhook = async (req, res) => {
   try {
     console.log('Processing webhook payload:', JSON.stringify(req.body, null, 2));
 
+    // Check for duplicate message first
+    const messageId = req.body['Message-Id'] || req.body['message-id'];
+    const existingEmail = await Email.findOne({ messageId });
+    
+    if (existingEmail) {
+      console.log('Duplicate email detected, skipping:', messageId);
+      return res.status(200).json({ 
+        message: 'Duplicate email skipped',
+        existing: existingEmail._id 
+      });
+    }
+
     // Parse sender name and email
     let senderName = '';
     let senderEmail = '';
     
     const fromHeader = req.body.from || req.body.sender || '';
-    const fromMatch = fromHeader.match(/^(?:([^<]*?)\s*)?(?:<(.+)>)?$/);
+    const fromMatch = fromHeader.match(/^(?:"?([^"<]*)"?\s*)?(?:<(.+)>)?$/);
     
     if (fromMatch) {
-      senderName = (fromMatch[1] || '').trim();
+      senderName = (fromMatch[1] || '').trim().replace(/^"|"$/g, ''); // Remove quotes
       senderEmail = (fromMatch[2] || fromMatch[0]).trim();
     } else {
       senderEmail = fromHeader;
     }
-
+    
     // Extract data from form fields
     const emailData = {
       sender: senderEmail,
