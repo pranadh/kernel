@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = process***REMOVED***.NODE_ENV === 'production' 
+const baseURL = process.env.NODE_ENV === 'production' 
   ? 'https://exlt.tech'
   : 'http://localhost:5000';
 

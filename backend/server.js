@@ -10,7 +10,7 @@ import jwt from 'jsonwebtoken';
 // Load env first
 dotenv.config();
 
-const PORT = process***REMOVED***.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 // Initialize express
 const app = express();
@@ -29,7 +29,7 @@ const wss = new WebSocketServer({
       return;
     }
     try {
-      const decoded = jwt.verify(token, process***REMOVED***.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       info.req.user = decoded;
       cb(true);
     } catch (err) {
@@ -50,7 +50,7 @@ wss.on('connection', (ws, req) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process***REMOVED***.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     clients.set(decoded.id, ws);
 
     ws.on('close', () => {

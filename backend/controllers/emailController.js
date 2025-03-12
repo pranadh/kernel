@@ -10,7 +10,7 @@ dotenv.config();
 const mailgun = new Mailgun(FormData);
 const mg = mailgun.client({
   username: "api",
-  key: process***REMOVED***.MAILGUN_API_KEY,
+  key: process.env.MAILGUN_API_KEY,
   url: "https://api.mailgun.net"
 });
 
@@ -205,7 +205,7 @@ export const sendEmail = async (req, res) => {
 
     // Send via Mailgun
     const response = await mg.messages.create(
-      process***REMOVED***.MAILGUN_DOMAIN,
+      process.env.MAILGUN_DOMAIN,
       messageData
     );
 

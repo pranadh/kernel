@@ -3,7 +3,7 @@ import Document from "../models/Document.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-const generateToken = (id) => jwt.sign({ id }, process***REMOVED***.JWT_SECRET, { expiresIn: "30d" });
+const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
 export const registerUser = async (req, res) => {
   const { username, handle, password } = req.body;

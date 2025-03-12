@@ -2,8 +2,12 @@
 node_modules/
 
 # Environment files
-***REMOVED***
-***REMOVED***.local
+.env
+.env.*
+!.env.example
+.env.local
+.env.development
+.env.production
 
 # Build files
 dist/

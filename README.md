@@ -8,5 +8,5 @@ Full-stack application with React frontend and Express backend.
 ```bash
 cd backend
 npm install
-cp ***REMOVED***.example ***REMOVED*** # Configure your environment variables
+cp .env.example .env # Configure your environment variables
 npm run dev

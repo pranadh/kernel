@@ -9,9 +9,9 @@ import {
   } from '../utils/spotifyUtils.js';
 
 const spotifyApi = new SpotifyWebApi({
-  clientId: process***REMOVED***.SPOTIFY_CLIENT_ID,
-  clientSecret: process***REMOVED***.SPOTIFY_CLIENT_SECRET,
-  redirectUri: process***REMOVED***.SPOTIFY_REDIRECT_URI
+  clientId: process.env.SPOTIFY_CLIENT_ID,
+  clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+  redirectUri: process.env.SPOTIFY_REDIRECT_URI
 });
 
 // Admin auth endpoint (only you should use this)

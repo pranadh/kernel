@@ -46,7 +46,7 @@ export const uploadImage = async (req, res) => {
       author: req.user._id
     });
 
-    const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
+    const baseUrl = process.env.NODE_ENV === 'production' 
       ? 'https://i.exlt.tech'
       : `${req.protocol}://i.${req.get('host')}`;
 
@@ -68,7 +68,7 @@ export const uploadAvatar = async (req, res) => {
       return res.status(400).json({ message: "No image uploaded" });
     }
 
-    const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
+    const baseUrl = process.env.NODE_ENV === 'production' 
       ? 'https://i.exlt.tech'
       : `${req.protocol}://i.${req.get('host')}`;
 
@@ -104,7 +104,7 @@ export const uploadBanner = async (req, res) => {
       return res.status(403).json({ message: "Only verified users can upload GIF banners" });
     }
 
-    const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
+    const baseUrl = process.env.NODE_ENV === 'production' 
       ? 'https://i.exlt.tech'
       : `${req.protocol}://i.${req.get('host')}`;
 
@@ -424,7 +424,7 @@ export const uploadIosImage = async (req, res) => {
       author: req.user._id
     });
 
-    const baseUrl = process***REMOVED***.NODE_ENV === 'production' 
+    const baseUrl = process.env.NODE_ENV === 'production' 
       ? 'https://i.exlt.tech'
       : `${req.protocol}://i.${req.get('host')}`;
 
