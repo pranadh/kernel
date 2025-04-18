@@ -1,0 +1,20 @@
+# Maven build files
+target/
+dependency-reduced-pom.xml
+
+# IDE files
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+.vscode/
+
+# Compiled files
+*.class
+*.jar
+*.war
+*.ear
+
+# Log files
+*.log

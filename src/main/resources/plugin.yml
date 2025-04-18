@@ -1,0 +1,20 @@
+name: Kernel
+version: 1.0
+main: com.example.kernel.Kernel
+api-version: 1.13
+commands:
+  broadcast:
+    description: Broadcast a message to all players.
+    permission: kernel.broadcast
+    aliases: [bc]
+  playtime:
+    description: Check how long you or another player has played on the server.
+  day:
+    description: Sets the time to day
+    permission: kernel.time.day
+  night:
+    description: Sets the time to night
+    permission: kernel.time.night
+  vanish:
+    description: Vanish from other players
+    permission: kernel.vanish
