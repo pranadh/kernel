@@ -21,3 +21,6 @@ commands:
   god:
     description: Toggle god mode
     permission: kernel.god
+  scale:
+    description: Set the scale of a player
+    permission: kernel.scale

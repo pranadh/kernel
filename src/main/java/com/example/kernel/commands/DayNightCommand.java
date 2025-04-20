@@ -24,13 +24,13 @@ public class DayNightCommand implements CommandExecutor, TabCompleter {
 
         if (command.getName().equalsIgnoreCase("day")) {
             world.setTime(DAY_TIME);
-            player.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set time to &eday!"));
+            player.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set time to &eday."));
             return true;
         }
 
         if (command.getName().equalsIgnoreCase("night")) {
             world.setTime(NIGHT_TIME);
-            player.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set time to &9night!"));
+            player.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set time to &9night."));
             return true;
         }
 

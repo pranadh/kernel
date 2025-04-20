@@ -5,6 +5,7 @@ import com.example.kernel.commands.BroadcastCommand;
 import com.example.kernel.commands.PlaytimeCommand;
 import com.example.kernel.commands.DayNightCommand;
 import com.example.kernel.commands.GodCommand;
+import com.example.kernel.commands.ScaleCommand;
 import com.example.kernel.commands.VanishCommand;
 import com.example.kernel.listeners.ChatListener;
 
@@ -25,7 +26,9 @@ public class Kernel extends JavaPlugin {
         this.getCommand("god").setExecutor(new GodCommand());
         this.getCommand("god").setTabCompleter(new GodCommand());
 
-        // Register time commands
+        this.getCommand("scale").setExecutor(new ScaleCommand());
+        this.getCommand("scale").setTabCompleter(new ScaleCommand());
+
         this.getCommand("day").setExecutor(new DayNightCommand());
         this.getCommand("night").setExecutor(new DayNightCommand());
         
