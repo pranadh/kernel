@@ -20,7 +20,7 @@ public class GodCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&cUsage: /god <player>"));
+                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Usage: " + Constants.PRIMARY + "/god <player>"));
                 return true;
             }
 
@@ -31,7 +31,7 @@ public class GodCommand implements CommandExecutor, TabCompleter {
 
         Player target = Bukkit.getPlayer(args[0]);
         if (target == null) {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&cPlayer not found: " + args[0]));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Player not found: " + Constants.PRIMARY + args[0]));
             return true;
         }
 
@@ -54,7 +54,7 @@ public class GodCommand implements CommandExecutor, TabCompleter {
         if (sender == target) {
             sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7God mode has been " + status));
         } else {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7God mode for &e" + target.getName() + " &7has been " + status + "&7!"));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7God mode for " + Constants.PRIMARY + target.getName() + " &7has been " + status));
         }
     }
 

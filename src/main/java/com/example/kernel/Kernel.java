@@ -2,6 +2,7 @@ package com.example.kernel;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import com.example.kernel.commands.BroadcastCommand;
+import com.example.kernel.commands.ChatControlCommands;
 import com.example.kernel.commands.PlaytimeCommand;
 import com.example.kernel.commands.DayNightCommand;
 import com.example.kernel.commands.GodCommand;
@@ -31,9 +32,13 @@ public class Kernel extends JavaPlugin {
 
         this.getCommand("day").setExecutor(new DayNightCommand());
         this.getCommand("night").setExecutor(new DayNightCommand());
+
+        ChatControlCommands chatControl = new ChatControlCommands();
+        this.getCommand("chat").setExecutor(chatControl);
+        this.getCommand("chat").setTabCompleter(chatControl);
         
         // Register chat listener
-        getServer().getPluginManager().registerEvents(new ChatListener(), this);
+        getServer().getPluginManager().registerEvents(new ChatListener(chatControl), this);
     }
 
     @Override

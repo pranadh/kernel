@@ -20,7 +20,7 @@ public class ScaleCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&cUsage: /scale <value> [player]"));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Usage: " + Constants.PRIMARY + "/scale <value> [player]"));
             return true;
         }
 
@@ -43,7 +43,7 @@ public class ScaleCommand implements CommandExecutor, TabCompleter {
 
             Player target = Bukkit.getPlayer(args[1]);
             if (target == null) {
-                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&cPlayer not found: " + args[1]));
+                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Player not found: " + Constants.PRIMARY + args[1]));
                 return true;
             }
 
@@ -51,7 +51,7 @@ public class ScaleCommand implements CommandExecutor, TabCompleter {
             return true;
 
         } catch (NumberFormatException e) {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&cInvalid scale value!"));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Invalid scale value!"));
             return true;
         }
     }

@@ -16,7 +16,7 @@ public class BroadcastCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&cUsage: /broadcast <message>"));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Usage: " + Constants.PRIMARY + "/broadcast <message>"));
             return true;
         }
 

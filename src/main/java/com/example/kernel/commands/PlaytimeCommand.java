@@ -22,7 +22,7 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&cUsage: /playtime <player>"));
+                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Usage: " + Constants.PRIMARY + "/playtime <player>"));
                 return true;
             }
             
@@ -37,7 +37,7 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
                 // Check if player has played before
                 OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetName);
                 if (!offlinePlayer.hasPlayedBefore()) {
-                    sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&cPlayer not found: " + targetName));
+                    sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Player not found: " + Constants.PRIMARY + targetName));
                     return true;
                 }
                 showOfflinePlaytime(sender, offlinePlayer);
@@ -62,7 +62,7 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
         seconds %= 60;
         
         String timeString = String.format("%dd, %dh, %dm, %ds", days, hours, minutes, seconds);
-        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&e" + target.getName() + "&7 has a playtime of &#ffecb8" + timeString));
+        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + target.getName() + "&7 has a playtime of " + Constants.PRIMARY + timeString));
     }
     
     private void showPlaytime(CommandSender sender, Player target) {
@@ -83,9 +83,9 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
         String timeString = String.format("%dd, %dh, %dm, %ds", days, hours, minutes, seconds);
         
         if (sender == target) {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7You have a playtime of &#ffecb8" + timeString));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7You have a playtime of " + Constants.PRIMARY + timeString));
         } else {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&e" + target.getName() + "&7 has a playtime of &#ffecb8" + timeString));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + target.getName() + "&7 has a playtime of " + Constants.PRIMARY + timeString));
         }
     }
     

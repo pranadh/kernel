@@ -24,3 +24,6 @@ commands:
   scale:
     description: Set the scale of a player
     permission: kernel.scale
+  chat:
+    description: Chat control commands
+    permission: kernel.chat

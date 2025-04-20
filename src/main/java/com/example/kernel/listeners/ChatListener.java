@@ -3,10 +3,18 @@ package com.example.kernel.listeners;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+
+import com.example.kernel.commands.ChatControlCommands;
+
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
 
 public class ChatListener implements Listener {
+    private final ChatControlCommands chatControl;
+
+    public ChatListener(ChatControlCommands chatControl) {
+        this.chatControl = chatControl;
+    }
     
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
@@ -29,6 +37,10 @@ public class ChatListener implements Listener {
             rank = "";
         }
 
+        if (!chatControl.canChat(player)) {
+            event.setCancelled(true);
+            return;
+        }
         
         // Set the new format
         String format;
