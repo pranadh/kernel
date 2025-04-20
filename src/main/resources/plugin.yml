@@ -2,6 +2,7 @@ name: Kernel
 version: 1.0
 main: com.example.kernel.Kernel
 api-version: 1.13
+depend: [LuckPerms]
 commands:
   broadcast:
     description: Broadcast a message to all players.

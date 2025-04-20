@@ -1,57 +1,46 @@
 package com.example.kernel.listeners;
 
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.cacheddata.CachedMetaData;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 
 import com.example.kernel.commands.ChatControlCommands;
 
-import org.bukkit.entity.Player;
-import org.bukkit.ChatColor;
-
 public class ChatListener implements Listener {
     private final ChatControlCommands chatControl;
+    private final LuckPerms luckPerms;
 
-    public ChatListener(ChatControlCommands chatControl) {
+    public ChatListener(ChatControlCommands chatControl, LuckPerms luckPerms) {
         this.chatControl = chatControl;
+        this.luckPerms = luckPerms;
     }
     
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
-        String message = event.getMessage();
         
-        String rank = ""; // No rank by default
-        
-        if (player.hasPermission("kernel.owner")) {
-            rank = "";
-        } else if (player.hasPermission("kernel.manager")) {
-            rank = "";
-        } else if (player.hasPermission("kernel.admin")) {
-            rank = "";
-        } else if (player.hasPermission("kernel.mod")) {
-            rank = "";
-        } else if (player.hasPermission("kernel.helper")) {
-            rank = "";
-        } else if (player.hasPermission("kernel.builder")) {
-            rank = "";
-        }
-
         if (!chatControl.canChat(player)) {
             event.setCancelled(true);
             return;
         }
+
+        // Get LuckPerms metadata
+        CachedMetaData metaData = luckPerms.getPlayerAdapter(Player.class)
+                .getMetaData(player);
+
+        String prefix = metaData.getPrefix();
+        String suffix = metaData.getSuffix();
         
-        // Set the new format
-        String format;
-        if (!rank.isEmpty()) {
-            format = rank + " " + 
-                    ChatColor.WHITE + "%s" + ChatColor.GRAY + " | " + 
-                    ChatColor.WHITE + "%s";
-        } else {
-            format = ChatColor.WHITE + "%s" + ChatColor.GRAY + " | " + 
-                    ChatColor.WHITE + "%s";
-        }
+        // Build format
+        String format = (prefix != null ? prefix + " " : "") +
+                       ChatColor.WHITE + "%s" +
+                       (suffix != null ? " " + suffix : "") +
+                       ChatColor.GRAY + " | " +
+                       ChatColor.WHITE + "%s";
         
         event.setFormat(format);
     }

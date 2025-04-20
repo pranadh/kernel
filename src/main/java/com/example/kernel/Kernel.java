@@ -1,6 +1,11 @@
 package com.example.kernel;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import net.luckperms.api.LuckPerms;
+
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.RegisteredServiceProvider;
+
 import com.example.kernel.commands.BroadcastCommand;
 import com.example.kernel.commands.ChatControlCommands;
 import com.example.kernel.commands.PlaytimeCommand;
@@ -8,12 +13,31 @@ import com.example.kernel.commands.DayNightCommand;
 import com.example.kernel.commands.GodCommand;
 import com.example.kernel.commands.ScaleCommand;
 import com.example.kernel.commands.VanishCommand;
+
 import com.example.kernel.listeners.ChatListener;
 
+import com.example.kernel.managers.TabManager;
+
 public class Kernel extends JavaPlugin {
+    private LuckPerms luckPerms;
+    private TabManager tabManager;
 
     @Override
     public void onEnable() {
+        // Setup LuckPerms integration
+        RegisteredServiceProvider<LuckPerms> provider = getServer().getServicesManager()
+                .getRegistration(LuckPerms.class);
+        if (provider != null) {
+            luckPerms = provider.getProvider();
+
+            // Initialize TabManager with server's scoreboard
+            tabManager = new TabManager(luckPerms, Bukkit.getScoreboardManager().getMainScoreboard());
+            getServer().getPluginManager().registerEvents(tabManager, this);
+            
+            // Update tab list for online players (in case of reload)
+            Bukkit.getOnlinePlayers().forEach(player -> tabManager.updatePlayerTab(player));
+        }
+
         // Register commands
         this.getCommand("broadcast").setExecutor(new BroadcastCommand());
         this.getCommand("broadcast").setTabCompleter(new BroadcastCommand());
@@ -38,11 +62,17 @@ public class Kernel extends JavaPlugin {
         this.getCommand("chat").setTabCompleter(chatControl);
         
         // Register chat listener
-        getServer().getPluginManager().registerEvents(new ChatListener(chatControl), this);
+        getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);
     }
 
     @Override
     public void onDisable() {
+
+        if (tabManager != null) {
+            // Clean up teams on disable
+            Bukkit.getOnlinePlayers().forEach(player -> tabManager.removePlayer(player));
+        }
+
         getLogger().info("Kernel disabled!");
     }
 }
