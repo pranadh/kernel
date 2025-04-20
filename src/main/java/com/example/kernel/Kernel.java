@@ -6,16 +6,10 @@ import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import com.example.kernel.commands.BroadcastCommand;
-import com.example.kernel.commands.ChatControlCommands;
-import com.example.kernel.commands.PlaytimeCommand;
-import com.example.kernel.commands.DayNightCommand;
-import com.example.kernel.commands.GodCommand;
-import com.example.kernel.commands.ScaleCommand;
-import com.example.kernel.commands.VanishCommand;
+import com.example.kernel.commands.*;
 
 import com.example.kernel.listeners.ChatListener;
-
+import com.example.kernel.listeners.PlayerJoinLeave;
 import com.example.kernel.managers.TabManager;
 
 public class Kernel extends JavaPlugin {
@@ -24,6 +18,7 @@ public class Kernel extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
         // Setup LuckPerms integration
         RegisteredServiceProvider<LuckPerms> provider = getServer().getServicesManager()
                 .getRegistration(LuckPerms.class);
@@ -63,6 +58,7 @@ public class Kernel extends JavaPlugin {
         
         // Register chat listener
         getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);
+        getServer().getPluginManager().registerEvents(new PlayerJoinLeave(), this);
     }
 
     @Override
