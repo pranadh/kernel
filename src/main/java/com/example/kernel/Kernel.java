@@ -55,6 +55,10 @@ public class Kernel extends JavaPlugin {
         ChatControlCommands chatControl = new ChatControlCommands();
         this.getCommand("chat").setExecutor(chatControl);
         this.getCommand("chat").setTabCompleter(chatControl);
+
+        RankCommand rankCommand = new RankCommand(luckPerms);
+        this.getCommand("rank").setExecutor(rankCommand);
+        this.getCommand("rank").setTabCompleter(rankCommand);
         
         // Register chat listener
         getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);

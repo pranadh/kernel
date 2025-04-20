@@ -28,3 +28,6 @@ commands:
   chat:
     description: Chat control commands
     permission: kernel.chat
+  rank:
+    description: Manage player ranks
+    permission: kernel.rank

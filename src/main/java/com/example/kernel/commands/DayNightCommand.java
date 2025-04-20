@@ -24,7 +24,7 @@ public class DayNightCommand implements CommandExecutor, TabCompleter {
 
         if (command.getName().equalsIgnoreCase("day")) {
             world.setTime(DAY_TIME);
-            player.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set time to  " + Constants.PRIMARY + "day."));
+            player.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set time to " + Constants.PRIMARY + "day."));
             return true;
         }
 
