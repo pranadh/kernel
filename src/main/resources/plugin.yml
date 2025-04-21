@@ -59,3 +59,13 @@ commands:
   speed:
     description: Set a player's walking or flying speed
     permission: kernel.speed
+  metrics:
+    description: Display server metrics and performance information
+    permission: kernel.metrics
+  list:
+    description: Display online players grouped by rank
+    permission: kernel.list
+  getpos:
+    description: Get a player's position
+    permission: kernel.getpos
+    aliases: [coords]

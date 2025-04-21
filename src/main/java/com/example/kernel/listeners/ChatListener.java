@@ -14,6 +14,8 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import com.example.kernel.commands.ChatControlCommands;
 import com.example.kernel.utils.ColorUtils;
 
+import me.clip.placeholderapi.PlaceholderAPI;
+
 public class ChatListener implements Listener {
     private final ChatControlCommands chatControl;
     private final LuckPerms luckPerms;
@@ -47,12 +49,20 @@ public class ChatListener implements Listener {
         
         // Create player name component with hover
         TextComponent nameComponent = new TextComponent(player.getName());
-        nameComponent.setColor(net.md_5.bungee.api.ChatColor.WHITE);
+        
+        // Check if player's group is default
+        String primaryGroup = luckPerms.getUserManager().getUser(player.getUniqueId()).getPrimaryGroup();
+        if (primaryGroup.equalsIgnoreCase("default")) {
+            nameComponent.setColor(net.md_5.bungee.api.ChatColor.GRAY);
+        } else {
+            nameComponent.setColor(net.md_5.bungee.api.ChatColor.WHITE);
+        }
+        
         nameComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create()));
         
         // Create suffix and message components
         TextComponent suffixComponent = new TextComponent(suffix != null ? ColorUtils.translateColorCodes(" " + suffix) : "");
-        TextComponent separatorComponent = new TextComponent(" | ");
+        TextComponent separatorComponent = new TextComponent(": ");
         separatorComponent.setColor(net.md_5.bungee.api.ChatColor.GRAY);
         TextComponent messageComponent = new TextComponent(event.getMessage());
         messageComponent.setColor(net.md_5.bungee.api.ChatColor.WHITE);
@@ -71,20 +81,36 @@ public class ChatListener implements Listener {
     }
 
     private String createHoverText(Player player, String prefix) {
-        // Calculate playtime
-        int ticks = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        int hours = minutes / 60;
-        int days = hours / 24;
-        
-        hours %= 24;
-        minutes %= 60;
-
-        // Format hover text with line breaks
-        return ColorUtils.translateColorCodes(
-            (prefix != null ? prefix + " " : "") + player.getName() + "\n" +
-            "&fPlaytime: &7" + days + "d " + hours + "h " + minutes + "m"
+        // Check if player's group is default
+        String primaryGroup = luckPerms.getUserManager().getUser(player.getUniqueId()).getPrimaryGroup();
+        String nameColor = primaryGroup.equalsIgnoreCase("default") ? "&7" : "&f";
+    
+        // Get player stats with PlaceholderAPI
+        String playtime = String.format("%sd, %sh, %sm",
+            PlaceholderAPI.setPlaceholders(player, "%statistic_time_played:days%"),
+            PlaceholderAPI.setPlaceholders(player, "%statistic_time_played:hours%"),
+            PlaceholderAPI.setPlaceholders(player, "%statistic_time_played:minutes%")
         );
+    
+        // Get join date and trim the time portion
+        String joinDate = PlaceholderAPI.setPlaceholders(player, "%player_first_join_date%");
+        if (joinDate.contains(" ")) {
+            joinDate = joinDate.split(" ")[0]; // Keep only the date part
+        }
+    
+        // Format hover text with line breaks
+        String hoverText = String.format(
+            "%s%s\n" +
+            "&fPlaytime: &7%s\n" +
+            "&fJoined: &7%s\n" +
+            "&fDeaths: &7%s",
+            prefix != null ? prefix + " " + nameColor : nameColor + player.getName(),
+            player.getName(),
+            playtime,
+            joinDate,
+            PlaceholderAPI.setPlaceholders(player, "%statistic_deaths%")
+        );
+    
+        return ColorUtils.translateColorCodes(hoverText);
     }
 }

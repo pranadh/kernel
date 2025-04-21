@@ -1,5 +1,6 @@
 package com.example.kernel.commands;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -10,8 +11,6 @@ import org.bukkit.entity.Player;
 
 import com.example.kernel.utils.ColorUtils;
 import com.example.kernel.utils.Constants;
-
-import org.bukkit.Statistic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,49 +49,37 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
     }
 
     private void showOfflinePlaytime(CommandSender sender, OfflinePlayer target) {
-        int ticks = target.getStatistic(Statistic.PLAY_ONE_MINUTE);
+        String playtime = String.format("%sd, %sh, %sm, %ss",
+            PlaceholderAPI.setPlaceholders(target, "%statistic_time_played:days%"),
+            PlaceholderAPI.setPlaceholders(target, "%statistic_time_played:hours%"),
+            PlaceholderAPI.setPlaceholders(target, "%statistic_time_played:minutes%"),
+            PlaceholderAPI.setPlaceholders(target, "%statistic_time_played:seconds%")
+        );
         
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        int hours = minutes / 60;
-        int days = hours / 24;
-        
-        hours %= 24;
-        minutes %= 60;
-        seconds %= 60;
-        
-        String timeString = String.format("%dd, %dh, %dm, %ds", days, hours, minutes, seconds);
-        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + target.getName() + "&7 has a playtime of " + Constants.PRIMARY + timeString));
+        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + 
+            target.getName() + "&7 has a playtime of " + Constants.PRIMARY + playtime));
     }
     
     private void showPlaytime(CommandSender sender, Player target) {
-        // Get playtime in ticks (20 ticks = 1 second)
-        int ticks = target.getStatistic(Statistic.PLAY_ONE_MINUTE);
-        
-        // Convert to more readable format
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        int hours = minutes / 60;
-        int days = hours / 24;
-        
-        hours %= 24;
-        minutes %= 60;
-        seconds %= 60;
-        
-        // Format the message
-        String timeString = String.format("%dd, %dh, %dm, %ds", days, hours, minutes, seconds);
+        String playtime = String.format("%sd, %sh, %sm, %ss",
+            PlaceholderAPI.setPlaceholders(target, "%statistic_time_played:days%"),
+            PlaceholderAPI.setPlaceholders(target, "%statistic_time_played:hours%"),
+            PlaceholderAPI.setPlaceholders(target, "%statistic_time_played:minutes%"),
+            PlaceholderAPI.setPlaceholders(target, "%statistic_time_played:seconds%")
+        );
         
         if (sender == target) {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7You have a playtime of " + Constants.PRIMARY + timeString));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + 
+                "&7You have a playtime of " + Constants.PRIMARY + playtime));
         } else {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + target.getName() + "&7 has a playtime of " + Constants.PRIMARY + timeString));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + 
+                target.getName() + "&7 has a playtime of " + Constants.PRIMARY + playtime));
         }
     }
     
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            // Return a list of online player names that match the beginning of what's typed
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
                     .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))

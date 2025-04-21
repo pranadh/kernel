@@ -37,8 +37,6 @@ public class TabManager implements Listener {
 
         Team team = scoreboard.registerNewTeam(teamName);
 
-        // Use PlaceholderAPI to get prefix
-        // %luckperms_prefix% is provided by LuckPerms integration
         String prefix = PlaceholderAPI.setPlaceholders(player, "%luckperms_prefix%");
         
         if (prefix != null && !prefix.isEmpty()) {

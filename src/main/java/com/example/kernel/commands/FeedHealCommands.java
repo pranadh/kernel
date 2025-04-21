@@ -69,6 +69,7 @@ public class FeedHealCommands implements CommandExecutor, TabCompleter {
         target.setFoodLevel(20); // Max food level
         target.setSaturation(20f); // Max saturation
         target.setFireTicks(0); // Extinguish fire
+        target.getActivePotionEffects().forEach(effect -> target.removePotionEffect(effect.getType())); // Remove all potion effects
         
         if (sender == target) {
             sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7You have been healed."));

@@ -95,6 +95,18 @@ public class Kernel extends JavaPlugin {
         SpeedCommand speedCommand = new SpeedCommand();
         this.getCommand("speed").setExecutor(speedCommand);
         this.getCommand("speed").setTabCompleter(speedCommand);
+
+        MetricsCommand metricsCommand = new MetricsCommand();
+        this.getCommand("metrics").setExecutor(metricsCommand);
+        this.getCommand("metrics").setTabCompleter(metricsCommand);
+
+        ListCommand listCommand = new ListCommand();
+        this.getCommand("list").setExecutor(listCommand);
+        this.getCommand("list").setTabCompleter(listCommand);
+
+        GetPositionCommand getPositionCommand = new GetPositionCommand();
+        this.getCommand("getpos").setExecutor(getPositionCommand);
+        this.getCommand("getpos").setTabCompleter(getPositionCommand);
         
         // Register listeners
         getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);
