@@ -1,8 +1,6 @@
 package com.example.kernel.commands;
 
 import net.luckperms.api.LuckPerms;
-import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.Node;
 import net.luckperms.api.node.types.InheritanceNode;
 import net.luckperms.api.track.Track;
 import org.bukkit.Bukkit;
@@ -24,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class RankCommand implements CommandExecutor, TabCompleter {
     private final LuckPerms luckPerms;
-    private final String STAFF_TRACK = "staff"; // Name of your staff track in LuckPerms
+    private final String STAFF_TRACK = "staff"; // Name of staff track in LuckPerms
 
     public RankCommand(LuckPerms luckPerms) {
         this.luckPerms = luckPerms;
@@ -68,7 +66,7 @@ public class RankCommand implements CommandExecutor, TabCompleter {
     }
 
     private void showHelp(CommandSender sender) {
-        sender.sendMessage(ColorUtils.translateColorCodes("&#c6b78f&lR&#c1b087&lA&#bca980&lN&#b7a278&lK &#b29b70&lC&#ad9469&lO&#a88d61&lM&#a38659&lM&#9e7f52&lA&#996d4a&lN&#945042&lD&#8f433b&lS"));
+        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Usage:"));
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "/rank help &8- &7Show this help message"));
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "/rank set <player> <rank> &8- &7Set a player's rank"));
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "/rank promote <player> &8- &7Promote player on staff track"));
@@ -253,7 +251,7 @@ public class RankCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            List<String> subCommands = Arrays.asList("help", "set", "promote", "demote");
+            List<String> subCommands = Arrays.asList("set", "help", "promote", "demote");
             return subCommands.stream()
                     .filter(sc -> sc.toLowerCase().startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());

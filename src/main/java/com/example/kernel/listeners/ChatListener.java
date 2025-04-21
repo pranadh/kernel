@@ -48,8 +48,7 @@ public class ChatListener implements Listener {
         // Create player name component with hover
         TextComponent nameComponent = new TextComponent(player.getName());
         nameComponent.setColor(net.md_5.bungee.api.ChatColor.WHITE);
-        nameComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-            new ComponentBuilder(hoverText).create()));
+        nameComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create()));
         
         // Create suffix and message components
         TextComponent suffixComponent = new TextComponent(suffix != null ? ColorUtils.translateColorCodes(" " + suffix) : "");

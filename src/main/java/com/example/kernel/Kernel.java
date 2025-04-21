@@ -52,6 +52,10 @@ public class Kernel extends JavaPlugin {
         this.getCommand("day").setExecutor(new DayNightCommand());
         this.getCommand("night").setExecutor(new DayNightCommand());
 
+        ClearDropsCommand clearDropsCommand = new ClearDropsCommand();
+        this.getCommand("cleardrops").setExecutor(clearDropsCommand);
+        this.getCommand("cleardrops").setTabCompleter(clearDropsCommand);
+
         ChatControlCommands chatControl = new ChatControlCommands();
         this.getCommand("chat").setExecutor(chatControl);
         this.getCommand("chat").setTabCompleter(chatControl);
@@ -59,6 +63,19 @@ public class Kernel extends JavaPlugin {
         RankCommand rankCommand = new RankCommand(luckPerms);
         this.getCommand("rank").setExecutor(rankCommand);
         this.getCommand("rank").setTabCompleter(rankCommand);
+        
+        GamemodeCommand gamemodeCommand = new GamemodeCommand();
+        this.getCommand("gm").setExecutor(gamemodeCommand);
+        this.getCommand("gmc").setExecutor(gamemodeCommand);
+        this.getCommand("gms").setExecutor(gamemodeCommand);
+        this.getCommand("gmsp").setExecutor(gamemodeCommand);
+        this.getCommand("gma").setExecutor(gamemodeCommand);
+
+        this.getCommand("gm").setTabCompleter(gamemodeCommand);
+        this.getCommand("gmc").setTabCompleter(gamemodeCommand);
+        this.getCommand("gms").setTabCompleter(gamemodeCommand);
+        this.getCommand("gmsp").setTabCompleter(gamemodeCommand);
+        this.getCommand("gma").setTabCompleter(gamemodeCommand);
         
         // Register chat listener
         getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);

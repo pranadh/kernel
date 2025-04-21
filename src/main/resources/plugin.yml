@@ -31,3 +31,22 @@ commands:
   rank:
     description: Manage player ranks
     permission: kernel.rank
+  gm:
+    description: Set gamemode
+    permission: kernel.gamemode
+    aliases: [gamemode]
+  gmc:
+    description: Set gamemode to creative
+    permission: kernel.gamemode.creative
+  gms:
+    description: Set gamemode to survival
+    permission: kernel.gamemode.survival
+  gmsp:
+    description: Set gamemode to spectator
+    permission: kernel.gamemode.spectator
+  gma:
+    description: Set gamemode to adventure
+    permission: kernel.gamemode.adventure
+  cleardrops:
+    description: Clear all dropped items from the server
+    permission: kernel.cleardrops

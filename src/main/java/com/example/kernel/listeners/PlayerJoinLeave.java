@@ -24,6 +24,6 @@ public class PlayerJoinLeave implements Listener {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        event.setQuitMessage(ColorUtils.translateColorCodes("§6§l* §e" + player.getDisplayName() + " §7left the server."));
+        event.setQuitMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "&l* " + Constants.PRIMARY + player.getName() + " &7left the server."));
     }
 }

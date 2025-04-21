@@ -1,0 +1,45 @@
+package com.example.kernel.commands;
+
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
+
+import com.example.kernel.utils.ColorUtils;
+import com.example.kernel.utils.Constants;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ClearDropsCommand implements CommandExecutor, TabCompleter {
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        int count = 0;
+
+        // Loop through all worlds
+        for (World world : Bukkit.getWorlds()) {
+            // Get all entities in the world
+            for (Entity entity : world.getEntities()) {
+                if (entity instanceof Item) {
+                    entity.remove();
+                    count++;
+                }
+            }
+        }
+
+        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Cleared " + 
+            Constants.PRIMARY + count + " &7dropped items from the server."));
+
+        return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        return new ArrayList<>();
+    }
+}
