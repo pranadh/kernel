@@ -33,7 +33,7 @@ public class ClearDropsCommand implements CommandExecutor, TabCompleter {
         }
 
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Cleared " + 
-            Constants.PRIMARY + count + " &7dropped items from the server."));
+            Constants.PRIMARY + count + " &7dropped item(s) from the server."));
 
         return true;
     }

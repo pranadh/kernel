@@ -5,7 +5,6 @@ import net.luckperms.api.cacheddata.CachedMetaData;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -101,9 +100,9 @@ public class ChatListener implements Listener {
         // Format hover text with line breaks
         String hoverText = String.format(
             "%s%s\n" +
-            "&fPlaytime: &7%s\n" +
-            "&fJoined: &7%s\n" +
-            "&fDeaths: &7%s",
+            " &ePlaytime: &7%s\n" +
+            " &aJoined: &7%s\n" +
+            " &cDeaths: &7%s",
             prefix != null ? prefix + " " + nameColor : nameColor + player.getName(),
             player.getName(),
             playtime,

@@ -69,3 +69,6 @@ commands:
     description: Get a player's position
     permission: kernel.getpos
     aliases: [coords]
+  tab:
+    description: Reload tab display
+    permission: kernel.tab.reload

@@ -8,7 +8,7 @@ Kernel - a simple Spigot core plugin.
 - Easy to use command structure.
 
 - Core commands:
-- AFK, chat control (clear, mute, slow, help), chat color, clear, discord, enderchest, feed, flight, scale
+- AFK, chat control (clear, mute, slow, help), chat color, clear, discord, feed, flight, scale, flight speed
 - gamemode, getpos, heal, invsee, list, nightvision, onlineplayers, ping, rename, seen, broadcast, rank, playtime
 - skull, spawn, speed, teleport, teleporthere, join leave messages, tab list, scoreboard, day, night, vanish, list
 

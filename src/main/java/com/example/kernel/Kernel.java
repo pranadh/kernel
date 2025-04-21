@@ -107,6 +107,10 @@ public class Kernel extends JavaPlugin {
         GetPositionCommand getPositionCommand = new GetPositionCommand();
         this.getCommand("getpos").setExecutor(getPositionCommand);
         this.getCommand("getpos").setTabCompleter(getPositionCommand);
+
+        TabCommand tabCommand = new TabCommand(this);
+        this.getCommand("tab").setExecutor(tabCommand);
+        this.getCommand("tab").setTabCompleter(tabCommand);
         
         // Register listeners
         getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);
