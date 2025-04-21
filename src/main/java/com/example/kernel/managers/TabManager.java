@@ -1,7 +1,7 @@
 package com.example.kernel.managers;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.luckperms.api.LuckPerms;
-import net.luckperms.api.cacheddata.CachedMetaData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,40 +26,46 @@ public class TabManager implements Listener {
     }
 
     public void updatePlayerTab(Player player) {
-        CachedMetaData metaData = luckPerms.getPlayerAdapter(Player.class)
-                .getMetaData(player);
+        // Clean up existing teams
+        removePlayer(player);
 
-        String prefix = metaData.getPrefix();
-        
-        // Create or get team for the player
+        // Create team name from player name
         String teamName = player.getName();
         if (teamName.length() > 16) {
             teamName = teamName.substring(0, 16);
         }
 
-        Team team = scoreboard.getTeam(teamName);
-        if (team == null) {
-            team = scoreboard.registerNewTeam(teamName);
-        }
+        Team team = scoreboard.registerNewTeam(teamName);
 
-        // Set prefix and suffix
-        if (prefix != null) {
-            team.setPrefix(ColorUtils.translateColorCodes(prefix + " "));
-        }
-
-        // Add player to team
-        team.addEntry(player.getName());
+        // Use PlaceholderAPI to get prefix
+        // %luckperms_prefix% is provided by LuckPerms integration
+        String prefix = PlaceholderAPI.setPlaceholders(player, "%luckperms_prefix%");
         
-        // Update player's display name
-        String displayName = player.getName();
+        if (prefix != null && !prefix.isEmpty()) {
+            team.setPrefix(ColorUtils.translateColorCodes(prefix + " "));
+        } else {
+            team.setPrefix("");
+        }
+
+        team.addEntry(player.getName());
+
+        // Update display name and tab list name using PlaceholderAPI
+        String displayName = PlaceholderAPI.setPlaceholders(player, "%luckperms_prefix% %player_name%");
         player.setDisplayName(ColorUtils.translateColorCodes(displayName));
         player.setPlayerListName(ColorUtils.translateColorCodes(displayName));
     }
 
     public void removePlayer(Player player) {
-        Team team = scoreboard.getTeam(player.getName());
-        if (team != null) {
-            team.unregister();
+        // Remove player from any existing teams
+        for (Team team : scoreboard.getTeams()) {
+            if (team.hasEntry(player.getName())) {
+                team.removeEntry(player.getName());
+            }
+        }
+        
+        Team personalTeam = scoreboard.getTeam(player.getName());
+        if (personalTeam != null) {
+            personalTeam.unregister();
         }
     }
 }

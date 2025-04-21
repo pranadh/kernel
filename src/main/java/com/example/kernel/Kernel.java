@@ -7,14 +7,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import com.example.kernel.commands.*;
+import com.example.kernel.listeners.*;
 
-import com.example.kernel.listeners.ChatListener;
-import com.example.kernel.listeners.PlayerJoinLeave;
 import com.example.kernel.managers.TabManager;
 
 public class Kernel extends JavaPlugin {
     private LuckPerms luckPerms;
     private TabManager tabManager;
+
+    public TabManager getTabManager() {
+        return tabManager;
+    }
 
     @Override
     public void onEnable() {
@@ -34,23 +37,29 @@ public class Kernel extends JavaPlugin {
         }
 
         // Register commands
-        this.getCommand("broadcast").setExecutor(new BroadcastCommand());
-        this.getCommand("broadcast").setTabCompleter(new BroadcastCommand());
+        BroadcastCommand broadcastCommand = new BroadcastCommand();
+        this.getCommand("broadcast").setExecutor(broadcastCommand);
+        this.getCommand("broadcast").setTabCompleter(broadcastCommand);
 
-        this.getCommand("playtime").setExecutor(new PlaytimeCommand());
-        this.getCommand("playtime").setTabCompleter(new PlaytimeCommand());
+        PlaytimeCommand playtimeCommand = new PlaytimeCommand();
+        this.getCommand("playtime").setExecutor(playtimeCommand);
+        this.getCommand("playtime").setTabCompleter(playtimeCommand);
 
-        this.getCommand("vanish").setExecutor(new VanishCommand());
-        this.getCommand("vanish").setTabCompleter(new VanishCommand());
+        VanishCommand vanishCommand = new VanishCommand();
+        this.getCommand("vanish").setExecutor(vanishCommand);
+        this.getCommand("vanish").setTabCompleter(vanishCommand);
 
-        this.getCommand("god").setExecutor(new GodCommand());
-        this.getCommand("god").setTabCompleter(new GodCommand());
+        GodCommand godCommand = new GodCommand();
+        this.getCommand("god").setExecutor(godCommand);
+        this.getCommand("god").setTabCompleter(godCommand);
 
-        this.getCommand("scale").setExecutor(new ScaleCommand());
-        this.getCommand("scale").setTabCompleter(new ScaleCommand());
+        ScaleCommand scaleCommand = new ScaleCommand();
+        this.getCommand("scale").setExecutor(scaleCommand);
+        this.getCommand("scale").setTabCompleter(scaleCommand);
 
-        this.getCommand("day").setExecutor(new DayNightCommand());
-        this.getCommand("night").setExecutor(new DayNightCommand());
+        DayNightCommand dayNightCommand = new DayNightCommand();
+        this.getCommand("day").setExecutor(dayNightCommand);
+        this.getCommand("night").setExecutor(dayNightCommand);
 
         ClearDropsCommand clearDropsCommand = new ClearDropsCommand();
         this.getCommand("cleardrops").setExecutor(clearDropsCommand);
@@ -76,10 +85,21 @@ public class Kernel extends JavaPlugin {
         this.getCommand("gms").setTabCompleter(gamemodeCommand);
         this.getCommand("gmsp").setTabCompleter(gamemodeCommand);
         this.getCommand("gma").setTabCompleter(gamemodeCommand);
+
+        FeedHealCommands feedHealCommands = new FeedHealCommands();
+        this.getCommand("feed").setExecutor(feedHealCommands);
+        this.getCommand("feed").setTabCompleter(feedHealCommands);
+        this.getCommand("heal").setExecutor(feedHealCommands);
+        this.getCommand("heal").setTabCompleter(feedHealCommands);
+
+        SpeedCommand speedCommand = new SpeedCommand();
+        this.getCommand("speed").setExecutor(speedCommand);
+        this.getCommand("speed").setTabCompleter(speedCommand);
         
-        // Register chat listener
+        // Register listeners
         getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinLeave(), this);
+        getServer().getPluginManager().registerEvents(new MOTDListener(), this);
     }
 
     @Override

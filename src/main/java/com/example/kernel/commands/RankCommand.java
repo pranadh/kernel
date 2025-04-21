@@ -1,5 +1,6 @@
 package com.example.kernel.commands;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.node.types.InheritanceNode;
 import net.luckperms.api.track.Track;
@@ -10,6 +11,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import com.example.kernel.Kernel;
+import com.example.kernel.managers.TabManager;
 import com.example.kernel.utils.ColorUtils;
 import com.example.kernel.utils.Constants;
 
@@ -22,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class RankCommand implements CommandExecutor, TabCompleter {
     private final LuckPerms luckPerms;
-    private final String STAFF_TRACK = "staff"; // Name of staff track in LuckPerms
+    private final String STAFF_TRACK = "staff";
 
     public RankCommand(LuckPerms luckPerms) {
         this.luckPerms = luckPerms;
@@ -58,6 +61,22 @@ public class RankCommand implements CommandExecutor, TabCompleter {
                 }
                 demotePlayer(sender, args[1]);
                 break;
+            case "info":
+                if (args.length < 2) {
+                    if (!(sender instanceof Player)) {
+                        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Usage: " + Constants.PRIMARY + "/rank info <player>"));
+                        return true;
+                    }
+                    showRankInfo(sender, (Player) sender);
+                    return true;
+                }
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Player not found: " + Constants.PRIMARY + args[1]));
+                    return true;
+                }
+                showRankInfo(sender, target);
+                break;
             default:
                 showHelp(sender);
                 break;
@@ -66,11 +85,26 @@ public class RankCommand implements CommandExecutor, TabCompleter {
     }
 
     private void showHelp(CommandSender sender) {
-        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Usage:"));
+        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Available commands:"));
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "/rank help &8- &7Show this help message"));
+        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "/rank info [player] &8- &7Show rank information"));
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "/rank set <player> <rank> &8- &7Set a player's rank"));
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "/rank promote <player> &8- &7Promote player on staff track"));
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PRIMARY + "/rank demote <player> &8- &7Demote player on staff track"));
+    }
+
+    private void showRankInfo(CommandSender sender, Player target) {
+        String rankInfo = PlaceholderAPI.setPlaceholders(target, 
+            "&8&m                                                &r\n" +
+            "&7Rank info for: " + Constants.PRIMARY + "%player_name%\n" +
+            "&7Current Rank: " + Constants.PRIMARY + "%luckperms_primary_group_name%\n" +
+            "&7Prefix: &f%luckperms_prefix%\n" +
+            "&7Tag(s): " + Constants.PRIMARY + "%luckperms_suffix%\n" +
+            "&7All Groups: " + Constants.PRIMARY + "%luckperms_groups%\n" +
+            "&8&m                                                "
+        );
+        
+        sender.sendMessage(ColorUtils.translateColorCodes(rankInfo));
     }
 
     private void setRank(CommandSender sender, String targetName, String rankName) {
@@ -79,63 +113,54 @@ public class RankCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        // Check if group exists
         if (luckPerms.getGroupManager().getGroup(rankName) == null) {
             sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Rank " + Constants.PRIMARY + rankName + " &7doesn't exist."));
             return;
         }
 
-        // Get player UUID
         Player targetPlayer = Bukkit.getPlayer(targetName);
-        UUID targetUUID;
-        String finalName;
-
-        if (targetPlayer != null) {
-            targetUUID = targetPlayer.getUniqueId();
-            finalName = targetPlayer.getName();
-        } else {
-            // Load from username if player is offline
+        if (targetPlayer == null) {
             CompletableFuture<UUID> lookupUUID = luckPerms.getUserManager().lookupUniqueId(targetName);
             try {
-                targetUUID = lookupUUID.get();
+                UUID targetUUID = lookupUUID.get();
                 if (targetUUID == null) {
                     sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Player " + Constants.PRIMARY + targetName + " &7not found."));
                     return;
                 }
-                finalName = targetName;
+                setRankOffline(sender, targetUUID, targetName, rankName);
             } catch (Exception e) {
                 sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Error looking up player: " + e.getMessage()));
-                return;
             }
+            return;
         }
 
-        // Load the user
-        luckPerms.getUserManager().loadUser(targetUUID)
-            .thenAcceptAsync(user -> {
-                // Clear existing groups
-                user.data().clear(node -> node instanceof InheritanceNode);
-                
-                // Add new group
-                InheritanceNode node = InheritanceNode.builder(rankName).build();
-                user.data().add(node);
-                
-                // Save changes
-                luckPerms.getUserManager().saveUser(user);
+        setRankOnline(sender, targetPlayer, rankName);
+    }
 
-                // Send update message
-                Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("Kernel"), () -> {
-                    sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set " + Constants.PRIMARY + finalName + 
-                        "&7's rank to " + Constants.PRIMARY + rankName + "&7."));
-                    
-                    // If player is online, update their tab list entry
-                    if (targetPlayer != null) {
-                        Bukkit.getPluginManager().callEvent(new org.bukkit.event.player.PlayerJoinEvent(
-                            targetPlayer, null
-                        ));
-                    }
-                });
-                
+    private void setRankOnline(CommandSender sender, Player target, String rankName) {
+        String oldRank = luckPerms.getUserManager().getUser(target.getUniqueId()).getPrimaryGroup();
+        
+        luckPerms.getUserManager().modifyUser(target.getUniqueId(), user -> {
+            user.data().clear(node -> node instanceof InheritanceNode);
+            user.data().add(InheritanceNode.builder(rankName).build());
+        }).thenRun(() -> {
+            Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("Kernel"), () -> {
+                updatePlayerRank(sender, target, oldRank, rankName);
             });
+        });
+    }
+
+    private void setRankOffline(CommandSender sender, UUID targetUUID, String targetName, String rankName) {
+        luckPerms.getUserManager().modifyUser(targetUUID, user -> {
+            String oldRank = user.getPrimaryGroup();
+            user.data().clear(node -> node instanceof InheritanceNode);
+            user.data().add(InheritanceNode.builder(rankName).build());
+            
+            Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("Kernel"), () -> {
+                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set " + Constants.PRIMARY + targetName + 
+                    "&7's rank from " + Constants.PRIMARY + oldRank + " &7to " + Constants.PRIMARY + rankName + "&7."));
+            });
+        });
     }
 
     private void promotePlayer(CommandSender sender, String targetName) {
@@ -156,41 +181,19 @@ public class RankCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        luckPerms.getUserManager().loadUser(targetPlayer.getUniqueId())
-        .thenAcceptAsync(user -> {
-            try {
-                String currentGroup = user.getPrimaryGroup();
-                int currentIndex = track.getGroups().indexOf(currentGroup);
-                
-                // Check if already at highest rank
-                if (currentIndex >= track.getGroups().size() - 1) {
-                    Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("Kernel"), () -> {
-                        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + targetName + 
-                            " &7is already at the highest rank " + Constants.PRIMARY + "(" + currentGroup + ")."));
-                    });
-                    return;
-                }
+        String currentGroup = luckPerms.getUserManager().getUser(targetPlayer.getUniqueId()).getPrimaryGroup();
+        int currentIndex = track.getGroups().indexOf(currentGroup);
 
-                String newGroup = track.getGroups().get(currentIndex + 1);
-                
-                // Clear existing groups and add new one
-                user.data().clear(node -> node instanceof InheritanceNode);
-                user.data().add(InheritanceNode.builder(newGroup).build());
-                
-                // Save changes
-                luckPerms.getUserManager().saveUser(user);
-                
-                Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("Kernel"), () -> {
-                    sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Promoted " + 
-                        Constants.PRIMARY + targetName + "&7 from " + Constants.PRIMARY + currentGroup + " to " + 
-                        Constants.PRIMARY + newGroup + "."));
-                    targetPlayer.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7You have been promoted to " + Constants.PRIMARY + newGroup + "."));
-                    Bukkit.getPluginManager().callEvent(new org.bukkit.event.player.PlayerJoinEvent(targetPlayer, null));
-                });
-            } catch (Exception e) {
-                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Error during promotion: " + e.getMessage()));
-            }
-        });
+        if (currentIndex >= track.getGroups().size() - 1) {
+            // Use PlaceholderAPI for display name in messages
+            String displayRank = PlaceholderAPI.setPlaceholders(targetPlayer, "%luckperms_primary_group_name%");
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + targetName + 
+                " &7is already at the highest rank " + Constants.PRIMARY + "(" + displayRank + ")."));
+            return;
+        }
+
+        String newGroup = track.getGroups().get(currentIndex + 1);
+        setRankOnline(sender, targetPlayer, newGroup);
     }
 
     private void demotePlayer(CommandSender sender, String targetName) {
@@ -211,56 +214,48 @@ public class RankCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        luckPerms.getUserManager().loadUser(targetPlayer.getUniqueId())
-        .thenAcceptAsync(user -> {
-            try {
-                String currentGroup = user.getPrimaryGroup();
-                int currentIndex = track.getGroups().indexOf(currentGroup);
-                
-                // Check if already at lowest rank
-                if (currentIndex <= 0) {
-                    Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("Kernel"), () -> {
-                        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + targetName + 
-                            " &7is already at the lowest rank " + Constants.PRIMARY + "(" + currentGroup + ")."));
-                    });
-                    return;
-                }
+        String currentGroup = luckPerms.getUserManager().getUser(targetPlayer.getUniqueId()).getPrimaryGroup();
+        int currentIndex = track.getGroups().indexOf(currentGroup);
 
-                String newGroup = track.getGroups().get(currentIndex - 1);
-                
-                // Clear existing groups and add new one
-                user.data().clear(node -> node instanceof InheritanceNode);
-                user.data().add(InheritanceNode.builder(newGroup).build());
-                
-                // Save changes
-                luckPerms.getUserManager().saveUser(user);
-                
-                Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("Kernel"), () -> {
-                    sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Demoted " + 
-                        Constants.PRIMARY + targetName + "&7 from " + Constants.PRIMARY + currentGroup + " to " + 
-                        Constants.PRIMARY + newGroup + "."));
-                    targetPlayer.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7You have been demoted to " + Constants.PRIMARY + newGroup + "."));
-                    Bukkit.getPluginManager().callEvent(new org.bukkit.event.player.PlayerJoinEvent(targetPlayer, null));
-                });
-            } catch (Exception e) {
-                sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Error during demotion: " + e.getMessage()));
+        if (currentIndex <= 0) {
+            // Use PlaceholderAPI for display name in messages
+            String displayRank = PlaceholderAPI.setPlaceholders(targetPlayer, "%luckperms_primary_group_name%");
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + Constants.PRIMARY + targetName + 
+                " &7is already at the lowest rank " + Constants.PRIMARY + "(" + displayRank + ")."));
+            return;
+        }
+
+        String newGroup = track.getGroups().get(currentIndex - 1);
+        setRankOnline(sender, targetPlayer, newGroup);
+    }
+
+    private void updatePlayerRank(CommandSender sender, Player targetPlayer, String oldRank, String newRank) {
+        String oldPrefix = luckPerms.getGroupManager().getGroup(oldRank).getCachedData().getMetaData().getPrefix();
+        String newPrefix = luckPerms.getGroupManager().getGroup(newRank).getCachedData().getMetaData().getPrefix();
+
+        sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set " + Constants.PRIMARY + targetPlayer.getName() + 
+            "&7's rank from &f" + oldPrefix + " &7to &f" + newPrefix + "&7."));
+    
+        if (targetPlayer.isOnline()) {
+            TabManager tabManager = ((Kernel) Bukkit.getPluginManager().getPlugin("Kernel")).getTabManager();
+            if (tabManager != null) {
+                tabManager.updatePlayerTab(targetPlayer);
             }
-        });
+        }
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            List<String> subCommands = Arrays.asList("set", "help", "promote", "demote");
-            return subCommands.stream()
+            return Arrays.asList("set", "help", "promote", "demote", "info").stream()
                     .filter(sc -> sc.toLowerCase().startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         }
         
         if (args.length == 2) {
-            // Return online players for all subcommands that need player names
             String subCommand = args[0].toLowerCase();
-            if (subCommand.equals("set") || subCommand.equals("promote") || subCommand.equals("demote")) {
+            if (subCommand.equals("set") || subCommand.equals("promote") || 
+                subCommand.equals("demote") || subCommand.equals("info")) {
                 return Bukkit.getOnlinePlayers().stream()
                         .map(Player::getName)
                         .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
@@ -269,7 +264,6 @@ public class RankCommand implements CommandExecutor, TabCompleter {
         }
         
         if (args.length == 3 && args[0].equalsIgnoreCase("set")) {
-            // Return available groups for set subcommand
             return luckPerms.getGroupManager().getLoadedGroups().stream()
                     .map(group -> group.getName())
                     .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))

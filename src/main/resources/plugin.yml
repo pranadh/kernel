@@ -2,7 +2,7 @@ name: Kernel
 version: 1.0
 main: com.example.kernel.Kernel
 api-version: 1.13
-depend: [LuckPerms]
+depend: [LuckPerms, PlaceholderAPI]
 commands:
   broadcast:
     description: Broadcast a message to all players.
@@ -50,3 +50,12 @@ commands:
   cleardrops:
     description: Clear all dropped items from the server
     permission: kernel.cleardrops
+  feed:
+    description: Fill a player's hunger bar
+    permission: kernel.feed
+  heal:
+    description: Heal a player and fill their hunger bar
+    permission: kernel.heal
+  speed:
+    description: Set a player's walking or flying speed
+    permission: kernel.speed
