@@ -72,3 +72,6 @@ commands:
   tab:
     description: Reload tab display
     permission: kernel.tab.reload
+  fly:
+    description: Toggle flight mode
+    permission: kernel.fly

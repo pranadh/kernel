@@ -8,12 +8,13 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import com.example.kernel.commands.*;
 import com.example.kernel.listeners.*;
-
+import com.example.kernel.managers.ScoreboardManager;
 import com.example.kernel.managers.TabManager;
 
 public class Kernel extends JavaPlugin {
     private LuckPerms luckPerms;
     private TabManager tabManager;
+    private ScoreboardManager scoreboardManager;
 
     public TabManager getTabManager() {
         return tabManager;
@@ -29,12 +30,15 @@ public class Kernel extends JavaPlugin {
             luckPerms = provider.getProvider();
 
             // Initialize TabManager with server's scoreboard
-            tabManager = new TabManager(luckPerms, Bukkit.getScoreboardManager().getMainScoreboard());
+            tabManager = new TabManager(luckPerms, Bukkit.getScoreboardManager().getMainScoreboard(), this);
             getServer().getPluginManager().registerEvents(tabManager, this);
             
             // Update tab list for online players (in case of reload)
             Bukkit.getOnlinePlayers().forEach(player -> tabManager.updatePlayerTab(player));
         }
+
+        scoreboardManager = new ScoreboardManager(this);
+        getServer().getPluginManager().registerEvents(scoreboardManager, this);
 
         // Register commands
         BroadcastCommand broadcastCommand = new BroadcastCommand();
@@ -111,6 +115,10 @@ public class Kernel extends JavaPlugin {
         TabCommand tabCommand = new TabCommand(this);
         this.getCommand("tab").setExecutor(tabCommand);
         this.getCommand("tab").setTabCompleter(tabCommand);
+
+        FlightCommand flightCommand = new FlightCommand();
+        this.getCommand("fly").setExecutor(flightCommand);
+        this.getCommand("fly").setTabCompleter(flightCommand);
         
         // Register listeners
         getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);

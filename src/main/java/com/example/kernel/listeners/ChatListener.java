@@ -100,9 +100,9 @@ public class ChatListener implements Listener {
         // Format hover text with line breaks
         String hoverText = String.format(
             "%s%s\n" +
-            " &ePlaytime: &7%s\n" +
-            " &aJoined: &7%s\n" +
-            " &cDeaths: &7%s",
+            "&f &ePlaytime: &f%s\n" +
+            "&f &aJoined: &f%s\n" +
+            "&f &cDeaths: &f%s",
             prefix != null ? prefix + " " + nameColor : nameColor + player.getName(),
             player.getName(),
             playtime,
