@@ -75,3 +75,6 @@ commands:
   fly:
     description: Toggle flight mode
     permission: kernel.fly
+  gravity:
+    description: Set the gravity of a player
+    permission: kernel.gravity

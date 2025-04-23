@@ -3,22 +3,15 @@ package com.example.kernel;
 import org.bukkit.plugin.java.JavaPlugin;
 import net.luckperms.api.LuckPerms;
 
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import com.example.kernel.commands.*;
 import com.example.kernel.listeners.*;
 import com.example.kernel.managers.ScoreboardManager;
-import com.example.kernel.managers.TabManager;
 
 public class Kernel extends JavaPlugin {
     private LuckPerms luckPerms;
-    private TabManager tabManager;
     private ScoreboardManager scoreboardManager;
-
-    public TabManager getTabManager() {
-        return tabManager;
-    }
 
     @Override
     public void onEnable() {
@@ -28,13 +21,6 @@ public class Kernel extends JavaPlugin {
                 .getRegistration(LuckPerms.class);
         if (provider != null) {
             luckPerms = provider.getProvider();
-
-            // Initialize TabManager with server's scoreboard
-            tabManager = new TabManager(luckPerms, Bukkit.getScoreboardManager().getMainScoreboard(), this);
-            getServer().getPluginManager().registerEvents(tabManager, this);
-            
-            // Update tab list for online players (in case of reload)
-            Bukkit.getOnlinePlayers().forEach(player -> tabManager.updatePlayerTab(player));
         }
 
         scoreboardManager = new ScoreboardManager(this);
@@ -112,13 +98,13 @@ public class Kernel extends JavaPlugin {
         this.getCommand("getpos").setExecutor(getPositionCommand);
         this.getCommand("getpos").setTabCompleter(getPositionCommand);
 
-        TabCommand tabCommand = new TabCommand(this);
-        this.getCommand("tab").setExecutor(tabCommand);
-        this.getCommand("tab").setTabCompleter(tabCommand);
-
         FlightCommand flightCommand = new FlightCommand();
         this.getCommand("fly").setExecutor(flightCommand);
         this.getCommand("fly").setTabCompleter(flightCommand);
+
+        GravityCommand gravityCommand = new GravityCommand();
+        this.getCommand("gravity").setExecutor(gravityCommand);
+        this.getCommand("gravity").setTabCompleter(gravityCommand);
         
         // Register listeners
         getServer().getPluginManager().registerEvents(new ChatListener(chatControl, luckPerms), this);
@@ -128,12 +114,6 @@ public class Kernel extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
-        if (tabManager != null) {
-            // Clean up teams on disable
-            Bukkit.getOnlinePlayers().forEach(player -> tabManager.removePlayer(player));
-        }
-
         getLogger().info("Kernel disabled!");
     }
 }

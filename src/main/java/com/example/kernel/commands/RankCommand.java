@@ -11,8 +11,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import com.example.kernel.Kernel;
-import com.example.kernel.managers.TabManager;
 import com.example.kernel.utils.ColorUtils;
 import com.example.kernel.utils.Constants;
 
@@ -235,13 +233,6 @@ public class RankCommand implements CommandExecutor, TabCompleter {
 
         sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Set " + Constants.PRIMARY + targetPlayer.getName() + 
             "&7's rank from &f" + oldPrefix + " &7to &f" + newPrefix + "&7."));
-    
-        if (targetPlayer.isOnline()) {
-            TabManager tabManager = ((Kernel) Bukkit.getPluginManager().getPlugin("Kernel")).getTabManager();
-            if (tabManager != null) {
-                tabManager.updatePlayerTab(targetPlayer);
-            }
-        }
     }
 
     @Override

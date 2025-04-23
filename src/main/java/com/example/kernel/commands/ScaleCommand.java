@@ -51,7 +51,7 @@ public class ScaleCommand implements CommandExecutor, TabCompleter {
             return true;
 
         } catch (NumberFormatException e) {
-            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Invalid scale value!"));
+            sender.sendMessage(ColorUtils.translateColorCodes(Constants.PREFIX + "&7Invalid scale value."));
             return true;
         }
     }

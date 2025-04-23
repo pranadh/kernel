@@ -61,13 +61,24 @@ public class ScoreboardManager implements Listener {
         String playerName = PlaceholderAPI.setPlaceholders(player, "%player_name%");
         String ping = PlaceholderAPI.setPlaceholders(player, "%player_ping%");
         String tps = PlaceholderAPI.setPlaceholders(player, "%server_tps_1_colored%");
+        String date = PlaceholderAPI.setPlaceholders(player, "%localtime_time_MMM d, Y%");
+        String playtime = String.format("%sd, %sh, %sm",
+            PlaceholderAPI.setPlaceholders(player, "%statistic_time_played:days%"),
+            PlaceholderAPI.setPlaceholders(player, "%statistic_time_played:hours%"),
+            PlaceholderAPI.setPlaceholders(player, "%statistic_time_played:minutes%")
+        );
+        String serverIP = "ᴘʟᴀʏ.ᴋᴇʀɴᴇʟ.ɢᴀᴍᴇѕ";
     
         // Create teams with RGB colors and formatting
-        createTeamLine(board, "line1", ChatColor.STRIKETHROUGH + "                                 ", 6, ChatColor.DARK_GRAY);
-        createTeamLine(board, "player", "" + SECONDARY_COLOR + ChatColor.BOLD + playerName, 5, PRIMARY_COLOR);
-        createTeamLine(board, "rank", "  " + ChatColor.WHITE + " " + PRIMARY_COLOR + "Rank: ", 4, PRIMARY_COLOR, ChatColor.WHITE, rankPrefix);
-        createTeamLine(board, "ping", "  " + ChatColor.WHITE + " " + PRIMARY_COLOR + "Ping: ", 3, PRIMARY_COLOR, ChatColor.WHITE, ping + "ms");
-        createTeamLine(board, "tps", "  " + ChatColor.WHITE + " " + PRIMARY_COLOR + "TPS: ", 2, PRIMARY_COLOR, ChatColor.WHITE, tps);
+        createTeamLine(board, "line1", ChatColor.STRIKETHROUGH + "                                 ", 10, ChatColor.DARK_GRAY);
+        createTeamLine(board, "date", ChatColor.GRAY + "        ⏰ " + date, 9, PRIMARY_COLOR);
+        createTeamLine(board, "player", "" + SECONDARY_COLOR + ChatColor.BOLD + playerName, 8, PRIMARY_COLOR);
+        createTeamLine(board, "rank", "  " + ChatColor.WHITE + " " + PRIMARY_COLOR + "Rank: ", 7, PRIMARY_COLOR, ChatColor.WHITE, rankPrefix);
+        createTeamLine(board, "ping", "  " + ChatColor.WHITE + " " + PRIMARY_COLOR + "Ping: ", 6, PRIMARY_COLOR, ChatColor.WHITE, ping + "ms");
+        createTeamLine(board, "tps", "  " + ChatColor.WHITE + " " + PRIMARY_COLOR + "TPS: ", 5, PRIMARY_COLOR, ChatColor.WHITE, tps);
+        createTeamLine(board, "playtime", "  " + ChatColor.WHITE + " " + PRIMARY_COLOR + "Playtime: ", 4, PRIMARY_COLOR, ChatColor.WHITE, playtime);
+        createTeamLine(board, "blank1", " ", 3, PRIMARY_COLOR);
+        createTeamLine(board, "ip", " ", 2, ChatColor.GRAY, ChatColor.GRAY, serverIP);
         createTeamLine(board, "line2", ChatColor.STRIKETHROUGH + "                                ", 1, ChatColor.DARK_GRAY);
     }
     
